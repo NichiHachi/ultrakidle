@@ -18,6 +18,7 @@ const PlayPage = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [shouldFlash, setShouldFlash] = useState(false);
     const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
+    const [copySuccess, setCopySuccess] = useState(false);
     // Load initial guesses from history
     useEffect(() => {
         if (!loading && guessHistory.length > 0) {
@@ -82,6 +83,31 @@ const PlayPage = () => {
     const revealedId = guesses.find(g => g.correct_id)?.correct_id;
     const revealedEnemy = revealedId ? enemies.find(e => e.id === revealedId) : null;
 
+    const copyMissionLog = () => {
+        const getEmoji = (result: string, color?: string) => {
+            if (color === 'green' || result === 'correct') return '🟩';
+            if (color === 'yellow') return '🟧';
+            return '🟥';
+        };
+
+        const grid = guesses.map(g => {
+            const row = [
+                getEmoji(g.correct ? 'correct' : 'incorrect'), // Name
+                getEmoji(g.properties.enemy_type.result), // Type
+                getEmoji(g.properties.weight_class.result), // Weight
+                getEmoji(g.properties.health.result, g.properties.health.color), // Health
+                getEmoji(g.properties.is_boss.result), // Boss
+                getEmoji(g.properties.appearance.result, g.properties.appearance.color) // Appearance
+            ];
+            return row.join('');
+        }).join('\n');
+
+        const text = `${grid}\n\nhttps://ultrakilldle.online`;
+        navigator.clipboard.writeText(text);
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+    };
+
     if (loading) {
         return (
             <>
@@ -98,22 +124,37 @@ const PlayPage = () => {
         <>
             <div className="z-20  flex flex-col w-full pt-4  h-full justify-start items-start">
                 <div className="mb-6">
-                    <Button
-                        variant="ghost"
-                        size="md"
-                        onClick={() => navigate('/')}
-                        className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100"
-                    >
-                        &lt; RETURN TO HOME
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="md"
-                        onClick={() => setIsHowToPlayOpen(true)}
-                        className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100 mt-2"
-                    >
-                        ? HOW TO PLAY
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <Button
+                            variant="ghost"
+                            size="md"
+                            onClick={() => navigate('/')}
+                            className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100"
+                        >
+                            &lt; RETURN TO HOME
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="md"
+                            onClick={() => setIsHowToPlayOpen(true)}
+                            className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100"
+                        >
+                            ? HOW TO PLAY
+                        </Button>
+                        {isGameOver && (
+                            <Button
+                                variant="ghost"
+                                size="md"
+                                onClick={copyMissionLog}
+                                className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100"
+                                initial={{ backgroundColor: "rgba(255, 255, 255, 1)" }}
+                                animate={{ backgroundColor: "rgba(255, 255, 255, 0)" }}
+                                transition={{ duration: 0.5 }}
+                            >
+                                {copySuccess ? '✓ LOG COPIED' : '⎘ COPY MISSION LOG'}
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 <Modal
