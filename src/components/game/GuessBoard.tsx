@@ -54,7 +54,7 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                     {guesses.map((guess, idx) => (
                         <tr key={idx} className="border-b border-white/5 last:border-0 hover:bg-white/5">
                             {/* Static Name Column */}
-                            <td className="px-4 py-4 font-bold max-w-[150px] ">
+                            <td className={`px-4 py-4 font-bold max-w-[150px] border-l-4 border-black/50 ${getResultColorClass(guess.correct ? 'correct' : 'incorrect')}`}>
                                 {guess.enemy_name}
                             </td>
 
