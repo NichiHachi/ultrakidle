@@ -85,8 +85,8 @@ const PlayPage = () => {
             <>
                 <div className="h-dvh w-dvw bg-black/40 fixed top-0 left-0  overflow-visible">
                 </div>
-                <div className="flex flex-col w-full h-full items-center justify-center">
-                    <p className="text-2xl opacity-50 animate-pulse">INITIALIZING BOARD...</p>
+                <div className="flex flex-col w-full h-full items-start justify-start mt-2">
+                    <p className="text-xl opacity-50 animate-pulse">INITIALIZING BOARD...</p>
                 </div>
             </>
         );
@@ -100,7 +100,7 @@ const PlayPage = () => {
                         variant="ghost"
                         size="md"
                         onClick={() => navigate('/')}
-                        className="flex items-center gap-2 opacity-50 hover:opacity-100"
+                        className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100"
                     >
                         &lt; RETURN TO HOME
                     </Button>

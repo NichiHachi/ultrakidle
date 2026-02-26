@@ -20,16 +20,16 @@ const LoadingDots = () => {
 
 const getCountdown = () => {
   const now = new Date();
-  const nextMidnight = new Date(
-    Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate() + 1,
-      0, 0, 0
-    )
-  );
 
-  const msDiff = nextMidnight.getTime() - now.getTime();
+  // Get current time string in Eastern Time
+  const etStr = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+  const etNow = new Date(etStr);
+
+  // Get next midnight in Eastern Time
+  const etMidnight = new Date(etStr);
+  etMidnight.setHours(24, 0, 0, 0);
+
+  const msDiff = etMidnight.getTime() - etNow.getTime();
 
   const hours = Math.floor(msDiff / (1000 * 60 * 60));
   const minutes = Math.floor((msDiff % (1000 * 60 * 60)) / (1000 * 60));
@@ -114,42 +114,46 @@ const HomePage = () => {
           </div>
 
           {diagnosticsStarted && (
-            <div className="mt-1">
-              <Typewriter text={`CURRENT_STREAK ${streak}`} speed={0.03} />
-            </div>
-          )}
-
-          {diagnosticsStarted && (
             <>
+              <div className="">
+                <Typewriter
+                  text={`CURRENT_STREAK ${streak}`}
+                  speed={0.03}
+                  delay={0.2}
+                />
+              </div>
+
+              {dailyStats && (
+                <Typewriter
+                  text={`NETWORK_SYNC: ${dailyStats.total_wins} MACHINES SUCCEEDED | ${dailyStats.total_players - dailyStats.total_wins} TERMINATED`}
+                  speed={0.02}
+                  delay={0.7}
+                />
+              )}
+
               <Typewriter
                 text="SYSTEM V1 INITIALIZED"
                 speed={0.02}
-                delay={0.4}
-                className="mt-10"
+                delay={1.4}
+                className="mt-5"
               />
               <Typewriter
                 text="DIAGNOSTICS... OK"
                 speed={0.02}
-                delay={0.8}
+                delay={1.8}
               />
-              {dailyStats && (
-                <Typewriter
-                  text={`${dailyStats.total_wins} OUT OF ${dailyStats.total_players} MACHINES HAVE IDENTIFIED TODAY'S TARGET`}
-                  speed={0.02}
-                  delay={1.2}
-                />
-              )}
+
               {isGameOver ? (
                 <Typewriter
                   text="NEXT CHALLENGE IN:"
                   speed={0.02}
-                  delay={2}
+                  delay={2.3}
                 />
               ) : (
                 <Typewriter
                   text="STANDBY - WAIT FOR WAKE"
                   speed={0.02}
-                  delay={2}
+                  delay={2.3}
                 />
               )}
             </>
@@ -160,7 +164,7 @@ const HomePage = () => {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.8, duration: 0.5 }}
+            transition={{ duration: 0.5 }}
             className="flex flex-col gap-4 w-full max-w-[450px]"
           >
             {isGameOver ? (
@@ -187,7 +191,7 @@ const HomePage = () => {
                   variant="outline"
                   size="xl"
                   onClick={() => navigate('/credits')}
-                  className="mt-4"
+                  className="mt-2"
                 >
                   CREDITS
                 </Button>
@@ -224,6 +228,18 @@ const HomePage = () => {
                 </Button>
               </div>
             )}
+            <a
+              href='https://ko-fi.com/G2G41UYAX6' target='_blank'>
+              <Button
+                variant="ghost"
+                className="flex items-center"
+              >
+                Support me on ko-fi
+                <img
+                  className="w-5 ml-2"
+                  src="https://cdn.prod.website-files.com/5c14e387dab576fe667689cf/670f5a01229bf8a18f97a3c1_favion.png" />
+              </Button>
+            </a>
           </motion.div>
         )}
       </div>

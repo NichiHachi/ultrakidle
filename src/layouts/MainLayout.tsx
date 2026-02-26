@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 const MainLayout = () => {
   return (
     <div className="text-white overflow-hidden">
-      <div className="fixed top-0 left-0 z-10 h-dvh w-dvw overflow-auto lg:px-10 px-5 lg:py-20 py-5">
+      <div className="fixed top-0 left-0 z-10 h-dvh w-dvw overflow-auto lg:px-10 px-5 lg:py-12 py-5">
         <div className="md:w-full flex-0 h-full  flex flex-col" >
           <div className="z-20 max-w-[600px]">
             <img

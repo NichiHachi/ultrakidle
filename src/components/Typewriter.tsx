@@ -23,13 +23,13 @@ export const Typewriter = ({ text, delay = 0, onComplete, className = '', speed 
 
     const child = {
         visible: {
-            display: "inline",
+            opacity: 1,
             transition: {
                 duration: 0,
             },
         },
         hidden: {
-            display: "none",
+            opacity: 0,
         },
     };
 
