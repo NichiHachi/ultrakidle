@@ -12,7 +12,9 @@ export const EnemySearch = ({ onGuess, disabled = false, excludeIds = [] }: Enem
     const [isOpen, setIsOpen] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
 
-    const filteredEnemies = enemies.filter(enemy =>
+    const sortedEnemies = [...enemies].sort((a, b) => a.name.localeCompare(b.name));
+
+    const filteredEnemies = sortedEnemies.filter(enemy =>
         enemy.name.toLowerCase().includes(query.toLowerCase()) &&
         !excludeIds.includes(enemy.id)
     );

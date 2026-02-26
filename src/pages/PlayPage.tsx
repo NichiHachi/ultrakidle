@@ -131,6 +131,10 @@ const PlayPage = () => {
                                 <span>CORRECT PROPERTY MATCH</span>
                             </div>
                             <div className="flex gap-3 items-center">
+                                <div className="w-4 h-4 bg-yellow-500/20 border border-yellow-500" />
+                                <span>PARTIAL PROPERTY MATCH</span>
+                            </div>
+                            <div className="flex gap-3 items-center">
                                 <div className="w-4 h-4 bg-red-500/20 border border-red-500" />
                                 <span>INCORRECT PROPERTY MATCH</span>
                             </div>
@@ -141,9 +145,9 @@ const PlayPage = () => {
                             <ul className="list-disc [&>*]:text-left pl-4 list-outside  space-y-1 opacity-80 ">
                                 <li>TYPE: ???, DEMON, MACHINE, HUSK, ANGEL OR PRIME SOUL</li>
                                 <li>WEIGHT: LIGHT, MEDIUM, HEAVY OR SUPERHEAVY</li>
-                                <li>HEALTH: NUMERIC COMPARISON. TARGET CAN BE HIGHER ▲ OR LOWER ▼</li>
+                                <li>HEALTH: NUMERIC COMPARISON. TARGET CAN BE HIGHER ▲ OR LOWER ▼. <span className="text-yellow-500">YELLOW</span> INDICATES VALUE IS WITHIN 10 HP OF TARGET</li>
                                 <li>IS BOSS: ANY ENEMY THAT HAS APPEARED WITH A VISIBLE HEALTH BAR. IF AN ENEMY COUNTS AS A BOSS ITS HEALTH IS THAT OF THEIR BOSS APPEARANCE</li>
-                                <li>REGISTERED AT: LEVEL OF FIRST ENCOUNTER</li>
+                                <li>REGISTERED AT: LEVEL OF FIRST ENCOUNTER. <span className="text-yellow-500">YELLOW</span> INDICATES TARGET ENEMY ALSO APPEARS IN THIS LEVEL</li>
                             </ul>
                         </div>
                     </div>

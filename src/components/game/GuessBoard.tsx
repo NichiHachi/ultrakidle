@@ -6,15 +6,35 @@ export interface GuessResult {
     properties: {
         enemy_type: { value: string; result: 'correct' | 'incorrect' };
         weight_class: { value: string; result: 'correct' | 'incorrect' };
-        health: { value: number; result: 'correct' | 'higher' | 'lower' };
+        health: {
+            value: number;
+            result: 'correct' | 'higher' | 'lower';
+            color?: 'green' | 'yellow' | 'red';
+        };
         is_boss: { value: boolean; result: 'correct' | 'incorrect' };
-        appearance: { value: string; result: 'correct' | 'incorrect' };
+        appearance: {
+            value: string;
+            result: 'correct' | 'incorrect';
+            color?: 'green' | 'yellow' | 'red';
+        };
     };
 }
 
 interface GuessBoardProps {
     guesses: GuessResult[];
 }
+
+const getResultColorClass = (result: 'correct' | 'incorrect' | string, color?: 'green' | 'yellow' | 'red') => {
+    if (color) {
+        if (color === 'green') return 'bg-green-600/20 border-green-500 text-green-500';
+        if (color === 'yellow') return 'bg-yellow-600/20 border-yellow-500 text-yellow-500';
+        return 'bg-red-600/20 border-red-500 text-red-500';
+    }
+
+    return result === 'correct'
+        ? 'bg-green-600/20 border-green-500 text-green-500'
+        : 'bg-red-600/20 border-red-500 text-red-500';
+};
 
 export const GuessBoard = ({ guesses }: GuessBoardProps) => {
     return (
@@ -39,26 +59,17 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                             </td>
 
                             {/* Enemy Type */}
-                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${guess.properties.enemy_type.result === 'correct'
-                                ? 'bg-green-600/20 border-green-500 text-green-500'
-                                : 'bg-red-600/20 border-red-500 text-red-500'
-                                }`}>
+                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.enemy_type.result)}`}>
                                 {guess.properties.enemy_type.value || 'UNKNOWN'}
                             </td>
 
                             {/* Weight Class */}
-                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${guess.properties.weight_class.result === 'correct'
-                                ? 'bg-green-600/20 border-green-500 text-green-500'
-                                : 'bg-red-600/20 border-red-500 text-red-500'
-                                }`}>
+                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.weight_class.result)}`}>
                                 {guess.properties.weight_class.value || 'UNKNOWN'}
                             </td>
 
                             {/* Health */}
-                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${guess.properties.health.result === 'correct'
-                                ? 'bg-green-600/20 border-green-500 text-green-500'
-                                : 'bg-red-600/20 border-red-500 text-red-500'
-                                }`}>
+                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.health.result, guess.properties.health.color)}`}>
                                 <div className="flex items-center gap-2 h-full">
                                     {guess.properties.health.value}
                                     {guess.properties.health.result === 'higher' && <span className="text-lg">▲</span>}
@@ -67,18 +78,12 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                             </td>
 
                             {/* Is Boss */}
-                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${guess.properties.is_boss.result === 'correct'
-                                ? 'bg-green-600/20 border-green-500 text-green-500'
-                                : 'bg-red-600/20 border-red-500 text-red-500'
-                                }`}>
+                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.is_boss.result)}`}>
                                 {guess.properties.is_boss.value ? 'YES' : 'NO'}
                             </td>
 
                             {/* Appearance */}
-                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${guess.properties.appearance.result === 'correct'
-                                ? 'bg-green-600/20 border-green-500 text-green-500'
-                                : 'bg-red-600/20 border-red-500 text-red-500'
-                                }`}>
+                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.appearance.result, guess.properties.appearance.color)}`}>
                                 {guess.properties.appearance.value || 'UNKNOWN'}
                             </td>
                         </tr>
