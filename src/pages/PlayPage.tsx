@@ -147,9 +147,12 @@ const PlayPage = () => {
                                 size="md"
                                 onClick={copyMissionLog}
                                 className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100"
-                                initial={{ backgroundColor: "rgba(255, 255, 255, 1)" }}
-                                animate={{ backgroundColor: "rgba(255, 255, 255, 0)" }}
-                                transition={{ duration: 0.5 }}
+                                initial={{ backgroundColor: "rgba(255, 255, 255, 1)", opacity: 0 }}
+                                animate={{ backgroundColor: "rgba(255, 255, 255, 0)", opacity: 1 }}
+                                transition={{
+                                    opacity: { duration: 0.1, delay: 0.8 },
+                                    backgroundColor: { duration: 0.5, delay: 0.8 }
+                                }}
                             >
                                 {copySuccess ? '✓ LOG COPIED' : '⎘ COPY MISSION LOG'}
                             </Button>
