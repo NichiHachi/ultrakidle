@@ -14,7 +14,7 @@ export interface GuessResult {
         is_boss: { value: boolean; result: 'correct' | 'incorrect' };
         appearance: {
             value: string;
-            result: 'correct' | 'incorrect';
+            result: 'correct' | 'incorrect' | 'later' | 'earlier';
             color?: 'green' | 'yellow' | 'red';
         };
     };
@@ -84,7 +84,11 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
 
                             {/* Appearance */}
                             <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.appearance.result, guess.properties.appearance.color)}`}>
-                                {guess.properties.appearance.value || 'UNKNOWN'}
+                                <div className="flex items-center gap-2 h-full">
+                                    {guess.properties.appearance.value || 'UNKNOWN'}
+                                    {guess.properties.appearance.result === 'later' && <span className="text-lg">▲</span>}
+                                    {guess.properties.appearance.result === 'earlier' && <span className="text-lg">▼</span>}
+                                </div>
                             </td>
                         </tr>
                     ))}
