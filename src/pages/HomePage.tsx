@@ -21,8 +21,8 @@ const LoadingDots = () => {
 const getCountdown = () => {
   const now = new Date();
 
-  // Get current time string in Eastern Time
-  const etStr = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+  // Get current time string in Nicaragua Time
+  const etStr = now.toLocaleString("en-US", { timeZone: "America/Managua" });
   const etNow = new Date(etStr);
 
   // Get next midnight in Eastern Time
