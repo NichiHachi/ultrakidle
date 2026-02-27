@@ -75,9 +75,9 @@ const HomePage = () => {
   const statusColor = hasWon ? "text-green-500" : hasReachedLimit ? "text-red-500" : "";
 
   return (
-    <div className="flex flex-col w-full justify-between h-full">
-      <div className="flex flex-col gap-4 w-full mx-auto h-full">
-        <div className="flex flex-col gap-0 mt-2 w-full lg:text-xl text-lg opacity-50 text-left min-h-[160px]">
+    <div className="flex flex-col w-full h-full min-h-0">
+      <div className="flex flex-col gap-4 w-full mx-auto h-full min-h-0">
+        <div className="flex flex-col gap-0 mt-2 w-full lg:text-xl text-lg opacity-50 text-left flex-shrink-0">
           <div className="flex gap-1 items-baseline">
             <Typewriter
               text="DAILY_CHALLENGE "
@@ -165,7 +165,7 @@ const HomePage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex flex-col gap-4 w-full max-w-[450px]"
+            className="flex flex-col gap-4 w-full max-w-[450px] overflow-auto min-h-0 pb-4"
           >
             {isGameOver ? (
               <div className="flex flex-col gap-2">

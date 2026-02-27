@@ -44,7 +44,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             sm: 'text-xs',
             md: 'text-sm',
             lg: 'text-base',
-            xl: 'text-2xl md:text-3xl lg:text-5xl',
+            xl: 'text-xl md:text-2xl lg:text-3xl',
         };
 
         const padding = {
