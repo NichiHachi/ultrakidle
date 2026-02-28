@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { enemies } from '../../lib/enemy_list';
+import { EnemyIcon } from './EnemyIcon';
 
 interface EnemySearchProps {
     onGuess: (enemyId: number) => void;
@@ -66,9 +67,10 @@ export const EnemySearch = ({ onGuess, disabled = false, excludeIds = [] }: Enem
                             <li
                                 key={enemy.id}
                                 onClick={() => handleSelect(enemy.id)}
-                                className="p-3 hover:bg-white/10 cursor-pointer uppercase text-left border-b border-white/10 last:border-b-0"
+                                className="p-3 hover:bg-white/10 cursor-pointer uppercase text-left border-b border-white/10 last:border-b-0 flex items-center gap-3"
                             >
-                                {enemy.name}
+                                <EnemyIcon icons={enemy.icon} size={24} />
+                                <span>{enemy.name}</span>
                             </li>
                         ))
                     ) : (

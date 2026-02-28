@@ -1,3 +1,6 @@
+import { enemies } from '../../lib/enemy_list';
+import { EnemyIcon } from './EnemyIcon';
+
 export interface GuessResult {
     guess_id?: number;
     enemy_name: string;
@@ -51,47 +54,53 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {guesses.map((guess, idx) => (
-                        <tr key={idx} className="border-b border-white/5 last:border-0 hover:bg-white/5">
-                            {/* Static Name Column */}
-                            <td className={`px-4 py-4 font-bold max-w-[150px] border-l-4 border-black/50 ${getResultColorClass(guess.correct ? 'correct' : 'incorrect')}`}>
-                                {guess.enemy_name}
-                            </td>
+                    {guesses.map((guess, idx) => {
+                        const enemy = enemies.find(e => e.name === guess.enemy_name);
+                        return (
+                            <tr key={idx} className="border-b border-white/5 last:border-0 hover:bg-white/5">
+                                {/* Static Name Column */}
+                                <td className={`px-4 py-4 font-bold max-w-[200px] border-l-4 border-black/50 ${getResultColorClass(guess.correct ? 'correct' : 'incorrect')}`}>
+                                    <div className="flex items-center gap-3">
+                                        {enemy && <EnemyIcon icons={enemy.icon} size={32} className="shrink-0" />}
+                                        <span className="truncate">{guess.enemy_name}</span>
+                                    </div>
+                                </td>
 
-                            {/* Enemy Type */}
-                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.enemy_type.result)}`}>
-                                {guess.properties.enemy_type.value || 'UNKNOWN'}
-                            </td>
+                                {/* Enemy Type */}
+                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.enemy_type.result)}`}>
+                                    {guess.properties.enemy_type.value || 'UNKNOWN'}
+                                </td>
 
-                            {/* Weight Class */}
-                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.weight_class.result)}`}>
-                                {guess.properties.weight_class.value || 'UNKNOWN'}
-                            </td>
+                                {/* Weight Class */}
+                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.weight_class.result)}`}>
+                                    {guess.properties.weight_class.value || 'UNKNOWN'}
+                                </td>
 
-                            {/* Health */}
-                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.health.result, guess.properties.health.color)}`}>
-                                <div className="flex items-center gap-2 h-full">
-                                    {guess.properties.health.value}
-                                    {guess.properties.health.result === 'higher' && <span className="text-lg">▲</span>}
-                                    {guess.properties.health.result === 'lower' && <span className="text-lg">▼</span>}
-                                </div>
-                            </td>
+                                {/* Health */}
+                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.health.result, guess.properties.health.color)}`}>
+                                    <div className="flex items-center gap-2 h-full">
+                                        {guess.properties.health.value}
+                                        {guess.properties.health.result === 'higher' && <span className="text-lg">▲</span>}
+                                        {guess.properties.health.result === 'lower' && <span className="text-lg">▼</span>}
+                                    </div>
+                                </td>
 
-                            {/* Is Boss */}
-                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.is_boss.result)}`}>
-                                {guess.properties.is_boss.value ? 'YES' : 'NO'}
-                            </td>
+                                {/* Is Boss */}
+                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.is_boss.result)}`}>
+                                    {guess.properties.is_boss.value ? 'YES' : 'NO'}
+                                </td>
 
-                            {/* Appearance */}
-                            <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.appearance.result, guess.properties.appearance.color)}`}>
-                                <div className="flex items-center gap-2 h-full">
-                                    {guess.properties.appearance.value || 'UNKNOWN'}
-                                    {guess.properties.appearance.result === 'later' && <span className="text-lg">▲</span>}
-                                    {guess.properties.appearance.result === 'earlier' && <span className="text-lg">▼</span>}
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
+                                {/* Appearance */}
+                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.appearance.result, guess.properties.appearance.color)}`}>
+                                    <div className="flex items-center gap-2 h-full">
+                                        {guess.properties.appearance.value || 'UNKNOWN'}
+                                        {guess.properties.appearance.result === 'later' && <span className="text-lg">▲</span>}
+                                        {guess.properties.appearance.result === 'earlier' && <span className="text-lg">▼</span>}
+                                    </div>
+                                </td>
+                            </tr>
+                        );
+                    })}
                     {guesses.length === 0 && (
                         <tr>
                             <td colSpan={6} className="px-4 py-8 text-center text-white/30 italic">

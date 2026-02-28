@@ -14,10 +14,8 @@ export const enemies = [
   { id: 13, name: "Filth", icon: ["https://ultrakill.wiki.gg/images/Filth.webp"] },
   { id: 14, name: "Flesh Panopticon", icon: ["https://ultrakill.wiki.gg/images/Flesh_Panopticon.webp"] },
   { id: 15, name: "Spotlight Eye Spawn", icon: ["https://ultrakill.wiki.gg/images/PanopticonEye.webp"] },
-  { id: 16, name: "Malicious Spawn", icon: ["https://ultrakill.wiki.gg/images/Malicious_Face.webp"] },
   { id: 17, name: "Flesh Prison", icon: ["https://ultrakill.wiki.gg/images/Flesh_Prison.webp"] },
   { id: 18, name: "Eye Spawn", icon: ["https://ultrakill.wiki.gg/images/FleshPrisonEye.webp"] },
-  { id: 19, name: "Malicious Spawn (P1)", icon: ["https://ultrakill.wiki.gg/images/Malicious_Face.webp"] },
   { id: 20, name: "Gabriel (Judge of Hell)", icon: ["https://ultrakill.wiki.gg/images/Gabriel%2C_Judge_of_Hell.webp"] },
   { id: 21, name: "Gabriel (Apostate of Hate)", icon: ["https://ultrakill.wiki.gg/images/Gabriel%2C_Apostate_of_Hate.webp"] },
   { id: 22, name: "Geryon", icon: ["https://ultrakill.wiki.gg/images/Geryon.webp"] },
@@ -66,5 +64,10 @@ export const enemies = [
     id: 68,
     name: 'Ferryman "Rudraksha/Agonis"',
     icon: ["https://ultrakill.wiki.gg/images/Ferryman.webp", "https://ultrakill.wiki.gg/images/Ferryman.webp"],
+  },
+    {
+    id: 63,
+    name: "Malicious Spawn",
+    icon: ["https://ultrakill.wiki.gg/images/Malicious_Face.webp"],
   },
 ];
