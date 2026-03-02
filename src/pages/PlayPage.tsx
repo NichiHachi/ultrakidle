@@ -139,7 +139,7 @@ const PlayPage = () => {
 
     return (
         <>
-            <div className="z-20  flex flex-col w-full pt-4  h-full justify-start items-start">
+            <div className="z-20  flex flex-col w-full pt-4  min-h-full justify-start items-start">
 
                 <div className="w-full z-10">
                     <EnemySearch
