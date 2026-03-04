@@ -2,7 +2,7 @@ import { DiscordSDK } from "@discord/embedded-app-sdk";
 import { useEffect } from "react";
 import { supabase } from "./supabaseClient";
 
-const DISCORD_URL = "https://discord.com/oauth2/authorize?client_id=1478255175926808696&permissions=182272&scope=bot";
+const DISCORD_URL = "https://discord.com/oauth2/authorize?client_id=1478255175926808696&permissions=51200&scope=bot";
 export const DiscordRedirect = () => {
     useEffect(() => {
         window.location.replace(DISCORD_URL);
