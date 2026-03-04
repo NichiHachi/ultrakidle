@@ -2,13 +2,16 @@ import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
-import { isRunningInDiscord, discordSdk } from '../lib/discord';
+import { isRunningInDiscord, discordSdk, getGuildId } from '../lib/discord';
 import { Leaderboard } from '../components/game/Leaderboard';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLeaderboard } from '../hooks/useLeaderboard';
 
 const MainLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const guildId = getGuildId();
+  const { users, loading } = useLeaderboard(guildId);
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [isRankingOpen, setIsRankingOpen] = useState(true);
 
@@ -57,7 +60,7 @@ const MainLayout = () => {
                 }`}
               aria-hidden={!isRankingOpen}
             >
-              <Leaderboard layout="horizontal" />
+              <Leaderboard layout="horizontal" users={users} loading={loading} />
             </div>
           </div>
         )}
@@ -198,7 +201,7 @@ const MainLayout = () => {
                   }`}
               >
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-                  <Leaderboard layout="vertical" />
+                  <Leaderboard layout="vertical" users={users} loading={loading} />
                 </div>
               </div>
             </div>

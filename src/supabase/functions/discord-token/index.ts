@@ -12,12 +12,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { code, client_id, guild_id } = await req.json();
+    const { code, client_id } = await req.json();
 
-    // 1. Resolve which Client Secret to use based on the incoming Client ID
     let clientSecret = "";
-    if (client_id === Deno.env.get("DISCORD_CLIENT_ID")) {
-      clientSecret = Deno.env.get("DISCORD_CLIENT_SECRET")!;
+    if (client_id === Deno.env.get("DISCORD_CLIENT_ID_PROD")) {
+      clientSecret = Deno.env.get("DISCORD_CLIENT_SECRET_PROD")!;
     } else if (client_id === Deno.env.get("DISCORD_CLIENT_ID_DEV")) {
       clientSecret = Deno.env.get("DISCORD_CLIENT_SECRET_DEV")!;
     }
@@ -26,7 +25,7 @@ Deno.serve(async (req) => {
       throw new Error("Invalid or missing Client ID configuration");
     }
 
-    // 2. Exchange code for Discord Access Token
+    // 1. Exchange code for Discord Access Token & Metadata
     const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -41,80 +40,78 @@ Deno.serve(async (req) => {
     const tokenData = await tokenResponse.json();
     if (!tokenResponse.ok) throw new Error(tokenData.error_description || "Token exchange failed");
 
-    // 3. Get Discord User Profile
+    // Extract guild_id provided by Discord if launched from a server
+    const launchedGuildId = tokenData.guild_id || null;
+
+    // 2. Get Discord User Profile
     const userResponse = await fetch("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
     const discordUser = await userResponse.json();
 
-    // 4. Initialize Supabase Admin Client
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      },
+        auth: { autoRefreshToken: false, persistSession: false },
+      }
     );
 
-    // Create a deterministic internal identity
     const email = `${discordUser.id}@discord.internal`;
-	const password = `discord_${discordUser.id}_${Deno.env.get("USER_PASSWORD_SALT")}`;
+    const password = `discord_${discordUser.id}_${Deno.env.get("USER_PASSWORD_SALT")}`;
 
-    // 5. Sign in or Sign up the user in Supabase Auth
+    // 3. Sign in or Sign up logic
     let { data: authData, error: authError } = await supabaseAdmin.auth.signInWithPassword({
       email,
       password,
     });
 
     if (authError) {
-      const { data: signUpData, error: signUpError } = await supabaseAdmin.auth.admin.createUser({
+      const { error: signUpError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
         user_metadata: {
           discord_id: discordUser.id,
           full_name: discordUser.global_name || discordUser.username,
-          avatar_url: `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`,
         },
       });
 
-      if (signUpError) throw signUpError;
+      if (signUpError) {
+        // If user exists but password changed/stale, update it
+        const { data: users } = await supabaseAdmin.auth.admin.listUsers();
+        const existing = users?.users?.find((u) => u.email === email);
+        if (existing) {
+          await supabaseAdmin.auth.admin.updateUserById(existing.id, { password });
+        } else {
+          throw signUpError;
+        }
+      }
 
-      // Log in after creating
       const login = await supabaseAdmin.auth.signInWithPassword({ email, password });
+      if (login.error) throw login.error;
       authData = login.data;
     }
 
-    if (!authData?.user) {
-      throw new Error("Could not establish a user session");
-    }
+    if (!authData?.user) throw new Error("Could not establish a user session");
 
-    console.log("About to upsert profile for:", authData.user.id);
+    // 4. Sync Profile and Guild Membership
+    const avatarUrl = discordUser.avatar 
+      ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
+      : null;
 
-    const { data: profileData, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .upsert({
-        id: authData.user.id,
-        discord_name: discordUser.global_name || discordUser.username,
-        avatar_url: `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`,
-      })
-      .select();
+    await supabaseAdmin.from("profiles").upsert({
+      id: authData.user.id,
+      discord_name: discordUser.global_name || discordUser.username,
+      avatar_url: avatarUrl,
+      updated_at: new Date().toISOString(),
+    });
 
-    console.log("Profile result:", JSON.stringify({ profileData, profileError }));
-
-
-    if (profileError) {
-      console.error("Profile upsert failed:", profileError.message);
-    }
-
-    // 2. Sync server membership (using the guild_id passed from frontend)
-    if (guild_id) {
-      await supabaseAdmin.from('user_guilds').upsert({
+    if (launchedGuildId) {
+      await supabaseAdmin.from("user_guilds").upsert({
         user_id: authData.user.id,
-        guild_id: guild_id
+        guild_id: launchedGuildId,
+        last_seen_at: new Date().toISOString(),
       });
     }
 
@@ -123,13 +120,15 @@ Deno.serve(async (req) => {
         access_token: tokenData.access_token,
         supabase_session: authData.session,
         discord_user: discordUser,
+        guild_id: launchedGuildId,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
-      },
+      }
     );
   } catch (err) {
+    console.error("discord-token error:", err.message);
     return new Response(JSON.stringify({ error: err.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
