@@ -9,6 +9,7 @@ import { EnemyIcon } from '../components/game/EnemyIcon';
 import { enemies } from '../lib/enemy_list';
 import { Typewriter } from '../components/Typewriter';
 import { motion } from 'framer-motion';
+import { copyToClipboard } from '../lib/clipboard';
 
 const PlayPage = () => {
     const { loading, guessHistory, dailyChanged, setDailyChanged, refresh } = useGameInit();
@@ -119,10 +120,12 @@ const PlayPage = () => {
         }).join('')
     ).join('\n');
 
-    const copyMissionLog = () => {
-        navigator.clipboard.writeText(`${emojiGrid}\n\nhttps://ultrakidle.online/`);
-        setCopySuccess(true);
-        setTimeout(() => setCopySuccess(false), 2000);
+    const copyMissionLog = async () => {
+        const success = await copyToClipboard(`${emojiGrid}\n\nhttps://ultrakidle.online/`);
+        if (success) {
+            setCopySuccess(true);
+            setTimeout(() => setCopySuccess(false), 2000);
+        }
     };
 
     if (loading) {

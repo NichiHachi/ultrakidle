@@ -12,11 +12,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { code, client_id } = await req.json();
+    const { code, client_id, guild_id } = await req.json();
 
     let clientSecret = "";
-    if (client_id === Deno.env.get("DISCORD_CLIENT_ID_PROD")) {
-      clientSecret = Deno.env.get("DISCORD_CLIENT_SECRET_PROD")!;
+    if (client_id === Deno.env.get("DISCORD_CLIENT_ID")) {
+      clientSecret = Deno.env.get("DISCORD_CLIENT_SECRET")!;
     } else if (client_id === Deno.env.get("DISCORD_CLIENT_ID_DEV")) {
       clientSecret = Deno.env.get("DISCORD_CLIENT_SECRET_DEV")!;
     }
@@ -25,7 +25,6 @@ Deno.serve(async (req) => {
       throw new Error("Invalid or missing Client ID configuration");
     }
 
-    // 1. Exchange code for Discord Access Token & Metadata
     const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -38,12 +37,12 @@ Deno.serve(async (req) => {
     });
 
     const tokenData = await tokenResponse.json();
-    if (!tokenResponse.ok) throw new Error(tokenData.error_description || "Token exchange failed");
+    if (!tokenResponse.ok)
+      throw new Error(tokenData.error_description || "Token exchange failed");
 
-    // Extract guild_id provided by Discord if launched from a server
-    const launchedGuildId = tokenData.guild_id || null;
+    // Prefer the guild_id from the request body, fall back to token response
+    const launchedGuildId = guild_id || tokenData.guild_id || null;
 
-    // 2. Get Discord User Profile
     const userResponse = await fetch("https://discord.com/api/users/@me", {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
@@ -60,44 +59,49 @@ Deno.serve(async (req) => {
     const email = `${discordUser.id}@discord.internal`;
     const password = `discord_${discordUser.id}_${Deno.env.get("USER_PASSWORD_SALT")}`;
 
-    // 3. Sign in or Sign up logic
-    const { data: signInData, error: authError } = await supabaseAdmin.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data: signInData, error: authError } =
+      await supabaseAdmin.auth.signInWithPassword({
+        email,
+        password,
+      });
 
     let authData = signInData;
 
     if (authError) {
-      const { error: signUpError } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          discord_id: discordUser.id,
-          full_name: discordUser.global_name || discordUser.username,
-        },
-      });
+      const { error: signUpError } =
+        await supabaseAdmin.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: {
+            discord_id: discordUser.id,
+            full_name: discordUser.global_name || discordUser.username,
+          },
+        });
 
       if (signUpError) {
-        // If user exists but password changed/stale, update it
         const { data: users } = await supabaseAdmin.auth.admin.listUsers();
         const existing = users?.users?.find((u) => u.email === email);
         if (existing) {
-          await supabaseAdmin.auth.admin.updateUserById(existing.id, { password });
+          await supabaseAdmin.auth.admin.updateUserById(existing.id, {
+            password,
+          });
         } else {
           throw signUpError;
         }
       }
 
-      const login = await supabaseAdmin.auth.signInWithPassword({ email, password });
+      const login = await supabaseAdmin.auth.signInWithPassword({
+        email,
+        password,
+      });
       if (login.error) throw login.error;
       authData = login.data;
     }
 
-    if (!authData?.user) throw new Error("Could not establish a user session");
+    if (!authData?.user)
+      throw new Error("Could not establish a user session");
 
-    // 4. Sync Profile and Guild Membership
     const avatarUrl = discordUser.avatar
       ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
       : null;
