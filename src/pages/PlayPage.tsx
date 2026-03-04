@@ -239,23 +239,30 @@ const PlayPage = () => {
                                 }}
                                 className="flex flex-col gap-1 mt-1"
                             >
-                                {guessGridData.map((row, rowIndex) => (
-                                    <div key={rowIndex} className="flex gap-1">
-                                        {row.map((status, colIndex) => (
-                                            <motion.div
-                                                key={colIndex}
-                                                variants={{
-                                                    hidden: { opacity: 0, scale: 0.5 },
-                                                    visible: { opacity: 1, scale: 1 }
-                                                }}
-                                                className={`w-6 h-6 border ${status === 'green' ? 'bg-green-500/20 border-green-500' :
-                                                    status === 'yellow' ? 'bg-yellow-500/20 border-yellow-500' :
-                                                        'bg-red-500/20 border-red-500'
-                                                    }`}
-                                            />
-                                        ))}
-                                    </div>
-                                ))}
+                                {Array.from({ length: 5 }).map((_, rowIndex) => {
+                                    const row = guessGridData[rowIndex];
+                                    return (
+                                        <div key={rowIndex} className="flex gap-1">
+                                            {Array.from({ length: 6 }).map((_, colIndex) => {
+                                                const status = row ? row[colIndex] : 'gray';
+                                                return (
+                                                    <motion.div
+                                                        key={colIndex}
+                                                        variants={{
+                                                            hidden: { opacity: 0, scale: 0.5 },
+                                                            visible: { opacity: 1, scale: 1 }
+                                                        }}
+                                                        className={`w-6 h-6 border ${status === 'green' ? 'bg-green-500/20 border-green-500' :
+                                                            status === 'yellow' ? 'bg-yellow-500/20 border-yellow-500' :
+                                                                status === 'gray' ? 'bg-zinc-800/20 border-zinc-500/30' :
+                                                                    'bg-red-500/20 border-red-500'
+                                                            }`}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                })}
                             </motion.div>
                             <Button
                                 variant="ghost"

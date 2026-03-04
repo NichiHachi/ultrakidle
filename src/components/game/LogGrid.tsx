@@ -44,19 +44,26 @@ export const LogGrid = ({ hintData, size = 'md' }: LogGridProps) => {
 
     return (
         <div className="flex flex-col gap-0.5">
-            {grid.map((row, rowIndex) => (
-                <div key={rowIndex} className="flex gap-0.5">
-                    {row.map((status, colIndex) => (
-                        <div
-                            key={colIndex}
-                            className={`${boxSize} border ${status === 'green' ? 'bg-green-500/20 border-green-500' :
-                                status === 'yellow' ? 'bg-yellow-500/20 border-yellow-500' :
-                                    'bg-red-500/20 border-red-500'
-                                }`}
-                        />
-                    ))}
-                </div>
-            ))}
+            {Array.from({ length: 5 }).map((_, rowIndex) => {
+                const row = grid[rowIndex];
+                return (
+                    <div key={rowIndex} className="flex gap-0.5">
+                        {Array.from({ length: 6 }).map((_, colIndex) => {
+                            const status = row ? row[colIndex] : 'gray';
+                            return (
+                                <div
+                                    key={colIndex}
+                                    className={`${boxSize} border ${status === 'green' ? 'bg-green-500/20 border-green-500' :
+                                        status === 'yellow' ? 'bg-yellow-500/20 border-yellow-500' :
+                                            status === 'gray' ? 'bg-zinc-800/20 border-zinc-500/30' :
+                                                'bg-red-500/20 border-red-500'
+                                        }`}
+                                />
+                            );
+                        })}
+                    </div>
+                );
+            })}
         </div>
     );
 };

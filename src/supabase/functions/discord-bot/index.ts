@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import nacl from "https://esm.sh/tweetnacl@1.0.3";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const DISCORD_PUBLIC_KEY = Deno.env.get("DISCORD_PUBLIC_KEY")!;
 
@@ -39,6 +40,43 @@ serve(async (req) => {
       return Response.json({
         type: 4,
         data: { content: "Hey!" },
+      });
+    }
+
+    if (payload.data.name === "share") {
+      const discordId = payload.member.user.id;
+      const displayName =
+        payload.member.nick ||
+        payload.member.user.global_name ||
+        payload.member.user.username;
+
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+        { auth: { autoRefreshToken: false, persistSession: false } },
+      );
+
+      const { data, error } = await supabase.rpc("get_daily_share", {
+        p_discord_id: discordId,
+      });
+
+      if (error || !data) {
+        return Response.json({
+          type: 4,
+          data: {
+            content: "You haven't completed today's ULTRAKIDLE yet!",
+            flags: 64,
+          },
+        });
+      }
+
+      const result = data.is_win ? `${data.attempts}/5` : "X/5";
+
+      return Response.json({
+        type: 4,
+        data: {
+          content: `**${displayName}** — ULTRAKIDLE #${data.day_number} ${result}\n\n${data.grid}\n\nhttps://ultrakidle.online/`,
+        },
       });
     }
   }
