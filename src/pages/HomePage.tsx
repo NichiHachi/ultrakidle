@@ -246,18 +246,44 @@ const HomePage = () => {
                 </Button>
               </div>
             )}
-            <a
-              href='https://ko-fi.com/G2G41UYAX6' target='_blank' onClick={(e) => handleLinkClick(e, 'https://ko-fi.com/G2G41UYAX6')}>
-              <Button
-                variant="ghost"
-                className="flex items-center"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {!isRunningInDiscord() && (
+                <Button
+                  variant="ghost"
+                  className="flex items-center w-full"
+                  onClick={() => navigate('/discord-install')}
+                >
+                  INSTALL ON DISCORD
+                  <img
+                    className="w-5 ml-2"
+                    src="https://img.icons8.com/ios-filled/50/ffffff/discord-logo.png"
+                    alt="Discord"
+                  />
+                </Button>
+              )}
+              <div 
+                className="w-full"
               >
-                Support me on ko-fi
-                <img
-                  className="w-5 ml-2"
-                  src={resolveExternalUrl("/external/kofi/5c14e387dab576fe667689cf/670f5a01229bf8a18f97a3c1_favion.png")} />
-              </Button>
-            </a>
+              <a
+                href='https://ko-fi.com/G2G41UYAX6'
+                target='_blank'
+                onClick={(e) => handleLinkClick(e, 'https://ko-fi.com/G2G41UYAX6')}
+                className="w-full"
+              >
+                <Button
+                  variant="ghost"
+                  className="flex w-full items-center"
+                >
+                  Support me on ko-fi
+                  <img
+                    className={`w-5 ml-2`}
+                    src={resolveExternalUrl("/external/kofi/5c14e387dab576fe667689cf/670f5a01229bf8a18f97a3c1_favion.png")}
+                    alt="Ko-fi"
+                  />
+                </Button>
+              </a>
+            </div>
+            </div>
           </motion.div>
         )}
       </div>
