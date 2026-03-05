@@ -36,11 +36,71 @@ serve(async (req) => {
       return Response.json({ type: 12 });
     }
 
-    if (payload.data.name === "hello") {
+    if (payload.data.name === "channel-unsubscribe") {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+        { auth: { autoRefreshToken: false, persistSession: false } },
+      );
+
+      const { error, count } = await supabase
+        .from("daily_notification_channels")
+        .delete({ count: "exact" })
+        .eq("guild_id", payload.guild_id);
+
+      if (error || count === 0) {
+        return Response.json({
+          type: 4,
+          data: {
+            content: "This channel doesn't have daily notifications enabled.",
+            flags: 64,
+          },
+        });
+      }
+
       return Response.json({
         type: 4,
-        data: { content: "Hey!" },
+        data: {
+          content: "🛑 Daily ULTRAKIDLE notifications have been disabled for this channel.",
+        },
       });
+    }
+
+    if (payload.data.name === "channel-subscribe") {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+        { auth: { autoRefreshToken: false, persistSession: false } },
+      );
+
+      const { error } = await supabase
+        .from("daily_notification_channels")
+        .upsert({
+          guild_id: payload.guild_id,
+          channel_id: payload.channel_id,
+          configured_by: payload.member.user.id,
+        });
+
+      if (error) {
+        return Response.json({
+          type: 4,
+          data: {
+            content: "Failed to set notification channel.",
+            flags: 64,
+          },
+        });
+      }
+
+      return Response.json({
+        type: 4,
+        data: {
+          content: `✅ Daily ULTRAKIDLE notifications will be posted in <#${payload.channel_id}>`,
+        },
+      });
+    }
+
+    if (payload.data.name === "ultrakidle") {
+      return Response.json({ type: 12 });
     }
 
     if (payload.data.name === "share") {

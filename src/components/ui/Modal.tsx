@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
     isOpen: boolean;
@@ -20,7 +21,7 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
 
     return (
         <AnimatePresence>
-            {isOpen && (
+            {isOpen && createPortal(
                 <>
                     {/* Backdrop */}
                     <motion.div
@@ -65,10 +66,12 @@ const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
                             </div>
                         </motion.div>
                     </div>
-                </>
+                </>,
+                document.body
             )}
         </AnimatePresence>
     );
 };
 
 export default Modal;
+
