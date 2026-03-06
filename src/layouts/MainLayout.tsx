@@ -32,7 +32,7 @@ const MainLayout = () => {
       </div>
       {/* Background Layer */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <img className="opacity-30 object-cover w-full h-full scale-[1.04]" src="/images/main-menu.gif" alt="Background" />
+        <img className="opacity-30 object-cover w-full h-full scale-[1.04]" src={`${import.meta.env.BASE_URL}images/main-menu.gif`} alt="Background" />
       </div>
 
       <div className="fixed top-0 left-0 z-10 h-dvh w-full flex flex-col pointer-events-none overflow-x-hidden">
@@ -76,7 +76,7 @@ const MainLayout = () => {
                 <div className="sr-only">wordle, ultrakilldle, ultrakidle, daily game, character guesser</div>
                 <img
                   className=" mx-auto lg:mx-0"
-                  src="/images/ultrakidle-logo.png"
+                  src={`${import.meta.env.BASE_URL}images/ultrakidle-logo.png`}
                   alt="Ultrakidle Logo"
                 />
               </div>

@@ -288,7 +288,7 @@ const PlayPage = () => {
                 (!hasWon && hasReachedLimit && (
                     <div className="-z-10 h-dvh w-dvw bg-black fixed top-0 left-0 flex items-center justify-center overflow-visible">
                         <div className="w-1/3 h-1/3 overflow-visible">
-                            <img className="opacity-10 overflow-visible object-cover w-full h-full mx-auto " src="/images/ultrakill-death.gif" />
+                            <img className="opacity-10 overflow-visible object-cover w-full h-full mx-auto " src={`${import.meta.env.BASE_URL}images/ultrakill-death.gif`} />
                         </div>
                     </div>)) || (
                     <div className="-z-10 h-dvh w-dvw bg-black/40 fixed top-0 left-0  overflow-visible">

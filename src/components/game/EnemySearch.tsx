@@ -67,7 +67,7 @@ export const EnemySearch = ({ onGuess, disabled = false, excludeIds = [] }: Enem
                     className="md:text-base text-sm w-full bg-black border-2 border-white/20 p-3 text-white uppercase font-bold focus:outline-none focus:border-red-500 transition-colors disabled:opacity-50"
                 />
                 <span className="md:text-base text-sm">
-                OR
+                    OR
                 </span>
                 <button
                     onClick={handleRandom}
@@ -75,7 +75,7 @@ export const EnemySearch = ({ onGuess, disabled = false, excludeIds = [] }: Enem
                     title="RANDOM GUESS"
                     className="hover:cursor-pointer bg-black border-2 border-white/20 p-3 text-white hover:border-red-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[3.5rem]"
                 >
-                    <img className="invert" src="/images/random-icon.svg"/>
+                    <img className="invert" src={`${import.meta.env.BASE_URL}images/random-icon.svg`} />
                 </button>
             </div>
 
