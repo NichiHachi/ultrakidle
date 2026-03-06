@@ -159,16 +159,16 @@ const MainLayout = () => {
           {/* Column 2: Desktop Ranking Panel (collapsible, own scroll, fixed header) */}
           {inDiscord && (
             <div
-              className={`hidden lg:flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out bg-black/60 border-l border-white/10 pointer-events-auto z-20 ${isRankingOpen ? 'w-[320px]' : 'w-[45px]'
+              className={`hidden lg:flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out bg-black/60 border-l border-white/10 pointer-events-auto z-20 ${isRankingOpen ? 'w-[170px]' : 'w-[45px]'
                 }`}
             >
               <button
                 onClick={() => setIsRankingOpen(prev => !prev)}
-                className={`flex items-center bg-white/5 border-b border-white/10 hover:bg-white/10 transition-colors cursor-pointer flex-shrink-0 h-[53px] ${isRankingOpen ? 'justify-between px-4' : 'justify-center px-0'
+                className={`flex items-center bg-white/5 border-b border-white/10 hover:bg-white/10 transition-colors cursor-pointer flex-shrink-0 h-[53px] ${isRankingOpen ? 'justify-between px-2' : 'justify-center px-0'
                   }`}
               >
                 {isRankingOpen && (
-                  <span className="text-indigo-400 font-bold tracking-widest text-sm uppercase whitespace-nowrap overflow-hidden">SERVER_RANKINGS</span>
+                  <span className="text-indigo-400 font-bold tracking-widest text-xs uppercase whitespace-nowrap overflow-hidden">SERVER_RANKINGS</span>
                 )}
                 <motion.span
                   animate={{ rotate: isRankingOpen ? 0 : 180 }}
@@ -197,7 +197,7 @@ const MainLayout = () => {
 
               {/* Scrollable rank list container */}
               <div
-                className={`flex-1 transition-all duration-300 overflow-hidden flex flex-col ${isRankingOpen ? 'opacity-100' : 'opacity-0 invisible h-0'
+                className={`flex-1 transition-all duration-300 overflow-hidden flex flex-col items-start justify-center ${isRankingOpen ? 'opacity-100' : 'opacity-0 invisible h-0'
                   }`}
               >
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-3">

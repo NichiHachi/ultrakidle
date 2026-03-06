@@ -1,3 +1,5 @@
+import { useState, useEffect, useRef } from 'react';
+
 interface HintData {
     correct: boolean;
     properties: {
@@ -12,9 +14,21 @@ interface HintData {
 interface LogGridProps {
     hintData: (string[] | HintData)[]; // Array of guess results
     size?: 'sm' | 'md';
+    typewriter?: boolean;
 }
 
-export const LogGrid = ({ hintData, size = 'md' }: LogGridProps) => {
+const COLS = 6;
+const ROWS = 5;
+const TYPEWRITER_INTERVAL_MS = 80;
+
+const colorClasses: Record<string, string> = {
+    green: 'bg-green-500/20 border-green-500',
+    yellow: 'bg-yellow-500/20 border-yellow-500',
+    red: 'bg-red-500/20 border-red-500',
+    gray: 'bg-zinc-800/20 border-zinc-500/30',
+};
+
+export const LogGrid = ({ hintData, size = 'md', typewriter = false }: LogGridProps) => {
     const boxSize = size === 'sm' ? 'w-3 h-3' : 'w-4 h-4';
 
     // Process hints into raw statuses if they are full HintData objects
@@ -42,22 +56,54 @@ export const LogGrid = ({ hintData, size = 'md' }: LogGridProps) => {
         ];
     });
 
+    // Count total filled squares for typewriter animation
+    const totalFilledSquares = grid.length * COLS;
+
+    const prevTotalRef = useRef(typewriter ? 0 : totalFilledSquares);
+    const [revealedCount, setRevealedCount] = useState(typewriter ? 0 : totalFilledSquares);
+
+    useEffect(() => {
+        if (!typewriter) return;
+        const prevTotal = prevTotalRef.current;
+
+        // No new squares added — nothing to animate
+        if (totalFilledSquares <= prevTotal) {
+            prevTotalRef.current = totalFilledSquares;
+            return;
+        }
+
+        // Start revealing from where the previous data ended
+        setRevealedCount(prevTotal);
+
+        const interval = setInterval(() => {
+            setRevealedCount(prev => {
+                if (prev >= totalFilledSquares) {
+                    clearInterval(interval);
+                    return prev;
+                }
+                return prev + 1;
+            });
+        }, TYPEWRITER_INTERVAL_MS);
+
+        prevTotalRef.current = totalFilledSquares;
+        return () => clearInterval(interval);
+    }, [typewriter, totalFilledSquares]);
+
     return (
         <div className="flex flex-col gap-0.5">
-            {Array.from({ length: 5 }).map((_, rowIndex) => {
+            {Array.from({ length: ROWS }).map((_, rowIndex) => {
                 const row = grid[rowIndex];
                 return (
                     <div key={rowIndex} className="flex gap-0.5">
-                        {Array.from({ length: 6 }).map((_, colIndex) => {
-                            const status = row ? row[colIndex] : 'gray';
+                        {Array.from({ length: COLS }).map((_, colIndex) => {
+                            const actualStatus = row ? row[colIndex] : 'gray';
+                            const flatIndex = rowIndex * COLS + colIndex;
+                            // In typewriter mode, show gray until this square is revealed
+                            const status = (typewriter && flatIndex >= revealedCount) ? 'gray' : actualStatus;
                             return (
                                 <div
                                     key={colIndex}
-                                    className={`${boxSize} border ${status === 'green' ? 'bg-green-500/20 border-green-500' :
-                                        status === 'yellow' ? 'bg-yellow-500/20 border-yellow-500' :
-                                            status === 'gray' ? 'bg-zinc-800/20 border-zinc-500/30' :
-                                                'bg-red-500/20 border-red-500'
-                                        }`}
+                                    className={`${boxSize} border transition-colors duration-200 ${colorClasses[status] || colorClasses.gray}`}
                                 />
                             );
                         })}

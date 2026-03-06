@@ -30,25 +30,34 @@ async function fetchAvatarBase64(url: string): Promise<string> {
   }
 }
 
+const COLOR_MAP: Record<string, string> = {
+  GREEN: "#00C950",
+  YELLOW: "#F0B100",
+  RED: "#FB2C36",
+};
+
 async function generateResultsImage(
   results: {
     name: string;
     is_win: boolean;
     attempts: number;
     avatar_url?: string;
+    colors?: string[][];
   }[],
 ): Promise<Uint8Array> {
   await ensureWasm();
 
   const CELL = 16;
   const GAP = 3;
-  const GRID_SIZE = 5;
-  const GRID_W = GRID_SIZE * (CELL + GAP) - GAP;
+  const GRID_COLS = 6;
+  const GRID_ROWS = 5;
+  const GRID_W = GRID_COLS * (CELL + GAP) - GAP;
+  const GRID_H = GRID_ROWS * (CELL + GAP) - GAP;
 
   const AVATAR_R = 24;
   const CARD_PAD = 12;
   const CARD_W = AVATAR_R * 2 + CARD_PAD + GRID_W + CARD_PAD * 2;
-  const CARD_H = GRID_W + CARD_PAD * 2;
+  const CARD_H = GRID_H + CARD_PAD * 2;
   const CARD_GAP = 16;
 
   const COLS = 3;
@@ -70,6 +79,7 @@ async function generateResultsImage(
   results.forEach((r, i) => {
     const col = i % COLS;
     const row = Math.floor(i / COLS);
+
     const cx = PAD + col * (CARD_W + CARD_GAP);
     const cy = PAD + row * (CARD_H + CARD_GAP);
 
@@ -85,20 +95,21 @@ async function generateResultsImage(
       cards += `<circle cx="${ax}" cy="${ay}" r="${AVATAR_R}" fill="#444"/>`;
     }
 
+    
+    cards += `<circle cx="${ax}" cy="${ay}" r="${AVATAR_R}" fill="none" stroke="#ffffff" stroke-width="2"/>`;
+
     const gridX = cx + CARD_PAD * 2 + AVATAR_R * 2;
     const gridY = cy + CARD_PAD;
 
-    for (let gr = 0; gr < GRID_SIZE; gr++) {
-      for (let gc = 0; gc < GRID_SIZE; gc++) {
+    for (let gr = 0; gr < GRID_ROWS; gr++) {
+      for (let gc = 0; gc < GRID_COLS; gc++) {
         const x = gridX + gc * (CELL + GAP);
         const y = gridY + gr * (CELL + GAP);
 
         let fill = "#3a3a3c";
-        if (r.is_win) {
-          if (gr < r.attempts - 1) fill = "#F0B100";
-          else if (gr === r.attempts - 1) fill = "#00C950";
-        } else {
-          fill = gr < GRID_SIZE ? "#FB2C36" : "#3a3a3c";
+        if (r.colors && r.colors[gr]) {
+          const hint = r.colors[gr][gc];
+          if (hint && COLOR_MAP[hint]) fill = COLOR_MAP[hint];
         }
 
         cards += `<rect x="${x}" y="${y}" width="${CELL}" height="${CELL}" fill="${fill}"/>`;
@@ -119,11 +130,7 @@ async function generateResultsImage(
 
 function formatMessage(
   data: {
-    results: {
-      name: string;
-      is_win: boolean;
-      attempts: number;
-    }[];
+    results: { name: string; is_win: boolean; attempts: number }[];
     streak: number;
     day_number: number;
   },
@@ -158,7 +165,7 @@ function formatMessage(
   return (
     `🔴 ULTRAKIDLE #${data.day_number} has ended!\n ${streakLine}\nHere are yesterday's results:\n` +
     lines.join("\n") +
-    `\n\nA new enemy is waiting, play now at https://ultrakidle.online/ or use \`/ultrakidle\` to compete in this server's leaderboard`
+    `\n\nA new enemy is waiting, play now at https://ultrakidle.online/ or use \`/ultrakidle\` to compete in this server's leaderboard!`
   );
 }
 

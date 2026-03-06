@@ -9,7 +9,7 @@ interface LeaderboardProps {
 }
 
 export const Leaderboard = ({ layout = 'vertical', users, loading }: LeaderboardProps) => {
-    if (loading) return <div className="text-white/50 animate-pulse uppercase text-xs">SYNCHRONIZING...</div>;
+    if (loading) return <div className="text-white/50 w-full animate-pulse uppercase text-xs">SYNCHRONIZING...</div>;
 
     const sortedUsers = Object.values(users).sort((a, b) => {
         const statusScore = { won: 2, playing: 1, lost: 0 };
@@ -58,7 +58,7 @@ export const Leaderboard = ({ layout = 'vertical', users, loading }: Leaderboard
                                 <span className="text-xs font-bold text-white truncate">
                                     {user.discord_name}
                                 </span>
-                                <LogGrid hintData={user.guesses} size="sm" />
+                                <LogGrid hintData={user.guesses} size="sm" typewriter />
                             </div>
                         </motion.div>
                     ))}
@@ -74,33 +74,36 @@ export const Leaderboard = ({ layout = 'vertical', users, loading }: Leaderboard
 
     // ── Vertical layout (desktop) ──
     return (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 w-full">
             <AnimatePresence initial={false}>
                 {sortedUsers.map((user, index) => (
                     <motion.div
                         key={user.user_id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className={`flex items-start gap-3 p-2 border transition-colors h-[107px] ${user.status === 'won' ? 'bg-green-500/10 border-green-500/30' :
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex items-start w-full justify-center gap-1 p-2 border transition-colors ${user.status === 'won' ? 'bg-green-500/10 border-green-500/30' :
                             user.status === 'lost' ? 'bg-red-500/10 border-red-500/30' :
                                 'bg-white/5 border-white/10'
                             }`}
                     >
-                        <span className={`text-sm font-bold w-5 text-center flex-shrink-0 pt-0.5 ${getRankColor()}`}>
-                            {index + 1}
-                        </span>
-                        <img
-                            src={user.avatar_url}
-                            alt={user.discord_name}
-                            className="w-8 h-8 border border-white/20 flex-shrink-0"
-                        />
-                        <div className="flex flex-col flex-1 gap-0.5 min-w-0">
-                            <div className="flex justify-between items-center gap-2">
-                                <span className="font-bold text-white tracking-widest uppercase truncate text-xs">
-                                    {user.discord_name}
-                                </span>
-                            </div>
-                            <LogGrid hintData={user.guesses} size="sm" />
+                        {/* Column 1: Rank, Avatar */}
+                        <div className="flex flex-col items-center gap-1">
+                            <span className={`text-xs font-bold ${getRankColor()}`}>
+                                #{index + 1}
+                            </span>
+                            <img
+                                src={user.avatar_url}
+                                alt={user.discord_name}
+                                className="w-8 h-8 border border-white/20"
+                            />
+                        </div>
+
+                        {/* Column 2: Name & Grid */}
+                        <div className="flex flex-col gap-1 min-w-0">
+                            <span className="text-xs font-bold text-white truncate">
+                                {user.discord_name}
+                            </span>
+                            <LogGrid hintData={user.guesses} size="sm" typewriter />
                         </div>
                     </motion.div>
                 ))}
