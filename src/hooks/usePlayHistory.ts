@@ -38,6 +38,7 @@ export function usePlayHistory() {
                             )
                         )
                     `)
+                    .eq('user_id', session.user.id)
                     .order('completed_at', { ascending: false });
 
                 if (error) throw error;

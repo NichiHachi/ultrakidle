@@ -91,18 +91,7 @@ export const useLeaderboard = (guildId?: string | null) => {
 
                 if (profileError) console.error('[Leaderboard] Profile fetch error:', profileError);
 
-                let winQuery = supabase
-                    .from('user_wins')
-                    .select('user_id, is_win, attempt_count')
-                    .eq('daily_choice_id', todayId);
-
-                if (guildMemberIds) {
-                    winQuery = winQuery.in('user_id', guildMemberIds);
-                }
-
-                const { data: winData, error: winError } = await winQuery;
-
-                if (winError) throw winError;
+                // winData? removed as we derive status from guess colors
 
                 interface Profile {
                     id: string;
@@ -130,17 +119,19 @@ export const useLeaderboard = (guildId?: string | null) => {
                             last_guess_at: row.created_at || '',
                         };
                     }
-                    initialUsers[row.user_id].guesses.push((row.colors as string[]).map((c: string) => c.toLowerCase()));
+                    const guessColors = (row.colors as string[]).map((c: string) => c.toLowerCase());
+                    initialUsers[row.user_id].guesses.push(guessColors);
+
+                    // Derive status: 6 greens = win, 5 guesses without win = loss
+                    if (guessColors.every(c => c === 'green')) {
+                        initialUsers[row.user_id].status = 'won';
+                    } else if (initialUsers[row.user_id].guesses.length >= 5 && initialUsers[row.user_id].status !== 'won') {
+                        initialUsers[row.user_id].status = 'lost';
+                    }
+
                     initialUsers[row.user_id].attempt_count = initialUsers[row.user_id].guesses.length;
                     if (row.created_at) {
                         initialUsers[row.user_id].last_guess_at = row.created_at;
-                    }
-                });
-
-                winData?.forEach((row) => {
-                    if (initialUsers[row.user_id]) {
-                        initialUsers[row.user_id].status = row.is_win ? 'won' : 'lost';
-                        initialUsers[row.user_id].attempt_count = row.attempt_count;
                     }
                 });
 
@@ -182,17 +173,23 @@ export const useLeaderboard = (guildId?: string | null) => {
                     setUsers(prev => {
                         const existing = prev[newGuess.user_id];
                         if (existing) {
+                            const newGuesses = [...existing.guesses, guessColors];
+                            const isWin = guessColors.every(c => c === 'green');
+                            const isLoss = !isWin && newGuesses.length >= 5;
+
                             return {
                                 ...prev,
                                 [newGuess.user_id]: {
                                     ...existing,
-                                    guesses: [...existing.guesses, guessColors],
-                                    attempt_count: existing.guesses.length + 1,
+                                    guesses: newGuesses,
+                                    attempt_count: newGuesses.length,
+                                    status: isWin ? 'won' : (isLoss ? 'lost' : existing.status),
                                     last_guess_at: createdAt,
                                 }
                             };
                         } else {
                             fetchProfileForUser(newGuess.user_id);
+                            const isWin = guessColors.every(c => c === 'green');
                             return {
                                 ...prev,
                                 [newGuess.user_id]: {
@@ -200,7 +197,7 @@ export const useLeaderboard = (guildId?: string | null) => {
                                     discord_name: 'Anonymous',
                                     avatar_url: '/images/v1-plush.webp',
                                     guesses: [guessColors],
-                                    status: 'playing',
+                                    status: isWin ? 'won' : 'playing',
                                     attempt_count: 1,
                                     last_guess_at: createdAt,
                                 }
@@ -211,56 +208,8 @@ export const useLeaderboard = (guildId?: string | null) => {
             )
             .subscribe();
 
-        const winChannel = supabase
-            .channel('leaderboard_wins')
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'user_wins',
-                    filter: `daily_choice_id=eq.${dailyId}`,
-                },
-                (payload) => {
-                    const newWin = payload.new as { user_id: string; is_win: boolean; attempt_count: number; completed_at?: string };
-
-                    // Filter by guild if active
-                    if (allowedUserIds && !allowedUserIds.has(newWin.user_id)) {
-                        return;
-                    }
-
-                    setUsers(prev => {
-                        const existing = prev[newWin.user_id];
-                        if (!existing) {
-                            fetchProfileForUser(newWin.user_id);
-                            return {
-                                ...prev,
-                                [newWin.user_id]: {
-                                    user_id: newWin.user_id,
-                                    discord_name: 'Anonymous',
-                                    avatar_url: '/images/v1-plush.webp',
-                                    guesses: [],
-                                    status: newWin.is_win ? 'won' : 'lost',
-                                    attempt_count: newWin.attempt_count,
-                                    last_guess_at: newWin.completed_at || new Date().toISOString(),
-                                }
-                            };
-                        }
-                        return {
-                            ...prev,
-                            [newWin.user_id]: {
-                                ...existing,
-                                status: newWin.is_win ? 'won' : 'lost',
-                                attempt_count: newWin.attempt_count,
-                            }
-                        };
-                    });
-                }
-            )
-            .subscribe();
         return () => {
             supabase.removeChannel(guessChannel);
-            supabase.removeChannel(winChannel);
         };
     }, [dailyId, allowedUserIds]);
 
