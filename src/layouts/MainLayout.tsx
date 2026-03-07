@@ -150,6 +150,7 @@ const MainLayout = () => {
                     <a onClick={(e) => handleLinkClick(e, 'https://github.com/ikz87')} target="_blank" href="https://github.com/ikz87" className="underline hover:opacity-80 transition-colors">GITHUB</a>
                     <a onClick={(e) => handleLinkClick(e, 'https://www.youtube.com/@kz8785/')} target="_blank" href="https://www.youtube.com/@kz8785/" className="underline hover:opacity-80 transition-colors">YOUTUBE</a>
                     <a onClick={(e) => handleLinkClick(e, 'https://x.com/iikz87ii')} target="_blank" href="https://x.com/iikz87ii" className="underline hover:opacity-80 transition-colors">TWITTER</a>
+                    <a onClick={(e) => handleLinkClick(e, 'https://discord.com/users/218938202386333697')} target="_blank" href="https://discord.com/users/218938202386333697" className="underline hover:opacity-80 transition-colors">DISCORD</a>
                   </div>
                 </div>
               </div>
