@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import ReactGA from 'react-ga4'
 import { setupDiscord, isRunningInDiscord } from './lib/discord'
 import App from './App.tsx'
 
@@ -21,6 +22,8 @@ async function bootstrap() {
     }
   } else {
     console.log("[Discord] Not in Discord iframe, skipping auth");
+    // Initialize Google Analytics only when outside Discord
+    ReactGA.initialize("G-MY639QH9M5");
   }
 
   createRoot(document.getElementById('root')!).render(

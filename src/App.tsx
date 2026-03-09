@@ -1,4 +1,6 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import ReactGA from 'react-ga4';
 import { DiscordRedirect } from "./lib/discord";
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
@@ -12,32 +14,38 @@ import VersionUpdateModal from './components/VersionUpdateModal';
 
 function AppContent() {
   const { updateAvailable } = useVersion();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Only send pageview if initialized (handled by react-ga4 internally or by being silent)
+    ReactGA.send({ hitType: "pageview", page: location.pathname + location.search });
+  }, [location]);
 
   return (
     <>
       <VersionUpdateModal isOpen={updateAvailable} />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<MainLayout />}>
-            <Route index element={<HomePage />} />
-            <Route path="play" element={<PlayPage />} />
-            <Route path="credits" element={<CreditsPage />} />
-            <Route path="history" element={<HistoryPage />} />
-            <Route path="discord-install" element={<DiscordRedirect />} />
-            {/* Redirect any unknown routes to home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <Routes>
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="play" element={<PlayPage />} />
+          <Route path="credits" element={<CreditsPage />} />
+          <Route path="history" element={<HistoryPage />} />
+          <Route path="discord-install" element={<DiscordRedirect />} />
+          {/* Redirect any unknown routes to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
     </>
   );
 }
 
 function App() {
   return (
-    <VersionProvider>
-      <AppContent />
-    </VersionProvider>
+    <BrowserRouter>
+      <VersionProvider>
+        <AppContent />
+      </VersionProvider>
+    </BrowserRouter>
   );
 }
 
