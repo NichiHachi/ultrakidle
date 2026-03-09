@@ -227,6 +227,12 @@ const MainLayout = () => {
                     <a onClick={(e) => handleLinkClick(e, 'https://x.com/iikz87ii')} target="_blank" href="https://x.com/iikz87ii" className="underline hover:opacity-80 transition-colors">TWITTER</a>
                     <a onClick={(e) => handleLinkClick(e, 'https://discord.com/users/218938202386333697')} target="_blank" href="https://discord.com/users/218938202386333697" className="underline hover:opacity-80 transition-colors">DISCORD</a>
                   </div>
+                  {/* Secondary Footer */}
+                  <div className="flex gap-2 lg:gap-4 mt-2 lg:text-base text-sm opacity-30 uppercase tracking-tighter">
+                    <button onClick={() => navigate('/tos')} className="hover:opacity-100 underline transition-opacity hover:cursor-pointer">TERMS OF SERVICE</button>
+                    <button onClick={() => navigate('/privacy')} className="hover:opacity-100 underline transition-opacity hover:cursor-pointer">PRIVACY POLICY</button>
+                    <button onClick={() => navigate('/contact')} className="hover:opacity-100 underline transition-opacity hover:cursor-pointer">CONTACT</button>
+                  </div>
                 </div>
               </div>
             </div>

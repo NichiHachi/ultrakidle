@@ -1,0 +1,25 @@
+const ContactPage = () => {
+    return (
+        <div className="flex flex-col w-full pt-4 h-full justify-start items-start">
+            <div className="flex flex-col text-left gap-6 w-full max-w-2xl bg-black/40 border-2 border-white/10 p-8 uppercase font-bold tracking-widest">
+                <span className="text-3xl text-white">CONTACT_SYSTEM</span>
+                <div className="flex flex-col gap-4 opacity-70 font-normal normal-case tracking-normal">
+                    <p>For inquiries, bug reports, or feedback, please reach out via the following channels:</p>
+                    <div className="flex flex-col gap-2 uppercase font-bold tracking-widest">
+                        <span className="opacity-50">Email:</span>
+                        <a href="mailto:iikz87ii@gmail.com" className="text-indigo-500 hover:text-red-400 transition-colors underline lowercase tracking-normal">iikz87ii@gmail.com</a>
+
+                        <span className="opacity-50 mt-2">Socials:</span>
+                        <div className="flex gap-4">
+                            <a href="https://x.com/iikz87ii" target="_blank" className="underline">Twitter</a>
+                            <a href="https://github.com/ikz87" target="_blank" className="underline">GitHub</a>
+                            <a href="https://discord.com/users/218938202386333697" target="_blank" className="underline">DISCORD</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default ContactPage;

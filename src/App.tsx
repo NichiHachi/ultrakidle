@@ -7,6 +7,9 @@ import HomePage from './pages/HomePage';
 import PlayPage from './pages/PlayPage';
 import CreditsPage from './pages/CreditsPage';
 import HistoryPage from './pages/HistoryPage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
+import ContactPage from './pages/ContactPage';
 import './App.css';
 
 import { VersionProvider, useVersion } from './context/VersionContext';
@@ -31,6 +34,9 @@ function AppContent() {
           <Route path="play" element={<PlayPage />} />
           <Route path="credits" element={<CreditsPage />} />
           <Route path="history" element={<HistoryPage />} />
+          <Route path="tos" element={<TermsPage />} />
+          <Route path="privacy" element={<PrivacyPage />} />
+          <Route path="contact" element={<ContactPage />} />
           <Route path="discord-install" element={<DiscordRedirect />} />
           {/* Redirect any unknown routes to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
