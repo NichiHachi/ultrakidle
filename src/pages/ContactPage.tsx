@@ -13,7 +13,7 @@ const ContactPage = () => {
                         <div className="flex gap-4">
                             <a href="https://x.com/iikz87ii" target="_blank" className="underline">Twitter</a>
                             <a href="https://github.com/ikz87" target="_blank" className="underline">GitHub</a>
-                            <a href="https://discord.com/users/218938202386333697" target="_blank" className="underline">DISCORD</a>
+                            <a href="https://discord.gg/QF8wqypuBb" target="_blank" className="underline">DISCORD</a>
                         </div>
                     </div>
                 </div>
