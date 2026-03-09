@@ -1,5 +1,6 @@
 import { enemies } from '../../lib/enemy_list';
 import { EnemyIcon } from './EnemyIcon';
+import { useSettings } from '../../context/SettingsContext';
 
 export interface GuessResult {
     guess_id?: number;
@@ -31,12 +32,16 @@ interface GuessBoardProps {
     guesses: GuessResult[];
 }
 
-const getResultColorClass = (result: 'correct' | 'incorrect' | 'gray' | string, color?: 'green' | 'yellow' | 'red') => {
+const getResultColorClass = (result: 'correct' | 'incorrect' | 'gray' | string, color?: 'green' | 'yellow' | 'red', colorblindMode?: boolean) => {
     if (result === 'gray') return 'bg-zinc-800/20 border-zinc-500/30 text-zinc-500/50';
 
     if (color) {
         if (color === 'green') return 'bg-green-600/20 border-green-500 text-green-500';
-        if (color === 'yellow') return 'bg-yellow-600/20 border-yellow-500 text-yellow-500';
+        if (color === 'yellow') {
+            return colorblindMode
+                ? 'bg-blue-600/20 border-blue-500 text-blue-500'
+                : 'bg-yellow-600/20 border-yellow-500 text-yellow-500';
+        }
         return 'bg-red-600/20 border-red-500 text-red-500';
     }
 
@@ -46,6 +51,7 @@ const getResultColorClass = (result: 'correct' | 'incorrect' | 'gray' | string, 
 };
 
 export const GuessBoard = ({ guesses }: GuessBoardProps) => {
+    const { colorblindMode } = useSettings();
     return (
         <div className="mt-4  overflow-x-auto">
             <table className="w-full text-sm text-left uppercase border-collapse">
@@ -65,7 +71,7 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                         return (
                             <tr key={idx} className="border-b border-white/5 last:border-0 hover:bg-white/5">
                                 {/* Static Name Column */}
-                                <td className={`px-4 py-4 font-bold max-w-[200px] border-l-4 border-black/50 ${getResultColorClass(guess.correct ? 'correct' : 'incorrect')}`}>
+                                <td className={`px-4 py-4 font-bold max-w-[200px] border-l-4 border-black/50 ${getResultColorClass(guess.correct ? 'correct' : 'incorrect', undefined, colorblindMode)}`}>
                                     <div className="flex items-center gap-3">
                                         {enemy && <EnemyIcon icons={enemy.icon} size={32} className="shrink-0" />}
                                         <span className="truncate">{guess.enemy_name}</span>
@@ -73,17 +79,17 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                                 </td>
 
                                 {/* Enemy Type */}
-                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.enemy_type.value ? guess.properties.enemy_type.result : 'gray')}`}>
+                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.enemy_type.value ? guess.properties.enemy_type.result : 'gray', undefined, colorblindMode)}`}>
                                     {guess.properties.enemy_type.value || '???'}
                                 </td>
 
                                 {/* Weight Class */}
-                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.weight_class.value ? guess.properties.weight_class.result : 'gray')}`}>
+                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.weight_class.value ? guess.properties.weight_class.result : 'gray', undefined, colorblindMode)}`}>
                                     {guess.properties.weight_class.value || '???'}
                                 </td>
 
                                 {/* Health */}
-                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.health.value !== undefined ? guess.properties.health.result : 'gray', guess.properties.health.value !== undefined ? guess.properties.health.color : undefined)}`}>
+                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.health.value !== undefined ? guess.properties.health.result : 'gray', guess.properties.health.value !== undefined ? guess.properties.health.color : undefined, colorblindMode)}`}>
                                     <div className="flex items-center gap-2 h-full">
                                         {guess.properties.health.value !== undefined ? guess.properties.health.value : '???'}
                                         {guess.properties.health.value !== undefined && guess.properties.health.result === 'higher' && <span className="text-lg">▲</span>}
@@ -92,7 +98,7 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                                 </td>
 
                                 {/* Levels */}
-                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.level_count.value !== undefined ? guess.properties.level_count.result : 'gray', guess.properties.level_count.value !== undefined ? guess.properties.level_count.color : undefined)}`}>
+                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.level_count.value !== undefined ? guess.properties.level_count.result : 'gray', guess.properties.level_count.value !== undefined ? guess.properties.level_count.color : undefined, colorblindMode)}`}>
                                     <div className="flex items-center gap-2 h-full">
                                         {guess.properties.level_count.value !== undefined ? guess.properties.level_count.value : '???'}
                                         {guess.properties.level_count.value !== undefined && guess.properties.level_count.result === 'higher' && <span className="text-lg">▲</span>}
@@ -101,7 +107,7 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                                 </td>
 
                                 {/* Appearance */}
-                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.appearance.value ? guess.properties.appearance.result : 'gray', guess.properties.appearance.value ? guess.properties.appearance.color : undefined)}`}>
+                                <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.appearance.value ? guess.properties.appearance.result : 'gray', guess.properties.appearance.value ? guess.properties.appearance.color : undefined, colorblindMode)}`}>
                                     <div className="flex items-center gap-2 h-full">
                                         {guess.properties.appearance.value || '???'}
                                         {guess.properties.appearance.value && guess.properties.appearance.result === 'later' && <span className="text-lg">▲</span>}

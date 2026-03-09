@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useSettings } from '../context/SettingsContext';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import { isRunningInDiscord, discordSdk, getGuildId } from '../lib/discord';
@@ -13,6 +14,7 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const guildId = getGuildId();
   const { users, loading } = useLeaderboard(guildId);
+  const { colorblindMode, toggleColorblindMode } = useSettings();
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [isRankingOpen, setIsRankingOpen] = useState(true);
   const [isNewPlayer, setIsNewPlayer] = useState(false);
@@ -135,29 +137,43 @@ const MainLayout = () => {
                   </Button>
                 )}
                 {isPlay && (
-                  <div className="relative inline-flex items-center">
-                    <Button
-                      variant="ghost"
-                      size="md"
-                      onClick={() => {
-                        setIsHowToPlayOpen(true);
-                        if (!hasOpenedHowToPlay) {
-                          setHasOpenedHowToPlay(true);
-                          localStorage.setItem('ultrakilldle_seen_how_to_play', 'true');
-                        }
-                      }}
-                      className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100"
-                    >
-                      ? HOW TO PLAY
-                    </Button>
-                    {isNewPlayer && !hasOpenedHowToPlay && (
-                      <div className="absolute top-0 right-0 z-30 pointer-events-none">
-                        <div className="relative w-3 h-3 translate-x-1/4 -translate-y-1/4">
-                          <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full" />
-                          <div className="absolute inset-0 w-3 h-3 scale-[1.5] animate-ping bg-green-500 rounded-full" />
+                  <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                    <div className="relative inline-flex items-center">
+                      <Button
+                        variant="ghost"
+                        size="md"
+                        onClick={() => {
+                          setIsHowToPlayOpen(true);
+                          if (!hasOpenedHowToPlay) {
+                            setHasOpenedHowToPlay(true);
+                            localStorage.setItem('ultrakilldle_seen_how_to_play', 'true');
+                          }
+                        }}
+                        className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100"
+                      >
+                        ? HOW TO PLAY
+                      </Button>
+                      {isNewPlayer && !hasOpenedHowToPlay && (
+                        <div className="absolute top-0 right-0 z-30 pointer-events-none">
+                          <div className="relative w-3 h-3 translate-x-1/4 -translate-y-1/4">
+                            <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full" />
+                            <div className="absolute inset-0 w-3 h-3 scale-[1.5] animate-ping bg-green-500 rounded-full" />
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+
+                    <label className="flex items-center gap-2 cursor-pointer group px-2">
+                      <input
+                        type="checkbox"
+                        checked={colorblindMode}
+                        onChange={toggleColorblindMode}
+                        className="w-4 h-4 bg-black border border-white/20 rounded accent-indigo-500 cursor-pointer"
+                      />
+                      <span className="text-xs uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        Colorblind Mode
+                      </span>
+                    </label>
                   </div>
                 )}
               </div>
@@ -176,7 +192,7 @@ const MainLayout = () => {
                       <span>CORRECT PROPERTY MATCH</span>
                     </div>
                     <div className="flex gap-3 items-center">
-                      <div className="w-4 h-4 bg-yellow-500/20 border border-yellow-500" />
+                      <div className={`w-4 h-4 border ${colorblindMode ? 'bg-blue-500/20 border-blue-500' : 'bg-yellow-500/20 border-yellow-500'}`} />
                       <span>PARTIAL PROPERTY MATCH</span>
                     </div>
                     <div className="flex gap-3 items-center">
@@ -189,9 +205,9 @@ const MainLayout = () => {
                     <ul className="list-disc [&>*]:text-left pl-4 list-outside space-y-1 opacity-80">
                       <li>TYPE: ???, DEMON, MACHINE, HUSK, ANGEL OR PRIME SOUL</li>
                       <li>WEIGHT: LIGHT, MEDIUM, HEAVY OR SUPERHEAVY</li>
-                      <li>HEALTH: NUMERIC COMPARISON. TARGET CAN BE HIGHER ▲ OR LOWER ▼. <span className="text-yellow-500">YELLOW</span> INDICATES VALUE IS WITHIN 10 HP OF TARGET. FOR ENEMIES WITH MULTIPLE VARIANTS, THE HIGHEST VARIANT'S HEALTH IS USED. FOR ENEMIES WITH MULTIPLE PHASES, HEALTH IS THE SUM OF ALL PHASES</li>
-                      <li>TOTAL LEVELS: NUMBER OF LEVELS THE ENEMY APPEARS IN. TARGET CAN BE HIGHER ▲ OR LOWER ▼. <span className="text-yellow-500">YELLOW</span> INDICATES VALUE IS WITHIN 3 LEVELS OF TARGET</li>
-                      <li>REGISTERED AT: LEVEL OF FIRST ENCOUNTER. TARGET CAN BE LATER ▲ OR EARLIER ▼ (ORDERED ACCORDING TO <a href="https://www.speedrun.com/ultrakill/levels" target="_blank" className="underline hover:text-white/80">SPEEDRUN.COM</a>). <span className="text-yellow-500">YELLOW</span> INDICATES TARGET ENEMY ALSO APPEARS IN THIS LEVEL</li>
+                      <li>HEALTH: NUMERIC COMPARISON. TARGET CAN BE HIGHER ▲ OR LOWER ▼. <span className={colorblindMode ? "text-blue-500" : "text-yellow-500"}>{colorblindMode ? "BLUE" : "YELLOW"}</span> INDICATES VALUE IS WITHIN 10 HP OF TARGET. FOR ENEMIES WITH MULTIPLE VARIANTS, THE HIGHEST VARIANT'S HEALTH IS USED. FOR ENEMIES WITH MULTIPLE PHASES, HEALTH IS THE SUM OF ALL PHASES</li>
+                      <li>TOTAL LEVELS: NUMBER OF LEVELS THE ENEMY APPEARS IN. TARGET CAN BE HIGHER ▲ OR LOWER ▼. <span className={colorblindMode ? "text-blue-500" : "text-yellow-500"}>{colorblindMode ? "BLUE" : "YELLOW"}</span> INDICATES VALUE IS WITHIN 3 LEVELS OF TARGET</li>
+                      <li>REGISTERED AT: LEVEL OF FIRST ENCOUNTER. TARGET CAN BE LATER ▲ OR EARLIER ▼ (ORDERED ACCORDING TO <a href="https://www.speedrun.com/ultrakill/levels" target="_blank" className="underline hover:text-white/80">SPEEDRUN.COM</a>). <span className={colorblindMode ? "text-blue-500" : "text-yellow-500"}>{colorblindMode ? "BLUE" : "YELLOW"}</span> INDICATES TARGET ENEMY ALSO APPEARS IN THIS LEVEL</li>
                     </ul>
                   </div>
                 </div>

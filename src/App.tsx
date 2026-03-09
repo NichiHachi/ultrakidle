@@ -10,6 +10,7 @@ import HistoryPage from './pages/HistoryPage';
 import './App.css';
 
 import { VersionProvider, useVersion } from './context/VersionContext';
+import { SettingsProvider } from './context/SettingsContext';
 import VersionUpdateModal from './components/VersionUpdateModal';
 
 function AppContent() {
@@ -43,7 +44,9 @@ function App() {
   return (
     <BrowserRouter>
       <VersionProvider>
-        <AppContent />
+        <SettingsProvider>
+          <AppContent />
+        </SettingsProvider>
       </VersionProvider>
     </BrowserRouter>
   );
