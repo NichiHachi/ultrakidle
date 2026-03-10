@@ -225,7 +225,7 @@ const MainLayout = () => {
                     <a onClick={(e) => handleLinkClick(e, 'https://github.com/ikz87')} target="_blank" href="https://github.com/ikz87" className="underline hover:opacity-80 transition-colors">GITHUB</a>
                     <a onClick={(e) => handleLinkClick(e, 'https://www.youtube.com/@kz8785/')} target="_blank" href="https://www.youtube.com/@kz8785/" className="underline hover:opacity-80 transition-colors">YOUTUBE</a>
                     <a onClick={(e) => handleLinkClick(e, 'https://x.com/iikz87ii')} target="_blank" href="https://x.com/iikz87ii" className="underline hover:opacity-80 transition-colors">TWITTER</a>
-                    <a onClick={(e) => handleLinkClick(e, 'https://discord.gg/QF8wqypuBb')} target="_blank" href="https://discord.gg/QF8wqypuBb" className="underline hover:opacity-80 transition-colors">DISCORD</a>
+                    <a onClick={(e) => handleLinkClick(e, 'https://discord.gg/6dsMavu6mH')} target="_blank" href="https://discord.gg/6dsMavu6mH" className="underline hover:opacity-80 transition-colors">DISCORD</a>
                   </div>
                   {/* Secondary Footer */}
                   <div className="flex gap-2 lg:gap-4 mt-2 lg:text-base text-sm opacity-30 uppercase tracking-tighter">

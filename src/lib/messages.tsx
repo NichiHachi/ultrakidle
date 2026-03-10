@@ -14,7 +14,7 @@ export const MESSAGES: Message[] = [
             <div className="space-y-2">
                 <p className="text-zinc-400 text-sm">NETWORK INVITE</p>
                 <p className="text-white/70 text-sm ">
-                    Hello machines, may I interest you in joining the <a className="text-indigo-500 underline" href="https://discord.gg/QF8wqypuBb">official ULTRAKIDLE discord server</a>?
+                    Hello machines, may I interest you in joining the <a className="text-indigo-500 underline" href="https://discord.gg/6dsMavu6mH">official ULTRAKIDLE discord server</a>?
                 </p>
                 <p className="text-white/70 text-sm ">
                     You can do it right here but I also changed the DISCORD link in the footer of the site, previously it pointed to my personal discord profile, now it goes to the invite link for the official server.
