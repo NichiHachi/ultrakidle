@@ -29,6 +29,7 @@ export default function MessagesModal({ isOpen, onClose }: MessagesModalProps) {
             onClose={handleClose}
             title="V-MAIL TERMINAL"
             showFooterButton={true}
+            maxWidth="max-w-4xl"
             footerButtonText="DISMISS"
         >
             <div className="space-y-6">
