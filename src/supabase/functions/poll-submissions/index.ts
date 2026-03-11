@@ -19,13 +19,6 @@ const headers = {
   "Content-Type": "application/json",
 };
 
-function discordAvatarUrl(
-  userId: string,
-  avatar: string | null,
-): string | null {
-  if (!avatar) return null;
-  return `https://cdn.discordapp.com/avatars/${userId}/${avatar}.png`;
-}
 
 async function sendMessage(channelId: string, content: string) {
   for (let attempt = 0; attempt < 3; attempt++) {

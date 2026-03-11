@@ -160,7 +160,7 @@ serve(async (req) => {
 
       const { data: enemies } = await supabase
         .from("ultrakill_enemies")
-        .select("name, icon_urls");
+        .select("name, icon_urls, wiki_link");
 
       if (!enemies || enemies.length === 0) {
         return Response.json({
@@ -171,12 +171,13 @@ serve(async (req) => {
 
       const enemy = enemies[Math.floor(Math.random() * enemies.length)];
       const urls: string[] = enemy.icon_urls ?? [];
+      const wikiUrl = enemy.wiki_link ?? "https://ultrakidle.online";
 
       // First embed has the title, rest are image-only (Discord renders them as a gallery)
       const embeds = urls.map((url: string, i: number) => ({
         ...(i === 0 ? { title: enemy.name, color: 0xff0000 } : {}),
         image: { url },
-        url: "https://ultrakidle.online",
+        url: wikiUrl,
       }));
 
       return Response.json({

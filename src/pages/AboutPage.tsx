@@ -28,7 +28,7 @@ const AboutPage = () => {
 
                     <p className="font-bold uppercase">The Team</p>
                     <p>
-                        ULTRAKIDLE is developed and maintained by ikz87, a dedicated fan, with the help of the official <a className="text-indigo-500 underline" href="https://discord.gg/6dsMavu6mH">official ULTRAKIDLE discord server</a>. We are dedicated to
+                        ULTRAKIDLE is developed and maintained by ikz87, a dedicated fan, with the help of the <a className="text-indigo-500 underline" href="https://discord.gg/6dsMavu6mH">official ULTRAKIDLE discord server</a>. We are dedicated to
                         polishing the experience and adding new content regularly based on community feedback.
                     </p>
 
