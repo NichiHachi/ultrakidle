@@ -213,6 +213,14 @@ const HomePage = () => {
                 <Button
                   variant="outline"
                   size="xl"
+                  onClick={() => navigate('/enemies')}
+                  className="mt-2"
+                >
+                  ENEMIES
+                </Button>
+                <Button
+                  variant="outline"
+                  size="xl"
                   onClick={() => navigate('/credits')}
                   className="mt-2"
                 >
@@ -264,6 +272,13 @@ const HomePage = () => {
                   onClick={() => navigate('/play')}
                 >
                   {guessHistory.length > 0 ? 'CONTINUE' : 'PLAY'}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="xl"
+                  onClick={() => navigate('/enemies')}
+                >
+                  ENEMIES
                 </Button>
                 <Button
                   variant="outline"

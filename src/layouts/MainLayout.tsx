@@ -231,6 +231,7 @@ const MainLayout = () => {
                   <div className="flex gap-2 lg:gap-4 mt-2 lg:text-base text-sm opacity-30 uppercase tracking-tighter">
                     <button onClick={() => navigate('/tos')} className="hover:opacity-100 underline transition-opacity hover:cursor-pointer">TERMS OF SERVICE</button>
                     <button onClick={() => navigate('/privacy')} className="hover:opacity-100 underline transition-opacity hover:cursor-pointer">PRIVACY POLICY</button>
+                    <button onClick={() => navigate('/about')} className="hover:opacity-100 underline transition-opacity hover:cursor-pointer">ABOUT</button>
                     <button onClick={() => navigate('/contact')} className="hover:opacity-100 underline transition-opacity hover:cursor-pointer">CONTACT</button>
                   </div>
                 </div>

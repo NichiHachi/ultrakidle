@@ -1,0 +1,357 @@
+Directory structure:
+└── lib/
+    ├── clipboard.ts
+    ├── discord.ts
+    ├── enemy_list.ts
+    ├── messages.tsx
+    ├── supabaseClient.ts
+    └── urls.ts
+
+================================================
+FILE: clipboard.ts
+================================================
+/**
+ * Robustly copies text to the clipboard, providing a fallback for environments 
+ * where navigator.clipboard might be unavailable or restricted (like Discord Activities).
+ */
+export async function copyToClipboard(text: string): Promise<boolean> {
+    // Try modern navigator.clipboard API first
+    if (navigator.clipboard && window.isSecureContext) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch (err) {
+            console.warn('navigator.clipboard.writeText failed, trying fallback:', err);
+        }
+    }
+
+    // Fallback to document.execCommand('copy')
+    try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+
+        // Ensure the textarea is off-screen but still part of the DOM
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '0';
+        document.body.appendChild(textArea);
+
+        textArea.focus();
+        textArea.select();
+
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        return successful;
+    } catch (err) {
+        console.error('Fallback copyToClipboard failed:', err);
+        return false;
+    }
+}
+
+
+
+================================================
+FILE: discord.ts
+================================================
+import { DiscordSDK } from "@discord/embedded-app-sdk";
+import { useEffect } from "react";
+import { supabase } from "./supabaseClient";
+
+const DISCORD_URL = "https://discord.com/oauth2/authorize?client_id=1478255175926808696&permissions=51200&scope=bot";
+export const DiscordRedirect = () => {
+    useEffect(() => {
+        window.location.replace(DISCORD_URL);
+    }, []);
+
+    return null;
+};
+
+// Initialize Discord SDK lazily to avoid errors outside of Discord
+export let discordSdk: DiscordSDK | null = null;
+let currentGuildId: string | null = null;
+
+export function isRunningInDiscord() {
+    return typeof window !== "undefined" && window.parent !== window;
+}
+
+export function getGuildId() {
+    if (discordSdk) return discordSdk.guildId;
+    return currentGuildId;
+}
+
+export async function setupDiscord() {
+    if (!discordSdk) {
+        discordSdk = new DiscordSDK(import.meta.env.VITE_DISCORD_CLIENT_ID);
+    }
+
+    await discordSdk.ready();
+    currentGuildId = discordSdk.guildId;
+
+    const clientId = import.meta.env.VITE_DISCORD_CLIENT_ID;
+
+    // 1. Authorize: Get the OAuth2 code from the Discord Client
+    const { code } = await discordSdk.commands.authorize({
+        client_id: clientId,
+        response_type: "code",
+        state: "",
+        prompt: "none",
+        scope: ["identify", "guilds"],
+    });
+
+    // 2. Token Exchange: Call Supabase Edge Function
+    const { data, error } = await supabase.functions.invoke("discord-token", {
+        body: {
+            code,
+            client_id: clientId,
+            guild_id: discordSdk.guildId,
+        },
+    });
+
+    if (error) throw error;
+
+    // 3. Supabase Auth: Sync the session returned by the Edge Function
+    await supabase.auth.setSession({
+        access_token: data.supabase_session.access_token,
+        refresh_token: data.supabase_session.refresh_token,
+    });
+
+    // 4. SDK Auth: Authenticate the SDK with the Discord access token
+    await discordSdk.commands.authenticate({
+        access_token: data.access_token,
+    });
+
+    return {
+        sdk: discordSdk,
+        user: data.discord_user,
+        guildId: discordSdk.guildId,
+    };
+}
+
+
+
+================================================
+FILE: enemy_list.ts
+================================================
+export const enemies = [
+  { id: 1, name: "Big Johninator", icon: ["/external/wiki/images/BigJohnator.webp"] },
+  { id: 2, name: "Cancerous Rodent", icon: ["/external/wiki/images/Cancerous_Rodent.webp"] },
+  { id: 3, name: "Very Cancerous Rodent", icon: ["/external/wiki/images/Very_Cancerous_Rodent.webp"] },
+  { id: 4, name: "Cerberus", icon: ["/external/wiki/images/Cerberus.webp"] },
+  { id: 5, name: "Deathcatcher", icon: ["/external/wiki/images/Deathcatcher.webp"] },
+  { id: 6, name: "Drone", icon: ["/external/wiki/images/Drone.webp"] },
+  { id: 7, name: "Earthmover (Central Brain)", icon: ["/external/wiki/images/Earthmover_Brain.png"] },
+  { id: 8, name: "1000-THR Defence System (Mainframe)", icon: ["/external/wiki/images/Earthmover_Defence_Mainframe.png"] },
+  { id: 9, name: "1000-THR Defence System (Rocket Launchers)", icon: ["/external/wiki/images/CentaurRocketLauncher.webp"] },
+  { id: 10, name: "1000-THR Defence System (Mortar Launchers)", icon: ["/external/wiki/images/CentaurMortar.webp"] },
+  { id: 11, name: "1000-THR Defence System (Towers)", icon: ["/external/wiki/images/CentaurTower.webp"] },
+  { id: 12, name: "Ferryman", icon: ["/external/wiki/images/Ferryman.webp"] },
+  { id: 13, name: "Filth", icon: ["/external/wiki/images/Filth.webp"] },
+  { id: 14, name: "Flesh Panopticon", icon: ["/external/wiki/images/Flesh_Panopticon.webp"] },
+  { id: 15, name: "Spotlight Eye Spawn", icon: ["/external/wiki/images/PanopticonEye.webp"] },
+  { id: 17, name: "Flesh Prison", icon: ["/external/wiki/images/Flesh_Prison.webp"] },
+  { id: 18, name: "Eye Spawn", icon: ["/external/wiki/images/FleshPrisonEye.webp"] },
+  { id: 20, name: "Gabriel (Judge of Hell)", icon: ["/external/wiki/images/Gabriel%2C_Judge_of_Hell.webp"] },
+  { id: 21, name: "Gabriel (Apostate of Hate)", icon: ["/external/wiki/images/Gabriel%2C_Apostate_of_Hate.webp"] },
+  { id: 22, name: "Geryon", icon: ["/external/wiki/images/Geryon.webp"] },
+  { id: 23, name: "Gutterman", icon: ["/external/wiki/images/Gutterman.webp"] },
+  { id: 24, name: "Guttertank", icon: ["/external/wiki/images/Guttertank.webp"] },
+  { id: 25, name: "Hideous Mass", icon: ["/external/wiki/images/Hideous_Mass.webp"] },
+  { id: 26, name: "Idol", icon: ["/external/wiki/images/Idol.webp"] },
+  { id: 27, name: "Insurrectionist", icon: ["/external/wiki/images/Insurrectionist.webp"] },
+  { id: 28, name: "Leviathan", icon: ["/external/wiki/images/Leviathan.webp"] },
+  { id: 29, name: "Malicious Face", icon: ["/external/wiki/images/Malicious_Face.webp"] },
+  { id: 30, name: "Mannequin", icon: ["/external/wiki/images/Mannequin.webp"] },
+  { id: 31, name: "Mindflayer", icon: ["/external/wiki/images/Mindflayer.webp"] },
+  { id: 32, name: "Minos Prime", icon: ["/external/wiki/images/Minos_Prime.webp"] },
+  { id: 33, name: "Minotaur", icon: ["/external/wiki/images/Minotaur.webp"] },
+  { id: 34, name: "Mirror Reaper", icon: ["/external/wiki/images/Mirror_Reaper.webp"] },
+  { id: 35, name: "Mysterious Druid Knight (& Owl)", icon: ["/external/wiki/images/Mysterious_Druid_Knight_%28%26_Owl%29.webp"] },
+  { id: 36, name: "Power", icon: ["/external/wiki/images/Power.webp"] },
+  { id: 37, name: "Providence", icon: ["/external/wiki/images/Providence.webp"] },
+  { id: 38, name: "Puppet", icon: ["/external/wiki/images/Puppet.webp"] },
+  { id: 39, name: "Schism", icon: ["/external/wiki/images/Schism.webp"] },
+  { id: 40, name: "Sentry", icon: ["/external/wiki/images/Sentry.webp"] },
+  { id: 41, name: "Sisyphus Prime", icon: ["/external/wiki/images/Sisyphus_Prime.webp"] },
+  { id: 42, name: "Soldier", icon: ["/external/wiki/images/Soldier.webp"] },
+  { id: 43, name: "Something Wicked", icon: ["/external/wiki/images/Something_Wicked.webp"] },
+  { id: 44, name: "Stalker", icon: ["/external/wiki/images/Stalker.webp"] },
+  { id: 45, name: "Stray", icon: ["/external/wiki/images/Stray.webp"] },
+  { id: 46, name: "Streetcleaner", icon: ["/external/wiki/images/Streetcleaner.webp"] },
+  { id: 47, name: "Swordsmachine", icon: ["/external/wiki/images/Swordsmachine.webp"] },
+  { id: 50, name: "The Corpse of King Minos' Arm", icon: ["/external/wiki/images/MinosArmFull.png"] },
+  { id: 51, name: "The Corpse of King Minos", icon: ["/external/wiki/images/The_Corpse_of_King_Minos.webp"] },
+  { id: 52, name: "V2", icon: ["/external/wiki/images/V2.webp"] },
+  { id: 53, name: "V2 (2nd)", icon: ["/external/wiki/images/V2_%282nd%29.webp"] },
+  { id: 54, name: "Virtue", icon: ["/external/wiki/images/Virtue.webp"] },
+  { id: 59, name: "Ghost Drone", icon: ["/external/wiki/images/thumb/DroneGhostFull.webp/200px-DroneGhostFull.webp"] },
+  {
+    id: 66,
+    name: 'Swordsmachine "Tundra/Agony"',
+    icon: ["/external/wiki/images/Swordsmachine_%22Tundra%22.webp", "/external/wiki/images/Swordsmachine_%22Agony%22.webp"],
+  },
+  {
+    id: 67,
+    name: 'Insurrectionist "Angry/Rude"',
+    icon: ["/external/wiki/images/Angry.png", "/external/wiki/images/Rude.png"],
+  },
+  {
+    id: 68,
+    name: 'Ferryman "Rudraksha/Agonis"',
+    icon: ["/external/wiki/images/Rudraksha.png", "/external/wiki/images/Agonis.png"],
+  },
+  {
+    id: 69,
+    name: "Malicious Spawn",
+    icon: ["/external/wiki/images/Malicious_Face.webp"],
+  },
+];
+
+
+
+================================================
+FILE: messages.tsx
+================================================
+import type { ReactNode } from 'react';
+
+export interface Message {
+    id: string;
+    content: ReactNode;
+    date?: string;
+}
+
+export const MESSAGES: Message[] = [
+    {
+        id: 'infernoguessr-submission',
+        date: '2026-03-11',
+        content: (
+            <div className="space-y-4 lg:space-y-6 text-justify">
+    <p className="text-white lg:text-base text-sm">
+      NEW CHALLENGE APPROACHING:{" "}
+      <span className="text-red-500">INFERNOGUESSR</span>
+      <br />
+      (accepting submissions!)
+    </p>
+    <p className="text-cyan-300 lg:text-base text-sm">
+      Wanna help development while ALSO getting credited in this website?
+    </p>
+    <p className="text-white/70 lg:text-base text-sm">
+      Hey all, I've been busy with IRL stuff but I've had this idea in
+      mind to implement different gamemodes; one of these being
+      InfernoGuessr (GeoGuessr for ULTRAKILL). Basically you'd have to
+      guess a given level from a single screenshot taken in that level.
+      Specifics of how exactly this will work are still TBD.
+    </p>
+    <p className="text-white/70 lg:text-base text-sm">
+      For this to be possible, I'd need <em>quite</em> the amount of
+      screenshots, an amount I cannot gather alone. That's why I have
+      opened community submissions!
+    </p>
+    <p className="text-white/70 lg:text-base text-sm">
+      Want to participate in sending images and/or voting which images
+      get in? Join the{" "}
+      <a
+        className="text-indigo-500 underline"
+        href="https://discord.gg/6dsMavu6mH"
+      >
+        official ULTRAKIDLE discord server
+      </a>{" "}
+      and check the{" "}
+      <span className="bg-indigo-900/50 rounded-sm px-1">
+        #infernoguessr-submissions
+      </span>{" "}
+      forum!
+    </p>
+    <p className="text-white/70 lg:text-base text-sm">
+        When the gamemode goes live, whenever your image appears in the game, it will be credited to your discord tag/nickname at time of submission approval.
+    </p>
+  </div>
+        ),
+    },
+    {
+        id: 'discord-invite',
+        date: '2026-03-09',
+        content: (
+            <div className="space-y-4 lg:space-y-6 text-justify">
+                <p className="text-zinc-400 text-sm">NETWORK INVITE</p>
+                <p className="text-white/70 lg:text-base text-sm">
+                    Hello machines, may I interest you in joining the <a className="text-indigo-500 underline" href="https://discord.gg/6dsMavu6mH">official ULTRAKIDLE discord server</a>?
+                </p>
+                <p className="text-white/70 lg:text-base text-sm">
+                    You can do it right here but I also changed the DISCORD link in the footer of the site, previously it pointed to my personal discord profile, now it goes to the invite link for the official server.
+                </p>
+                <p className="text-white/70 lg:text-base text-sm">
+                    That's all, have fun!
+                </p>
+            </div>
+        ),
+    },
+    {
+        id: 'v-mail-update',
+        date: '2026-03-09',
+        content: (
+            <div className="space-y-4 lg:space-y-6 text-justify">
+                <p className="text-zinc-400 text-sm">SYSTEM UPDATE LOG // [09-MAR-2026]</p>
+                <ul className="list-disc list-inside text-white/70 text-sm space-y-1">
+                    <li>Integrated V-MAIL interface.</li>
+                </ul>
+            </div>
+        ),
+    },
+];
+
+
+
+================================================
+FILE: supabaseClient.ts
+================================================
+import { createClient } from '@supabase/supabase-js';
+import { isRunningInDiscord } from './discord'
+
+// Use the environment variable in browser, but use the local origin 
+// in Discord to bypass CSP via the Vite proxy.
+const supabaseUrl = isRunningInDiscord()
+  ? window.location.origin
+  : import.meta.env.VITE_SUPABASE_URL;
+
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+
+
+================================================
+FILE: urls.ts
+================================================
+import { isRunningInDiscord } from './discord';
+
+/**
+ * Resolves an external URL.
+ * If running in Discord, it uses the local proxy path defined in vite.config.ts.
+ * If running in a normal browser (production on Render), it resolves to the direct external URL.
+ */
+export function resolveExternalUrl(url: string): string {
+    if (!url) return url;
+
+    // If we are in Discord, we need the proxy to bypass CSP
+    if (isRunningInDiscord()) {
+        return url;
+    }
+
+    // If not in Discord, we need to resolve to the direct URL because the /external proxy
+    // only exists in the Vite dev/preview server, not in the production build on Render.
+
+    // Handle Ko-fi proxy
+    if (url.startsWith('/external/kofi/')) {
+        return `https://cdn.prod.website-files.com/${url.replace('/external/kofi/', '')}`;
+    }
+
+    // Handle Wiki proxy
+    if (url.startsWith('/external/wiki/')) {
+        return `https://ultrakill.wiki.gg/${url.replace('/external/wiki/', '')}`;
+    }
+
+    return url;
+}
+
+
