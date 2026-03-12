@@ -215,7 +215,7 @@ const MainLayout = () => {
                 <div className="pb-4">
                   <Outlet />
                 </div>
-                <div className="z-30 text-left lg:text-xl md:text-lg text-sm border-t border-white/5 ">
+                <div className="z-10 text-left lg:text-xl md:text-lg text-sm border-t border-white/5 ">
                   <span className="opacity-50 uppercase ">
                     INTO SOCIALS... OK
                   </span>

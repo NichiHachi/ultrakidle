@@ -208,6 +208,15 @@ function isAspectRatio16x9(width: number, height: number): boolean {
   return Math.abs(width / height - 16 / 9) < ASPECT_TOLERANCE;
 }
 
+function discordAvatarUrl(userId: string, avatarHash: string | null): string {
+  if (!avatarHash) {
+    const index = (BigInt(userId) >> 22n) % 6n;
+    return `https://cdn.discordapp.com/embed/avatars/${index}.png`;
+  }
+  const ext = avatarHash.startsWith("a_") ? "gif" : "png";
+  return `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.${ext}`;
+}
+
 serve(async (req) => {
   const start = performance.now();
   console.log("[poll-submissions] Starting run");

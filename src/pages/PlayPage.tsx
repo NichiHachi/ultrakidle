@@ -155,7 +155,7 @@ const PlayPage = () => {
 
     return (
         <>
-            <div className="z-20 flex flex-col w-full pt-4 min-h-full justify-start items-start">
+            <div className="z-40 flex flex-col w-full pt-4 min-h-full justify-start items-start">
                 <SEO title="Daily Mission" description="Identify the target enemy in the standard daily guessing mode." />
 
                 <div className="flex flex-col gap-0 mb-4 w-full lg:text-xl md:text-lg text-sm opacity-50 text-left flex-shrink-0">

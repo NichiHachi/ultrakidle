@@ -112,6 +112,7 @@ Deno.serve(async (req) => {
 
     const profilePromise = dbClient.from("profiles").upsert({
       id: authData.user.id,
+      discord_id: discordUser.id,
       discord_name: discordUser.global_name || discordUser.username,
       avatar_url: avatarUrl,
       updated_at: new Date().toISOString(),
