@@ -90,6 +90,11 @@ async function prerender() {
 
         const page = await browser.newPage();
 
+        // Inject a flag so the app knows it's being pre-rendered
+        await page.evaluateOnNewDocument(() => {
+            window.__PRERENDER_INJECTED = true;
+        });
+
         // Suppress external network requests (Supabase, analytics, etc.)
         await page.setRequestInterception(true);
         page.on('request', (req) => {

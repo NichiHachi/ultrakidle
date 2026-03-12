@@ -43,13 +43,16 @@ async function bootstrap() {
 
   // Remove the splash loader once React has started mounting/hydrating
   // We do this in a requestAnimationFrame to ensure it doesn't flicker before the first paint
-  requestAnimationFrame(() => {
-    const loader = document.getElementById('splash-loader');
-    if (loader) {
-      loader.classList.add('fade-out'); // Optional transition
-      setTimeout(() => loader.remove(), 500);
-    }
-  });
+  // CRITICAL: Do NOT remove it if we are pre-rendering, so it stays in the captured HTML
+  if (!(window as any).__PRERENDER_INJECTED) {
+    requestAnimationFrame(() => {
+      const loader = document.getElementById('splash-loader');
+      if (loader) {
+        loader.classList.add('fade-out'); // Optional transition
+        setTimeout(() => loader.remove(), 500);
+      }
+    });
+  }
 }
 
 bootstrap();
