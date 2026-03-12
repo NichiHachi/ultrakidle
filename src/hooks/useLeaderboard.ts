@@ -217,6 +217,12 @@ export const useLeaderboard = (guildId?: string | null) => {
               const isWin = guessColors.every((c) => c === "green");
               const isLoss = !isWin && newGuesses.length >= 5;
 
+              let newStreak = existing.streak;
+              if (existing.status === "playing") {
+                if (isWin) newStreak += 1;
+                else if (isLoss) newStreak = 0;
+              }
+
               return {
                 ...prev,
                 [newGuess.user_id]: {
@@ -225,11 +231,13 @@ export const useLeaderboard = (guildId?: string | null) => {
                   attempt_count: newGuesses.length,
                   status: isWin ? "won" : isLoss ? "lost" : existing.status,
                   last_guess_at: createdAt,
+                  streak: newStreak,
                 },
               };
             } else {
               fetchProfileForUser(newGuess.user_id);
               const isWin = guessColors.every((c) => c === "green");
+              const isLoss = !isWin && 1 >= 5;
               return {
                 ...prev,
                 [newGuess.user_id]: {
@@ -237,10 +245,10 @@ export const useLeaderboard = (guildId?: string | null) => {
                   discord_name: "Anonymous",
                   avatar_url: "/images/v1-plush.webp",
                   guesses: [guessColors],
-                  status: isWin ? "won" : "playing",
+                  status: isWin ? "won" : isLoss ? "lost" : "playing",
                   attempt_count: 1,
                   last_guess_at: createdAt,
-                  streak: 0,
+                  streak: isWin ? 1 : isLoss ? 0 : 0,
                 },
               };
             }
