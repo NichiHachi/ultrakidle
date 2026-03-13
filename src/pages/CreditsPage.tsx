@@ -1,4 +1,5 @@
 import SEO from '../components/SEO';
+import { resolveExternalUrl } from '../lib/urls';
 
 const CreditsPage = () => {
     return (
@@ -19,7 +20,7 @@ const CreditsPage = () => {
                 <div className="flex flex-col gap-2">
                     <span className="text-xl opacity-50">DATA_SOURCE</span>
                     <a
-                        href="https://ultrakill.wiki.gg/"
+                        href={resolveExternalUrl("/external/wiki/")}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-3xl text-red-500 hover:text-red-400 transition-colors underline"
