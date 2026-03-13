@@ -135,7 +135,7 @@ const MainLayout = () => {
                   </Button>
                 )}
                 {isPlay && (
-                  <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                  <>
                     <div className="relative inline-flex items-center">
                       <Button
                         variant="ghost"
@@ -172,7 +172,7 @@ const MainLayout = () => {
                         Colorblind Mode
                       </span>
                     </label>
-                  </div>
+                  </>
                 )}
               </div>
 
