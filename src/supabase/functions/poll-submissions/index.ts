@@ -6,7 +6,7 @@ const BOT_TOKEN = Deno.env.get("DISCORD_AUTOMATION_BOT_TOKEN")!;
 const BOT_USER_ID = Deno.env.get("DISCORD_AUTOMATION_BOT_ID")!;
 const REACTION_THRESHOLD = 3;
 const INGEST_BATCH_SIZE = 200;
-const RESOLVE_BATCH_SIZE = 200;
+const RESOLVE_BATCH_SIZE = 500;
 
 const DISCORD_API = "https://discord.com/api/v10";
 
@@ -588,7 +588,7 @@ serve(async (req) => {
           await closeThread(sub.channel_id);
           totalResolved++;
           totalApprovedThisCycle++;
-+         console.log(
+         console.log(
            `[resolve] ✓ Approved #${sub.id} — ${up}👍 ${down}👎`,
          );
         } else {
@@ -608,7 +608,7 @@ serve(async (req) => {
           );
           await closeThread(sub.channel_id);
           totalResolved++;
-+         console.log(
+         console.log(
            `[resolve] ✗ Rejected #${sub.id} — ${up}👍 ${down}👎`,
          );
         }
@@ -633,6 +633,56 @@ serve(async (req) => {
       }
     }
   }
+
+  // --- PHASE 2.5: Archive stale pending submissions (older than 2 days) ---
+const TWO_DAYS_AGO = new Date(
+  Date.now() - 2 * 24 * 60 * 60 * 1000,
+).toISOString();
+
+const { data: stale } = await supabase
+  .from("image_submissions")
+  .select("*")
+  .eq("status", "pending")
+  .lt("created_at", TWO_DAYS_AGO)
+  .order("created_at", { ascending: true });
+
+console.log(
+  `[stale] ${stale?.length ?? 0} stale submission(s) to archive`,
+);
+
+let totalStale = 0;
+
+if (stale?.length) {
+  for (const sub of stale) {
+    try {
+      await new Promise((r) => setTimeout(r, 1000));
+
+      await removeReaction(sub.channel_id, sub.message_id, "👀");
+      await sendMessage(
+        sub.channel_id,
+        "⏰ **Submission expired** — This thread has been open for over 2 days without reaching the vote threshold. Feel free to resubmit!",
+      );
+      await closeThread(sub.channel_id);
+
+      await supabase
+        .from("image_submissions")
+        .update({
+          status: "expired",
+          resolved_at: new Date().toISOString(),
+        })
+        .eq("id", sub.id);
+
+      console.log(`[stale] ✓ Archived #${sub.id}`);
+      totalStale++;
+      totalResolved++;
+    } catch (e) {
+      console.error(
+        `[stale] Unexpected error for submission #${sub.id}:`,
+        e,
+      );
+    }
+  }
+}
 
   // --- PHASE 3: Send cycle summary ---
 const REPORT_CHANNEL_ID = "1481872631144775680";
@@ -672,8 +722,8 @@ if (approvedSubs?.length) {
     (a, b) => b.count - a.count,
   );
 
-  const least5 = sortedAsc.slice(0, 5);
-  const most5 = sortedDesc.slice(0, 5);
+  const least10 = sortedAsc.slice(0, 10);
+  const most10 = sortedDesc.slice(0, 10);
 
   const topUsers = [...userCounts.entries()]
     .sort((a, b) => b[1] - a[1])
@@ -710,7 +760,7 @@ if (approvedSubs?.length) {
   const fmtUsers = topUsers
     .map(
       ([uid, count], i) =>
-        `${i + 1}. **${userNames.get(uid)}** — ${count} approved submission{count !== 1 ? "s" : ""}`,
+        `${i + 1}. **${userNames.get(uid)}** — ${count} approved submission${count !== 1 ? "s" : ""}`,
     )
     .join("\n");
 
@@ -721,10 +771,10 @@ if (approvedSubs?.length) {
     `**Total approved:** ${totalApproved}`,
     ``,
     `📉 **Levels with fewest submissions:**`,
-    fmt(least5),
+    fmt(least10),
     ``,
     `📈 **Levels with most submissions:**`,
-    fmt(most5),
+    fmt(most10),
     ``,
     `🏆 **Top contributors:**`,
     fmtUsers,
@@ -740,12 +790,13 @@ if (approvedSubs?.length) {
 
   const elapsed = (performance.now() - start).toFixed(0);
   console.log(
-    `[poll-submissions] Done in ${elapsed}ms — ingested: ${totalIngested}, resolved: ${totalResolved}`,
+    `[poll-submissions] Done in ${elapsed}ms — ingested: ${totalIngested}, resolved: ${totalResolved}, stale: ${totalStale}`,
   );
 
   return Response.json({
     ok: true,
     ingested: totalIngested,
     resolved: totalResolved,
+    stale: totalStale,
   });
 });

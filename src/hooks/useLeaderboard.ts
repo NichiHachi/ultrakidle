@@ -42,6 +42,25 @@ export const useLeaderboard = (guildId?: string | null) => {
     }
   };
 
+  const fetchStreakForUser = async (userId: string) => {
+    const { data } = await supabase.rpc("get_user_streak_by_id", {
+      p_user_id: userId,
+    });
+
+    if (typeof data === "number") {
+      setUsers((prev) => {
+        if (!prev[userId]) return prev;
+        return {
+          ...prev,
+          [userId]: {
+            ...prev[userId],
+            streak: data,
+          },
+        };
+      });
+    }
+  };
+
   useEffect(() => {
     const initLeaderboard = async () => {
       try {
@@ -148,16 +167,16 @@ export const useLeaderboard = (guildId?: string | null) => {
         setUsers(initialUsers);
 
         if (guildId) {
-          const { data: streakData } = await supabase.rpc("get_guild_streaks", {
-            p_guild_id: guildId,
-          });
+          const { data: streakData } = await supabase.rpc(
+            "get_guild_streaks",
+            { p_guild_id: guildId }
+          );
 
           if (streakData) {
             const streakMap = new Map<string, number>(
-              (streakData as { user_id: string; streak: number }[]).map((s) => [
-                s.user_id,
-                s.streak,
-              ])
+              (streakData as { user_id: string; streak: number }[]).map(
+                (s) => [s.user_id, s.streak]
+              )
             );
             setUsers((prev) => {
               const updated = { ...prev };
@@ -235,9 +254,11 @@ export const useLeaderboard = (guildId?: string | null) => {
                 },
               };
             } else {
+              // New user appeared — fetch profile and streak async
               fetchProfileForUser(newGuess.user_id);
+              fetchStreakForUser(newGuess.user_id);
+
               const isWin = guessColors.every((c) => c === "green");
-              const isLoss = !isWin && 1 >= 5;
               return {
                 ...prev,
                 [newGuess.user_id]: {
@@ -245,10 +266,10 @@ export const useLeaderboard = (guildId?: string | null) => {
                   discord_name: "Anonymous",
                   avatar_url: "/images/v1-plush.webp",
                   guesses: [guessColors],
-                  status: isWin ? "won" : isLoss ? "lost" : "playing",
+                  status: isWin ? "won" : "playing",
                   attempt_count: 1,
                   last_guess_at: createdAt,
-                  streak: isWin ? 1 : isLoss ? 0 : 0,
+                  streak: 0,
                 },
               };
             }
