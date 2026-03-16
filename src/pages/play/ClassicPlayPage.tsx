@@ -187,7 +187,7 @@ const ClassicPlayPage = () => {
 
     const tabs: { id: GameMode; label: string }[] = [
         { id: "classic", label: "CLASSIC" },
-        { id: "inferno", label: "INFERNOGUESSR" },
+        { id: "infernoguessr", label: "INFERNOGUESSR" },
     ];
 
     if (loading) {

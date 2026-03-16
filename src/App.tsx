@@ -39,7 +39,7 @@ function AppContent() {
           <Route index element={<HomePage />} />
           <Route path="play" element={<Navigate to="/play/classic" replace />} />
           <Route path="play/classic" element={<ClassicPlayPage />} />
-          <Route path="play/inferno" element={<InfernoPlayPage />} />
+          <Route path="play/infernoguessr" element={<InfernoPlayPage />} />
           <Route path="credits" element={<CreditsPage />} />
           <Route path="history" element={<HistoryPage />} />
           <Route path="tos" element={<TermsPage />} />

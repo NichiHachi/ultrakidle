@@ -17,41 +17,43 @@ const MainLayout = () => {
   const { colorblindMode, toggleColorblindMode } = useSettings();
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [isRankingOpen, setIsRankingOpen] = useState(true);
-  const [isNewPlayer, setIsNewPlayer] = useState(false);
-  const [hasOpenedHowToPlay, setHasOpenedHowToPlay] = useState(() => {
-    return localStorage.getItem('ultrakilldle_seen_how_to_play') === 'true';
+  const [hasNeverPlayedClassic, setHasNeverPlayedClassic] = useState(false);
+  const [hasNeverPlayedInferno, setHasNeverPlayedInferno] = useState(false);
+  const [hasSeenClassicGuide, setHasSeenClassicGuide] = useState(() => {
+    return localStorage.getItem('ultrakilldle_seen_classic_guide') === 'true';
+  });
+  const [hasSeenInfernoGuide, setHasSeenInfernoGuide] = useState(() => {
+    return localStorage.getItem('ultrakilldle_seen_inferno_guide') === 'true';
   });
 
   useEffect(() => {
     const checkNewPlayer = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      console.log("[MainLayout] Session check:", session?.user?.id);
 
       if (session?.user) {
-        const { data, error } = await supabase
-          .from('user_guesses')
+        // Check classic mode (using the RPC)
+        const { data: neverPlayedClassic, error: classicError } = await supabase.rpc('has_never_played');
+        if (!classicError) {
+          setHasNeverPlayedClassic(neverPlayedClassic);
+        }
+
+        // Check inferno mode (checking the table)
+        const { data: infernoData, error: infernoError } = await supabase
+          .from('inferno_guesses')
           .select('id')
           .eq('user_id', session.user.id)
           .limit(1);
 
-        console.log("[MainLayout] Query result:", data, "Error:", error);
-
-        if (!error && (!data || data.length === 0)) {
-          console.log("[MainLayout] Setting isNewPlayer to true");
-          setIsNewPlayer(true);
-        } else {
-          setIsNewPlayer(false);
+        if (!infernoError) {
+          setHasNeverPlayedInferno(!infernoData || infernoData.length === 0);
         }
-      } else {
-        console.log("[MainLayout] No session, cannot check guesses");
       }
     };
 
     checkNewPlayer();
 
-    // Listen for auth changes (e.g., anonymous sign-in from child components)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("[MainLayout] Auth state changed:", _event, session?.user?.id);
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       checkNewPlayer();
     });
 
@@ -114,7 +116,7 @@ const MainLayout = () => {
         <div className="flex flex-1 min-h-0 w-full z-10 relative overflow-x-hidden">
 
           {/* Column 1: Main Content (Scrollable) */}
-          <div className="flex-1 min-w-0 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar pointer-events-auto items-center lg:items-stretch lg:px-10 px-5 lg:py-12 py-5">
+          <div id="main-scroll-container" className="flex-1 min-w-0 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar pointer-events-auto items-center lg:items-stretch lg:px-10 px-5 lg:py-12 py-5">
             <div className="md:w-full flex flex-col min-h-full max-w-[800px] lg:max-w-none mx-auto w-full">
               <div className="z-20 max-w-[600px] flex-shrink-0">
                 <img
@@ -142,23 +144,27 @@ const MainLayout = () => {
                         size="md"
                         onClick={() => {
                           setIsHowToPlayOpen(true);
-                          if (!hasOpenedHowToPlay) {
-                            setHasOpenedHowToPlay(true);
-                            localStorage.setItem('ultrakilldle_seen_how_to_play', 'true');
+                          if (location.pathname === '/play/classic' && !hasSeenClassicGuide) {
+                            setHasSeenClassicGuide(true);
+                            localStorage.setItem('ultrakilldle_seen_classic_guide', 'true');
+                          } else if (location.pathname === '/play/infernoguessr' && !hasSeenInfernoGuide) {
+                            setHasSeenInfernoGuide(true);
+                            localStorage.setItem('ultrakilldle_seen_inferno_guide', 'true');
                           }
                         }}
                         className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100"
                       >
                         ? HOW TO PLAY
                       </Button>
-                      {isNewPlayer && !hasOpenedHowToPlay && (
-                        <div className="absolute top-0 right-0 z-30 pointer-events-none">
-                          <div className="relative w-3 h-3 translate-x-1/4 -translate-y-1/4">
-                            <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full" />
-                            <div className="absolute inset-0 w-3 h-3 scale-[1.5] animate-ping bg-green-500 rounded-full" />
+                      {((location.pathname === '/play/classic' && hasNeverPlayedClassic && !hasSeenClassicGuide) ||
+                        (location.pathname === '/play/infernoguessr' && hasNeverPlayedInferno && !hasSeenInfernoGuide)) && (
+                          <div className="absolute top-0 right-0 z-30 pointer-events-none">
+                            <div className="relative w-3 h-3 translate-x-1/4 -translate-y-1/4">
+                              <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                              <div className="absolute inset-0 w-3 h-3 scale-[1.5] animate-ping bg-green-500 rounded-full" />
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
                     </div>
 
                     <label className="flex items-center gap-2 cursor-pointer group px-2">
@@ -212,8 +218,22 @@ const MainLayout = () => {
                   </div>
                 ) : (
                   <div className="space-y-4 text-sm">
-                    <p>INFERNOGUESSR: MODULE DEPLOYMENT PENDING.</p>
-                    <p className="opacity-50">STAY TUNED FOR UPDATED RECONNAISSANCE PROTOCOLS.</p>
+                    <p>IDENTIFY THE TARGET LEVEL FROM A SCREENSHOT IN <span className="text-white font-bold">3 ROUNDS</span>.</p>
+                    <div className="space-y-2">
+                      <p className="opacity-50 underline uppercase">Mechanics:</p>
+                      <ul className="list-disc [&>*]:text-left pl-4 list-outside space-y-1 opacity-80">
+                        <li>You get <span className="text-white">one attempt</span> per round.</li>
+                        <li>Distance is calculated based on the position of your guess relative to the correct answer in our <a href="/levels" target="_blank" className="underline hover:text-white/80">Levels</a> page list.</li>
+                        <li>A guess of 0-3 while the answer is 0-5 results in a <span className="text-white font-bold">distance of 2</span>.</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2 pt-2 border-t border-white/10">
+                      <p className="opacity-50 underline uppercase">Scoring Formula:</p>
+                      <div className="font-mono bg-white/5 p-3 rounded text-center text-cyan-300">
+                        score = round(100 * (0.85 ^ distance))
+                      </div>
+                      <p className="opacity-80">The closer your guess is in level progression, the higher your score!</p>
+                    </div>
                   </div>
                 )}
               </Modal>

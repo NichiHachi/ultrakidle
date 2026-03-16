@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Button from "./Button";
 
 interface PlayExpandableProps {
@@ -20,6 +21,7 @@ export const PlayExpandable = ({
     classicDisabled = false,
     classicContent,
 }: PlayExpandableProps) => {
+    const navigate = useNavigate();
     return (
         <div className="flex flex-col">
             <Button
@@ -47,7 +49,7 @@ export const PlayExpandable = ({
                         className="overflow-hidden md:px-3 px-2"
                     >
                         <div className="space-y-2 pb-2">
-                        <div className="grid grid-cols-2 gap-2 pt-2">
+                        <div className="grid grid-cols-2 gap-1 pt-1">
                             <Button
                                 variant="outline"
                                 size="xl"

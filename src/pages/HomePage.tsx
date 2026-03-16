@@ -47,6 +47,7 @@ const getCountdown = () => {
 };
 
 import PlayExpandable from "../components/ui/PlayExpandable";
+import { useInfernoStats } from "../hooks/useInfernoStats";
 
 const HomePage = () => {
   const {
@@ -58,6 +59,13 @@ const HomePage = () => {
     dailyChanged,
     setDailyChanged,
   } = useGameInit();
+  const {
+    loading: infernoLoading,
+    totalScore,
+    dailyAvg,
+    gameStatus
+  } = useInfernoStats();
+
   const navigate = useNavigate();
   const [titleFinished, setTitleFinished] = useState(false);
   const [diagnosticsStarted, setDiagnosticsStarted] = useState(false);
@@ -89,29 +97,36 @@ const HomePage = () => {
   }, [refresh]);
 
   useEffect(() => {
-    if (!gameLoading && titleFinished) {
+    if (!gameLoading && !infernoLoading) {
       const timer = setTimeout(
         () => setDiagnosticsStarted(true),
         200
       );
       return () => clearTimeout(timer);
     }
-  }, [gameLoading, titleFinished]);
+  }, [gameLoading, infernoLoading]);
 
   const hasWon = guessHistory.some((g) => g.hint_data?.correct);
   const hasReachedLimit = guessHistory.length >= 5;
   const isGameOver = hasWon || hasReachedLimit;
 
-  const statusText = hasWon
+  const classicStatus = hasWon
     ? "COMPLETED"
     : hasReachedLimit
       ? "FAILED"
       : "READY";
-  const statusColor = hasWon
-    ? "text-green-500"
-    : hasReachedLimit
-      ? "text-red-500"
-      : "";
+
+  const getInfernoStatus = () => {
+    if (!gameStatus) return "READY";
+    switch (gameStatus.status) {
+      case "completed": return "COMPLETED";
+      // Assuming 'in_progress' might mean they've started but not finished
+      // or simply that the game is active. For simple status:
+      case "in_progress": return "READY";
+      default: return "READY";
+    }
+  };
+  const infernoStatus = getInfernoStatus();
 
   const countdownStr = `${String(countdown.hours).padStart(2, "0")}:${String(countdown.minutes).padStart(2, "0")}:${String(countdown.seconds).padStart(2, "0")}`;
 
@@ -123,93 +138,103 @@ const HomePage = () => {
       />
       <div className="flex flex-col gap-4 w-full mx-auto h-full min-h-0">
         <div className="flex flex-col gap-0 w-full lg:text-xl md:text-lg text-sm opacity-50 text-left flex-shrink-0">
-          <div className="flex gap-1 items-baseline">
-            <h1 className="contents">
-              <Typewriter
-                text="DAILY_CHALLENGE "
-                speed={0.03}
-                onComplete={() => setTitleFinished(true)}
-              />
-            </h1>
-            <AnimatePresence mode="wait">
-              {titleFinished && gameLoading && (
-                <motion.div
-                  key="dots"
-                  initial={{ display: "none" }}
-                  animate={{ display: "inline-block" }}
-                  exit={{ display: "none" }}
-                >
-                  <LoadingDots />
-                </motion.div>
-              )}
-              {diagnosticsStarted && (
-                <motion.div
-                  key="ready"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  {statusText !== "READY" ? (
-                    <span className={statusColor}>
-                      <Typewriter text={statusText} speed={0.03} />
-                    </span>
-                  ) : (
-                    <Typewriter text={statusText} speed={0.03} />
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {diagnosticsStarted && (
-            <>
-              <div className="">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col">
+              <div className="flex gap-1 items-baseline">
                 <Typewriter
-                  text={`CURRENT_STREAK ${streak}`}
-                  speed={0.03}
-                  delay={0.2}
+                  text="MODULES:"
+                  speed={0.02}
+                  delay={0.1}
                 />
+                {(gameLoading || infernoLoading) && <LoadingDots />}
               </div>
-
-              {dailyStats && (
-                <Typewriter
-                  text={`NETWORK_SYNC: ${dailyStats.total_wins} MACHINES SUCCEEDED | ${dailyStats.total_players - dailyStats.total_wins} TERMINATED`}
-                  speed={0.02}
-                  delay={0.7}
-                />
+              {diagnosticsStarted && (
+                <>
+                  <Typewriter
+                    text={`CLASSIC... ${classicStatus}`}
+                    speed={0.02}
+                    delay={0}
+                    className={
+                      classicStatus === "COMPLETED"
+                        ? "text-green-500"
+                        : classicStatus === "FAILED"
+                          ? "text-red-500"
+                          : ""
+                    }
+                  />
+                  <Typewriter
+                    text={`INFERNOGUESSR... ${infernoStatus}`}
+                    speed={0.02}
+                    delay={0.1}
+                    className={
+                      infernoStatus === "COMPLETED"
+                        ? "text-green-500"
+                        : ""
+                    }
+                  />
+                </>
               )}
+            </div>
 
-              <Typewriter
-                text="SYSTEM V1 INITIALIZED"
-                speed={0.02}
-                delay={1.4}
-                className="mt-5"
-              />
-              <Typewriter
-                text="DIAGNOSTICS... OK"
-                speed={0.02}
-                delay={1.8}
-              />
+            {diagnosticsStarted && (
+              <div className="flex flex-row items-start justify-start gap-6">
+                <div className="flex flex-col min-w-0">
+                  <Typewriter
+                    text="CLASSIC:"
+                    speed={0.02}
+                    delay={0.3}
+                  />
+                  <Typewriter
+                    text={`├ STREAK: ${streak}`}
+                    speed={0.02}
+                    delay={0.4}
+                  />
+                  {dailyStats && (
+                    <>
+                      <Typewriter
+                        text={`├ CLEARED: ${dailyStats.total_wins}`}
+                        speed={0.02}
+                        delay={0.5}
+                      />
+                      <Typewriter
+                        text={`└ TERMINATED: ${dailyStats.total_players - dailyStats.total_wins}`}
+                        speed={0.02}
+                        delay={0.6}
+                      />
+                    </>
+                  )}
+                </div>
 
-              {isGameOver ? (
-                <Typewriter
-                  text="NEXT CHALLENGE IN:"
-                  speed={0.02}
-                  delay={2.3}
-                />
-              ) : (
-                <Typewriter
-                  text="STANDBY - WAIT FOR WAKE"
-                  speed={0.02}
-                  delay={2.3}
-                />
-              )}
-            </>
-          )}
+                <div className="flex flex-col min-w-0">
+                  <Typewriter
+                    text="INFERNOGUESSR:"
+                    speed={0.02}
+                    delay={0.3}
+                  />
+                  <Typewriter
+                    text={`├ POINTS: ${totalScore?.total_score ?? 0}`}
+                    speed={0.02}
+                    delay={0.4}
+                  />
+                  <Typewriter
+                    text={`├ DEPLOYMENTS: ${gameStatus?.total_games ?? 0}`}
+                    speed={0.02}
+                    delay={0.5}
+                  />
+                  <Typewriter
+                    text={`└ TODAY_AVG: ${dailyAvg?.avg_score ?? 0}`}
+                    speed={0.02}
+                    delay={0.6}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {diagnosticsStarted && (
           <motion.div
-              initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="flex flex-col gap-4 w-full max-w-[450px] overflow-show min-h-0 pb-4"
@@ -220,8 +245,8 @@ const HomePage = () => {
                   label={`PLAY`}
                   isExpanded={playExpanded}
                   onToggle={() => setPlayExpanded((p) => !p)}
-                  onClassic={() => navigate("/play")}
-                  onInferno={() => navigate("/play")}
+                  onClassic={() => navigate("/play/classic")}
+                  onInferno={() => navigate("/play/infernoguessr")}
                   classicDisabled
                   classicContent={
                     <span className="opacity-50">
@@ -319,8 +344,8 @@ const HomePage = () => {
                   }
                   isExpanded={playExpanded}
                   onToggle={() => setPlayExpanded((p) => !p)}
-                  onClassic={() => navigate("/play")}
-                  onInferno={() => navigate("/play")}
+                  onClassic={() => navigate("/play/classic")}
+                  onInferno={() => navigate("/play/infernoguessr")}
                 />
                 <Button
                   variant="outline"

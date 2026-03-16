@@ -1,6 +1,4 @@
-import { motion } from "framer-motion";
-
-export type GameMode = "classic" | "inferno";
+export type GameMode = "classic" | "inferno" | "infernoguessr";
 
 interface Tab {
     id: GameMode;
