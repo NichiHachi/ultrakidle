@@ -42,6 +42,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             },
         };
 
+        const currentVariant = variants[variant as keyof typeof variants] || variants.primary;
+
         const sizes = {
             sm: 'text-xs',
             md: 'text-sm',
@@ -107,12 +109,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         return (
             <motion.button
                 ref={ref}
-                className={`group relative inline-flex items-center justify-center font-bold disabled:opacity-50 disabled:pointer-events-none uppercase tracking-tighter cursor-pointer ${poly} ${variants[variant].outer} ${padding[size]} ${className}`}
+                className={`group relative inline-flex items-center justify-center font-bold disabled:opacity-50 disabled:pointer-events-none uppercase tracking-tighter cursor-pointer ${poly} ${currentVariant.outer} ${padding[size]} ${className}`}
                 {...getMotionProps()}
                 {...props as HTMLMotionProps<"button">}
             >
                 <motion.div
-                    className={`w-full h-full flex items-center justify-center ${poly} ${variants[variant].inner} ${sizes[size]} ${currentInnerPadding}`}
+                    className={`w-full h-full flex items-center justify-center ${poly} ${currentVariant.inner} ${sizes[size]} ${currentInnerPadding}`}
                     {...getInnerMotionProps()}
                 >
                     {children}

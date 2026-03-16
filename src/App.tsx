@@ -4,7 +4,8 @@ import ReactGA from 'react-ga4';
 import { DiscordRedirect } from "./lib/discord";
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
-import PlayPage from './pages/PlayPage';
+import ClassicPlayPage from './pages/play/ClassicPlayPage';
+import InfernoPlayPage from './pages/play/InfernoPlayPage';
 import CreditsPage from './pages/CreditsPage';
 import HistoryPage from './pages/HistoryPage';
 import TermsPage from './pages/TermsPage';
@@ -36,7 +37,9 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<HomePage />} />
-          <Route path="play" element={<PlayPage />} />
+          <Route path="play" element={<Navigate to="/play/classic" replace />} />
+          <Route path="play/classic" element={<ClassicPlayPage />} />
+          <Route path="play/inferno" element={<InfernoPlayPage />} />
           <Route path="credits" element={<CreditsPage />} />
           <Route path="history" element={<HistoryPage />} />
           <Route path="tos" element={<TermsPage />} />

@@ -61,7 +61,7 @@ const MainLayout = () => {
   }, []);
 
   const isHome = location.pathname === '/';
-  const isPlay = location.pathname === '/play';
+  const isPlay = location.pathname.startsWith('/play');
   const inDiscord = isRunningInDiscord();
 
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, url: string) => {
@@ -181,34 +181,41 @@ const MainLayout = () => {
                 onClose={() => setIsHowToPlayOpen(false)}
                 title="SYSTEM_GUIDE: HOW TO PLAY"
               >
-                <div className="space-y-4 text-sm">
-                  <p>IDENTIFY THE TARGET ENEMY IN <span className="text-white font-bold">5 ATTEMPTS</span>.</p>
-                  <div className="space-y-2">
-                    <p className="opacity-50 underline uppercase">Color Indicators:</p>
-                    <div className="flex gap-3 items-center">
-                      <div className="w-4 h-4 bg-green-500/20 border border-green-500" />
-                      <span>CORRECT PROPERTY MATCH</span>
+                {location.pathname === '/play/classic' ? (
+                  <div className="space-y-4 text-sm">
+                    <p>IDENTIFY THE TARGET ENEMY IN <span className="text-white font-bold">5 ATTEMPTS</span>.</p>
+                    <div className="space-y-2">
+                      <p className="opacity-50 underline uppercase">Color Indicators:</p>
+                      <div className="flex gap-3 items-center">
+                        <div className="w-4 h-4 bg-green-500/20 border border-green-500" />
+                        <span>CORRECT PROPERTY MATCH</span>
+                      </div>
+                      <div className="flex gap-3 items-center">
+                        <div className={`w-4 h-4 border ${colorblindMode ? 'bg-blue-500/20 border-blue-500' : 'bg-yellow-500/20 border-yellow-500'}`} />
+                        <span>PARTIAL PROPERTY MATCH</span>
+                      </div>
+                      <div className="flex gap-3 items-center">
+                        <div className="w-4 h-4 bg-red-500/20 border border-red-500" />
+                        <span>INCORRECT PROPERTY MATCH</span>
+                      </div>
                     </div>
-                    <div className="flex gap-3 items-center">
-                      <div className={`w-4 h-4 border ${colorblindMode ? 'bg-blue-500/20 border-blue-500' : 'bg-yellow-500/20 border-yellow-500'}`} />
-                      <span>PARTIAL PROPERTY MATCH</span>
-                    </div>
-                    <div className="flex gap-3 items-center">
-                      <div className="w-4 h-4 bg-red-500/20 border border-red-500" />
-                      <span>INCORRECT PROPERTY MATCH</span>
+                    <div className="space-y-2 pt-2 border-t border-white/10">
+                      <p className="opacity-50 underline uppercase">Properties Tracked:</p>
+                      <ul className="list-disc [&>*]:text-left pl-4 list-outside space-y-1 opacity-80">
+                        <li>TYPE: ???, DEMON, MACHINE, HUSK, ANGEL OR PRIME SOUL</li>
+                        <li>WEIGHT: LIGHT, MEDIUM, HEAVY OR SUPERHEAVY</li>
+                        <li>HEALTH: NUMERIC COMPARISON. TARGET CAN BE HIGHER ▲ OR LOWER ▼. <span className={colorblindMode ? "text-blue-500" : "text-yellow-500"}>{colorblindMode ? "BLUE" : "YELLOW"}</span> INDICATES VALUE IS WITHIN 10 HP OF TARGET. FOR ENEMIES WITH MULTIPLE VARIANTS, THE HIGHEST VARIANT'S HEALTH IS USED. FOR ENEMIES WITH MULTIPLE PHASES, HEALTH IS THE SUM OF ALL PHASES</li>
+                        <li>TOTAL LEVELS: NUMBER OF LEVELS THE ENEMY APPEARS IN. TARGET CAN BE HIGHER ▲ OR LOWER ▼. <span className={colorblindMode ? "text-blue-500" : "text-yellow-500"}>{colorblindMode ? "BLUE" : "YELLOW"}</span> INDICATES VALUE IS WITHIN 3 LEVELS OF TARGET</li>
+                        <li>REGISTERED AT: LEVEL OF FIRST ENCOUNTER. TARGET CAN BE LATER ▲ OR EARLIER ▼ (ORDERED ACCORDING TO OUR <a href="/levels" target="_blank" className="underline hover:text-white/80">LEVEL LIST</a>). <span className={colorblindMode ? "text-blue-500" : "text-yellow-500"}>{colorblindMode ? "BLUE" : "YELLOW"}</span> INDICATES TARGET ENEMY ALSO APPEARS IN THIS LEVEL</li>
+                      </ul>
                     </div>
                   </div>
-                  <div className="space-y-2 pt-2 border-t border-white/10">
-                    <p className="opacity-50 underline uppercase">Properties Tracked:</p>
-                    <ul className="list-disc [&>*]:text-left pl-4 list-outside space-y-1 opacity-80">
-                      <li>TYPE: ???, DEMON, MACHINE, HUSK, ANGEL OR PRIME SOUL</li>
-                      <li>WEIGHT: LIGHT, MEDIUM, HEAVY OR SUPERHEAVY</li>
-                      <li>HEALTH: NUMERIC COMPARISON. TARGET CAN BE HIGHER ▲ OR LOWER ▼. <span className={colorblindMode ? "text-blue-500" : "text-yellow-500"}>{colorblindMode ? "BLUE" : "YELLOW"}</span> INDICATES VALUE IS WITHIN 10 HP OF TARGET. FOR ENEMIES WITH MULTIPLE VARIANTS, THE HIGHEST VARIANT'S HEALTH IS USED. FOR ENEMIES WITH MULTIPLE PHASES, HEALTH IS THE SUM OF ALL PHASES</li>
-                      <li>TOTAL LEVELS: NUMBER OF LEVELS THE ENEMY APPEARS IN. TARGET CAN BE HIGHER ▲ OR LOWER ▼. <span className={colorblindMode ? "text-blue-500" : "text-yellow-500"}>{colorblindMode ? "BLUE" : "YELLOW"}</span> INDICATES VALUE IS WITHIN 3 LEVELS OF TARGET</li>
-                      <li>REGISTERED AT: LEVEL OF FIRST ENCOUNTER. TARGET CAN BE LATER ▲ OR EARLIER ▼ (ORDERED ACCORDING TO OUR <a href="/levels" target="_blank" className="underline hover:text-white/80">LEVEL LIST</a>). <span className={colorblindMode ? "text-blue-500" : "text-yellow-500"}>{colorblindMode ? "BLUE" : "YELLOW"}</span> INDICATES TARGET ENEMY ALSO APPEARS IN THIS LEVEL</li>
-                    </ul>
+                ) : (
+                  <div className="space-y-4 text-sm">
+                    <p>INFERNOGUESSR: MODULE DEPLOYMENT PENDING.</p>
+                    <p className="opacity-50">STAY TUNED FOR UPDATED RECONNAISSANCE PROTOCOLS.</p>
                   </div>
-                </div>
+                )}
               </Modal>
 
               <div className="flex flex-col justify-between h-full w-full ">
