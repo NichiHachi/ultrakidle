@@ -70,6 +70,9 @@ export default defineConfig(({ mode }) => {
         'dev.ultrakidle.online',
       ],
       proxy: proxyConfig,
+      headers: {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+      },
     },
   };
 });

@@ -51,13 +51,6 @@ const HomePage = () => {
   const [countdown, setCountdown] = useState(getCountdown());
   const { hasUnread } = useMessages();
 
-  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, url: string) => {
-    if (isRunningInDiscord() && discordSdk) {
-      e.preventDefault();
-      discordSdk.commands.openExternalLink({ url });
-    }
-  };
-
   useEffect(() => {
     if (dailyChanged) {
       setDailyChanged(false);
@@ -277,7 +270,7 @@ const HomePage = () => {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <Button
                   variant="primary"
                   size="xl"
@@ -299,13 +292,35 @@ const HomePage = () => {
                 >
                   LEVELS
                 </Button>
-                <Button
-                  variant="outline"
-                  size="xl"
-                  onClick={() => navigate('/credits')}
-                >
-                  CREDITS
-                </Button>
+                <div className="flex w-full h-fit gap-2 flex-row">
+                  <Button
+                    variant="outline"
+                    size="xl"
+                    className="flex-1" 
+                      onClick={() => {
+                      const url = 'https://ko-fi.com/G2G41UYAX6';
+                      if (isRunningInDiscord() && discordSdk) {
+                        discordSdk.commands.openExternalLink({ url });
+                      } else {
+                        window.open(url, '_blank');
+                      }
+                    }}
+                  >
+                    DONATE
+                    <img
+                      className={`w-6 ml-3`}
+                      src={resolveExternalUrl("/external/kofi/5c14e387dab576fe667689cf/670f5a01229bf8a18f97a3c1_favion.png")}
+                      alt="Ko-fi"
+                    />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="xl"
+                    onClick={() => navigate('/credits')}
+                  >
+                    CREDITS
+                  </Button>
+                </div>
                 <div className="flex h-fit gap-2 flex-row">
                   <Button
                     variant="outline"
@@ -345,8 +360,8 @@ const HomePage = () => {
                 </div>
               </div>
             )}
-            <div className={`grid grid-cols-1 ${isRunningInDiscord() ? "" : "md:grid-cols-2"} gap-2`}>
               {!isRunningInDiscord() && (
+            <div className={`grid grid-cols-1 ${isRunningInDiscord() ? "" : "md:grid-cols-1"} gap-2`}>
                 <Button
                   variant="ghost"
                   className="flex items-center w-full"
@@ -359,30 +374,8 @@ const HomePage = () => {
                     alt="Discord"
                   />
                 </Button>
-              )}
-              <div
-                className="w-full"
-              >
-                <a
-                  href='https://ko-fi.com/G2G41UYAX6'
-                  target='_blank'
-                  onClick={(e) => handleLinkClick(e, 'https://ko-fi.com/G2G41UYAX6')}
-                  className="w-full"
-                >
-                  <Button
-                    variant="ghost"
-                    className="flex w-full items-center"
-                  >
-                    Support me on ko-fi
-                    <img
-                      className={`w-5 ml-2`}
-                      src={resolveExternalUrl("/external/kofi/5c14e387dab576fe667689cf/670f5a01229bf8a18f97a3c1_favion.png")}
-                      alt="Ko-fi"
-                    />
-                  </Button>
-                </a>
-              </div>
             </div>
+              )}
           </motion.div>
         )}
       </div>

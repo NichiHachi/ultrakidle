@@ -7,6 +7,33 @@ export interface Message {
 }
 
 export const MESSAGES: Message[] = [
+  {
+    id: 'changelog-2026-03-16',
+    date: '2026-03-16',
+    content: (
+      <div className="space-y-4 lg:space-y-6 text-justify">
+        <p className="text-zinc-400 text-sm">
+          SYSTEM UPDATE LOG // [16-MAR-2026]
+        </p>
+        <p className="text-cyan-300 lg:text-base text-sm">
+          TLDR: Small bug fixes and new level ordering, read the how to
+          play section (again)
+        </p>
+        <ul className="list-disc list-outside pl-4 text-white/70 text-sm space-y-1">
+          <li>Reordered levels to follow our <span className="text-white">Levels</span> page ordering instead of the one used in speedrun.com</li>
+          <li>
+            Updated{" "}
+            <span className="text-white">How to Play</span>{" "}
+            section with new details
+          </li>
+          <li>Fixed streaks showing as 0 or 1 for discord members who joined the leaderboard mid-activity</li>
+          <li>Fixed clicking entries in the <span className="text-white">Enemies</span> and <span className="text-white">Levels</span> pages not redirecting to the official wiki in the discord activity</li>
+          <li>Added <span className="text-white">Longest Streak</span> to the information present in the <span className="text-white">Logs</span> page</li>
+          <li>Changed home page layout to make <span className="text-white">Donate</span> button more prominent</li>
+        </ul>
+      </div>
+    ),
+  },
     {
         id: 'infernoguessr-submission',
         date: '2026-03-11',

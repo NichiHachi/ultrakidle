@@ -1,16 +1,18 @@
 import SEO from '../components/SEO';
 import { enemies } from '../lib/enemy_list';
-import { resolveExternalUrl } from '../lib/urls';
+import { resolveExternalUrl, toExternalUrl } from '../lib/urls';
 import { isRunningInDiscord, discordSdk } from '../lib/discord';
 
 const EnemiesPage = () => {
-    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, url: string) => {
+    const handleLinkClick = (
+        e: React.MouseEvent<HTMLAnchorElement>,
+        url: string
+    ) => {
         if (isRunningInDiscord() && discordSdk) {
             e.preventDefault();
-            discordSdk.commands.openExternalLink({ url });
+            discordSdk.commands.openExternalLink({ url: toExternalUrl(url) });
         }
     };
-
     return (
         <div className="flex flex-col w-full pt-4 h-full justify-start items-start">
             <SEO title="Enemies Catalog" description="A complete list of enemies in ULTRAKILL with links to their official wiki entries." />

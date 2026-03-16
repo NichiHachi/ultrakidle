@@ -5,7 +5,7 @@ import { usePlayHistory } from '../hooks/usePlayHistory';
 import { Typewriter } from '../components/Typewriter';
 
 const HistoryPage = () => {
-    const { loading, history } = usePlayHistory();
+    const { loading, history, longestStreak } = usePlayHistory();
     const [visibleCount, setVisibleCount] = useState(10);
 
     const totalMissions = history.length;
@@ -25,14 +25,21 @@ const HistoryPage = () => {
                     {loading ? (
                         <div className="text-2xl animate-pulse mt-2">ACCESSING ARCHIVES...</div>
                     ) : (
-                        <div className="grid grid-cols-2 gap-4 mt-4">
-                            <div className="flex flex-col">
-                                <span className="opacity-50 text-sm">TOTAL DEPLOYMENTS</span>
-                                <span className="text-3xl">{totalMissions}</span>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mt-6">
+                            <div className="flex flex-col items-center text-center bg-white/5 p-3 md:p-0 border-l-2 md:border-l-0 border-white/20 relative overflow-hidden group">
+                                <span className="opacity-50 text-[10px] md:text-sm tracking-tighter">TOTAL DEPLOYMENTS</span>
+                                <span className="text-2xl md:text-3xl font-black">{totalMissions}</span>
+                                <div className="absolute inset-0 bg-white/5 -skew-x-12 translate-x-12 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                             </div>
-                            <div className="flex flex-col">
-                                <span className="opacity-50 text-sm">SUCCESS RATE</span>
-                                <span className="text-3xl text-green-500">{successRate}%</span>
+                            <div className="flex flex-col items-center text-center bg-white/5 p-3 md:p-0 border-l-2 md:border-l-0 border-yellow-500/20 relative overflow-hidden group">
+                                <span className="opacity-50 text-[10px] md:text-sm tracking-tighter">LONGEST STREAK</span>
+                                <span className="text-2xl md:text-3xl font-black text-yellow-500">{longestStreak}</span>
+                                <div className="absolute inset-0 bg-yellow-500/5 -skew-x-12 translate-x-12 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                            </div>
+                            <div className="flex flex-col items-center text-center bg-white/5 p-3 md:p-0 border-l-2 md:border-l-0 border-green-500/20 relative overflow-hidden group">
+                                <span className="opacity-50 text-[10px] md:text-sm tracking-tighter">SUCCESS RATE</span>
+                                <span className="text-2xl md:text-3xl font-black text-green-500">{successRate}%</span>
+                                <div className="absolute inset-0 bg-green-500/5 -skew-x-12 translate-x-12 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                             </div>
                         </div>
                     )}

@@ -28,3 +28,19 @@ export function resolveExternalUrl(url: string): string {
 
     return url;
 }
+
+
+// Kinda the same function as above but without the early return, useful in some places
+export function toExternalUrl(url: string): string {
+    if (!url) return url;
+
+    if (url.startsWith("/external/kofi/")) {
+        return `https://cdn.prod.website-files.com/${url.replace("/external/kofi/", "")}`;
+    }
+
+    if (url.startsWith("/external/wiki/")) {
+        return `https://ultrakill.wiki.gg/${url.replace("/external/wiki/", "")}`;
+    }
+
+    return url;
+}

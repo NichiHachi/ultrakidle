@@ -15,6 +15,7 @@ export interface HistoryItem {
 export function usePlayHistory() {
     const [loading, setLoading] = useState(true);
     const [history, setHistory] = useState<HistoryItem[]>([]);
+    const [longestStreak, setLongestStreak] = useState(0);
 
     useEffect(() => {
         async function fetchHistory() {
@@ -26,22 +27,26 @@ export function usePlayHistory() {
                     return;
                 }
 
-                const { data, error } = await supabase
-                    .from('user_wins')
-                    .select(`
-                        is_win,
-                        attempt_count,
-                        daily_choice:daily_choices (
-                            chosen_at,
-                            enemy:ultrakill_enemies (
-                                name
+                const [{ data, error }, { data: streakData }] = await Promise.all([
+                    supabase
+                        .from('user_wins')
+                        .select(`
+                            is_win,
+                            attempt_count,
+                            daily_choice:daily_choices (
+                                chosen_at,
+                                enemy:ultrakill_enemies (
+                                    name
+                                )
                             )
-                        )
-                    `)
-                    .eq('user_id', session.user.id)
-                    .order('completed_at', { ascending: false });
+                        `)
+                        .eq('user_id', session.user.id)
+                        .order('completed_at', { ascending: false }),
+                    supabase.rpc('get_user_longest_streak', { p_user_id: session.user.id })
+                ]);
 
                 if (error) throw error;
+                if (streakData !== null) setLongestStreak(streakData as number);
 
                 console.log('Raw user_wins data:', JSON.stringify(data, null, 2));
 
@@ -74,5 +79,5 @@ export function usePlayHistory() {
         fetchHistory();
     }, []);
 
-    return { loading, history };
+    return { loading, history, longestStreak };
 }

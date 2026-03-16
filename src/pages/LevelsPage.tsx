@@ -1,13 +1,16 @@
 import SEO from '../components/SEO';
 import { levels } from '../lib/levels_list';
-import { resolveExternalUrl } from '../lib/urls';
+import { resolveExternalUrl, toExternalUrl } from '../lib/urls';
 import { isRunningInDiscord, discordSdk } from '../lib/discord';
 
 const LevelsPage = () => {
-    const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, url: string) => {
+    const handleLinkClick = (
+        e: React.MouseEvent<HTMLAnchorElement>,
+        url: string
+    ) => {
         if (isRunningInDiscord() && discordSdk) {
             e.preventDefault();
-            discordSdk.commands.openExternalLink({ url });
+            discordSdk.commands.openExternalLink({ url: toExternalUrl(url) });
         }
     };
 
