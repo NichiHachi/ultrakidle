@@ -28,7 +28,12 @@ export const PlayExpandable = ({
   const navigate = useNavigate();
   return (
     <div className="flex flex-col">
-      <Button variant="primary" size="xl" onClick={onToggle}>
+      <Button
+        variant="primary"
+        size="xl"
+        onClick={onToggle}
+        className={classicDisabled && infernoDisabled ? "cursor-default" : ""}
+      >
         {label}
         <motion.span
           animate={{ rotate: isExpanded ? 180 : 0 }}
@@ -47,12 +52,12 @@ export const PlayExpandable = ({
             transition={{ duration: 0.25, ease: "easeInOut" }}
             className="overflow-hidden md:px-3 px-2"
           >
-            <div className="space-y-2 pb-2">
-              <div className="grid grid-cols-2 gap-1 pt-1">
+            <div className="space-y-1 pb-2 pt-1">
+              <div className="grid grid-cols-2 gap-1">
                 <Button
                   variant="outline"
                   size="xl"
-                  className="flex-1 "
+                  disabled={classicDisabled}
                   onClick={onClassic}
                 >
                   <span className="md:text-base text-sm">
@@ -62,7 +67,7 @@ export const PlayExpandable = ({
                 <Button
                   variant="outline"
                   size="xl"
-                  className="flex-1"
+                  disabled={infernoDisabled}
                   onClick={onInferno}
                 >
                   <span className="md:text-base text-sm">
@@ -70,16 +75,33 @@ export const PlayExpandable = ({
                   </span>
                 </Button>
               </div>
-              {classicDisabled && (
-                <Button
-                  variant="ghost"
-                  size="md"
-                  onClick={() => navigate("/play/classic")}
-                  className="opacity-50 w-full hover:opacity-100"
-                >
-                  VIEW BOARD
-                </Button>
-              )}
+
+              <div className="grid grid-cols-2 gap-1">
+                <div>
+                  {classicDisabled && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate("/play/classic")}
+                      className="opacity-50 w-full hover:opacity-100 text-xs"
+                    >
+                      VIEW BOARD
+                    </Button>
+                  )}
+                </div>
+                <div>
+                  {infernoDisabled && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate("/play/infernoguessr")}
+                      className="opacity-50 w-full hover:opacity-100 text-xs"
+                    >
+                      VIEW BOARD
+                    </Button>
+                  )}
+                </div>
+              </div>
             </div>
           </motion.div>
         )}

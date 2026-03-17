@@ -82,7 +82,7 @@ const HomePage = () => {
         current.minutes === 0 &&
         current.seconds === 0
       ) {
-        setTimeout(() => refresh(), 2000);
+        refresh();
       }
     }, 1000);
     return () => clearInterval(timer);
@@ -139,26 +139,34 @@ const HomePage = () => {
               </div>
               {diagnosticsStarted && (
                 <>
-                  <Typewriter
-                    text={`CLASSIC... ${classicStatus}`}
-                    speed={0.02}
-                    delay={0}
-                    className={
-                      classicStatus === "COMPLETED"
-                        ? "text-green-500"
-                        : classicStatus === "FAILED"
-                        ? "text-red-500"
-                        : ""
-                    }
-                  />
-                  <Typewriter
-                    text={`INFERNOGUESSR... ${infernoStatusText}`}
-                    speed={0.02}
-                    delay={0.1}
-                    className={
-                      infernoStatusText === "COMPLETED" ? "text-green-500" : ""
-                    }
-                  />
+                  <div className="flex gap-1">
+                    <Typewriter text="CLASSIC... " speed={0.02} delay={0} />
+                    <Typewriter
+                      text={classicStatus}
+                      speed={0.02}
+                      delay={0.2}
+                      className={
+                        classicStatus === "COMPLETED" ? "text-green-500" : ""
+                      }
+                    />
+                  </div>
+                  <div className="flex gap-1">
+                    <Typewriter
+                      text="INFERNOGUESSR... "
+                      speed={0.02}
+                      delay={0.1}
+                    />
+                    <Typewriter
+                      text={infernoStatusText}
+                      speed={0.02}
+                      delay={0.4}
+                      className={
+                        infernoStatusText === "COMPLETED"
+                          ? "text-green-500"
+                          : ""
+                      }
+                    />
+                  </div>
                 </>
               )}
             </div>
@@ -234,12 +242,13 @@ const HomePage = () => {
                 classicDisabled={isGameOver}
                 classicContent={
                   isGameOver ? (
-                    <span className="">CLASSIC ({countdownStr})</span>
+                    <span className="opacity-50">CLASSIC ({countdownStr})</span>
                   ) : null
                 }
+                infernoDisabled={isInfernoCompleted}
                 infernoContent={
                   isInfernoCompleted ? (
-                    <span className="">INFERNOGUESSR ({countdownStr})</span>
+                    <span className="opacity-50">INFERNO ({countdownStr})</span>
                   ) : null
                 }
               />
