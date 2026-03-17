@@ -176,8 +176,11 @@ const PlayPage = () => {
                 <motion.div
                     animate={shouldFlash ? { backgroundColor: ["rgba(255, 255, 255, 0.6)", "rgba(255, 255, 255, 0)"] } : { backgroundColor: "rgba(255, 255, 255, 0)" }}
                     transition={shouldFlash ? { duration: 1.5, ease: "easeOut" } : { duration: 0 }}
-                    className="md:max-w-[1000px] w-full "
+                    className="md:max-w-[1000px] w-full mt-4"
                 >
+                    <div className="w-full flex justify-left">
+                    <span className="text-white/50 text-sm text-left place-self-start w-full justify-left">* All data mirrors that of the official wiki</span>
+                    </div>
                     <GuessBoard guesses={guesses} />
                 </motion.div>
 
