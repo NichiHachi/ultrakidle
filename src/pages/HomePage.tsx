@@ -74,7 +74,7 @@ const DonorsBoard = ({
               className="relative flex flex-col items-center flex-shrink-0 gap-1 px-3 py-2 border border-white/20 bg-white/5 min-w-[80px] overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-1 h-full bg-green-500" />
-              <span className="text-xs md:text-sm uppercase truncate max-w-[100px] text-white/90">
+              <span className="text-xs text-wrap md:text-sm uppercase truncate max-w-[200px] text-white/90">
                 {donor.name || "ANONYMOUS"}
               </span>
               <span className="text-green-500 text-xs">
