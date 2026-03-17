@@ -51,15 +51,6 @@ const MainLayout = () => {
     };
 
     checkNewPlayer();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      checkNewPlayer();
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   const isHome = location.pathname === '/';
