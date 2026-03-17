@@ -76,7 +76,7 @@ const DonorsBoard = ({
               <span className="text-xs md:text-sm uppercase truncate max-w-[100px]">
                 {donor.name || "ANONYMOUS"}
               </span>
-              <span className="text-green-500 font-mono text-xs">
+              <span className="text-green-500 text-xs">
                 $
                 {donor.amountInUsd.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
