@@ -8,6 +8,65 @@ export interface Message {
 
 export const MESSAGES: Message[] = [
   {
+  id: 'back-online',
+  date: '2026-03-16',
+  content: (
+    <div className="space-y-4 lg:space-y-6 text-justify">
+      <p className="text-zinc-400 text-sm">
+        SYSTEM STATUS // [16-MAR-2026]
+      </p>
+      <p className="text-green-400 lg:text-base text-sm font-semibold">
+        ✓ ALL SYSTEMS OPERATIONAL
+      </p>
+      <p className="text-white/70 lg:text-base text-sm">
+        We're back. Servers have been upgraded to handle the new
+        traffic + I optimized some queries. Everything should be running smoothly now and initial load for the page should be even faster than before. If you
+        notice any lingering issues, let me know in the{" "}
+        <a
+          className="text-indigo-500 underline"
+          href="https://discord.gg/6dsMavu6mH"
+        >
+          discord server
+        </a>
+        .
+      </p>
+      <p className="text-white/70 lg:text-base text-sm">
+        Thanks for your patience
+      </p>
+    </div>
+  ),
+},
+  {
+  id: 'downtime-activity-spike',
+  date: '2026-03-16',
+  content: (
+    <div className="space-y-4 lg:space-y-6 text-justify">
+      <p className="text-zinc-400 text-sm">
+        SYSTEM STATUS // [16-MAR-2026]
+      </p>
+      <p className="text-red-500 lg:text-base text-sm font-semibold">
+        ⚠ CAPACITY EXCEEDED — INTERMITTENT DOWNTIME
+      </p>
+      <p className="text-white/70 lg:text-base text-sm">
+        Hakita tweeted about ULTRAKIDLE and, well... the servers
+        weren't exactly ready what came next.
+        We've been experiencing intermittent downtime and degraded
+        performance due to the massive influx of new players.
+      </p>
+      <p className="text-white/70 lg:text-base text-sm">
+        I'm actively working on scaling things up to handle the
+        load. In the meantime, if the site is slow or unresponsive,
+        please be patient and try again in a few minutes — your
+        progress is safe.
+      </p>
+      <p className="text-cyan-300 lg:text-base text-sm">
+        On a brighter note: welcome to all the new players. Glad to
+          have you here :).
+      </p>
+    </div>
+  ),
+},
+  {
     id: 'changelog-2026-03-16',
     date: '2026-03-16',
     content: (
