@@ -57,7 +57,7 @@ const DonorsBoard = ({
       if (b.amountInUsd !== a.amountInUsd)
         return b.amountInUsd - a.amountInUsd;
       return (
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
     });
 
