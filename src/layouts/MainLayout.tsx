@@ -49,15 +49,7 @@ const MainLayout = () => {
 
     checkNewPlayer();
 
-    // Listen for auth changes (e.g., anonymous sign-in from child components)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("[MainLayout] Auth state changed:", _event, session?.user?.id);
-      checkNewPlayer();
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    checkNewPlayer();
   }, []);
 
   const isHome = location.pathname === '/';

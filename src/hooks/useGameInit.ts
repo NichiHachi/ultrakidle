@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { getMsUntilNicaraguaMidnight } from "../lib/time";
 
 export interface GuessHistoryEntry {
   guess_enemy_id: number;
@@ -39,10 +40,10 @@ export function useGameInit() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [dailyChanged, setDailyChanged] = useState(false);
 
-  const refresh = () => {
+  const refresh = useCallback(() => {
     setLoading(true);
     setRefreshKey((prev) => prev + 1);
-  };
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -79,21 +80,24 @@ export function useGameInit() {
   }, [refreshKey]);
 
   useEffect(() => {
-    const channel = supabase
-      .channel("daily-change")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "current_daily_choice",
-        },
-        () => setDailyChanged(true),
-      )
-      .subscribe();
+    let timeoutId: any;
+
+    const scheduleReset = () => {
+      const msUntilMidnight = getMsUntilNicaraguaMidnight();
+      console.log(`[useGameInit] Scheduling local reset in ${msUntilMidnight}ms`);
+
+      timeoutId = setTimeout(() => {
+        console.log("[useGameInit] Local reset triggered");
+        setDailyChanged(true);
+        // Reschedule for next day if they stay on the page
+        scheduleReset();
+      }, msUntilMidnight);
+    };
+
+    scheduleReset();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, []);
 

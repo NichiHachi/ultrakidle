@@ -70,11 +70,7 @@ export const MessagesProvider: React.FC<{ children: ReactNode }> = ({ children }
 
         syncWithSupabase();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-            syncWithSupabase();
-        });
-
-        return () => subscription.unsubscribe();
+        syncWithSupabase();
     }, []);
 
     const markAsRead = async (id: string) => {
