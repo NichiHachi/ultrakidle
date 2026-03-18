@@ -850,7 +850,7 @@ const InfernoPlayPage = () => {
                       />
                       <Typewriter
                         delay={0.6}
-                        className="text-white opacity-50 font-bold tracking-wider uppercase text-sm"
+                        className="text-white opacity-50 font-bold tracking-wider uppercase "
                         text={`TOTAL TIME: ${formatTime(totalTimeSeconds)}`}
                       />
                     </div>
@@ -923,8 +923,7 @@ const InfernoPlayPage = () => {
                               Target
                             </span>
                             <span className="font-bold text-green-400 uppercase truncate max-w-[120px]">
-                              {round.correct_level.level_number}:{" "}
-                              {round.correct_level.level_name}
+                              {round.correct_level.level_number}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
