@@ -63,15 +63,14 @@ const DonorsBoard = ({
       if (b.amountInUsd !== a.amountInUsd)
         return b.amountInUsd - a.amountInUsd;
       return (
-        new Date(a.created_at).getTime() -
-        new Date(b.created_at).getTime()
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
     });
 
   return (
     <div className="flex flex-col gap-2 bg-black/40 border-2 border-white/10 p-4">
       <div className="text-xs uppercase font-bold tracking-widest text-white/40 border-b border-white/10 pb-2 mb-1">
-        RECENT_SUPPORTERS
+        RECENT_TIPS
       </div>
       <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-1">
         {processedDonors.length > 0 ? (
@@ -81,7 +80,7 @@ const DonorsBoard = ({
               className="relative flex flex-col items-center flex-shrink-0 gap-1 px-3 py-2 border border-white/20 bg-white/5 min-w-[80px] overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-1 h-full bg-green-500" />
-              <span className="text-xs md:text-sm uppercase truncate max-w-[100px] text-white/90">
+              <span className="text-xs text-wrap md:text-sm uppercase truncate max-w-[200px] text-white/90">
                 {donor.name || "ANONYMOUS"}
               </span>
               <span className="text-green-500 text-xs">
