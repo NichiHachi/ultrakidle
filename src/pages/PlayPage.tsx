@@ -15,7 +15,7 @@ import { motion } from 'framer-motion';
 import { copyToClipboard } from '../lib/clipboard';
 
 const PlayPage = () => {
-    const { loading, dailyId, guessHistory, dailyChanged, setDailyChanged, refresh } = useGameInit();
+    const { loading, dayNumber, guessHistory, dailyChanged, setDailyChanged, refresh } = useGameInit();
     const { setUpdateAvailable } = useVersion();
     const { colorblindMode } = useSettings();
     const [guesses, setGuesses] = useState<GuessResult[]>([]);
@@ -133,7 +133,7 @@ const PlayPage = () => {
 
     const copyMissionLog = async () => {
         const attempts = hasWon ? guesses.length : (hasReachedLimit ? 'X' : guesses.length);
-        const header = `ULTRAKIDLE #${dailyId || ''} ${attempts}/5\n\n`;
+        const header = `ULTRAKIDLE #${dayNumber || ''} ${attempts}/5\n\n`;
         const success = await copyToClipboard(`${header}${emojiGrid}\n\nhttps://ultrakidle.online/`);
         if (success) {
             setCopySuccess(true);
@@ -179,7 +179,7 @@ const PlayPage = () => {
                     className="md:max-w-[1000px] w-full mt-4"
                 >
                     <div className="w-full flex justify-left">
-                    <span className="text-white/50 text-sm text-left place-self-start w-full justify-left">* All data mirrors that of the official wiki, which can be subject to change</span>
+                        <span className="text-white/50 text-sm text-left place-self-start w-full justify-left">* All data mirrors that of the official wiki, which can be subject to change</span>
                     </div>
                     <GuessBoard guesses={guesses} />
                 </motion.div>

@@ -107,8 +107,10 @@ async function prerender() {
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 15000 });
     await new Promise((r) => setTimeout(r, 500));
 
-    const html = await page.evaluate(() => {
+    const html = await page.evaluate((route) => {
+      if ( route !== "/" ) {
       document.getElementById('splash-loader')?.remove();
+      }
       return document.documentElement.outerHTML;
     });
     await page.close();
