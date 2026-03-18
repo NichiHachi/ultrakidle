@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import ModeTabs from "../../components/ui/ModeTabs";
 import type { GameMode } from "../../components/ui/ModeTabs";
 import { levels } from "../../lib/levels_list";
+import { useGameInit } from "../../hooks/useGameInit";
+import { copyToClipboard } from "../../lib/clipboard";
 import { resolveExternalUrl } from "../../lib/urls";
 import Button from "../../components/ui/Button";
 import { supabase } from "../../lib/supabaseClient";
@@ -61,6 +63,7 @@ type GameData = GameInProgress | GameCompleted | NoGameToday;
 const InfernoPlayPage = () => {
   const navigate = useNavigate();
   const { setUpdateAvailable } = useVersion();
+  const { dayNumber } = useGameInit();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,8 +77,6 @@ const InfernoPlayPage = () => {
     null
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  //   const [pendingNextRound, setPendingNextRound] =
-  //     useState<GameInProgress | null>(null);
   const [isGameFinished, setIsGameFinished] = useState(false);
   const [imgRetry, setImgRetry] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -84,6 +85,7 @@ const InfernoPlayPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [lightboxZoomed, setLightboxZoomed] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const [activeTimer, setActiveTimer] = useState(0);
 
@@ -189,7 +191,6 @@ const InfernoPlayPage = () => {
 
   useEffect(() => {
     let timeoutId: any;
-
     const scheduleReset = () => {
       const msUntilMidnight = getMsUntilNicaraguaMidnight();
       timeoutId = setTimeout(() => {
@@ -197,9 +198,7 @@ const InfernoPlayPage = () => {
         scheduleReset();
       }, msUntilMidnight);
     };
-
     scheduleReset();
-
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
@@ -304,7 +303,7 @@ const InfernoPlayPage = () => {
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
-    const secs = (seconds % 60).toFixed(1); // Show 1 decimal point for "active" feel
+    const secs = (seconds % 60).toFixed(1);
     const [whole, decimal] = secs.split(".");
     return `${mins}:${whole.padStart(2, "0")}.${decimal}`;
   };
@@ -375,6 +374,29 @@ const InfernoPlayPage = () => {
     () => sortedLevels.find((l) => l.id === selectedLevelId),
     [selectedLevelId, sortedLevels]
   );
+
+  const infernoNumber = dayNumber ? dayNumber - 23 : null;
+
+  const copyMissionLog = async () => {
+    if (gameData?.status !== "completed") return;
+    const completed = gameData as GameCompleted;
+
+    const header = `INFERNOGUESSR #${infernoNumber || ""}\n${completed.total_score}/500\nTIME: ${formatTime(totalTimeSeconds)}\n\n`;
+
+    const roundLines = completed.rounds
+      .map((r) => {
+        const emoji = r.score === 100 ? "🟩" : r.score >= 60 ? "🟧" : "🟥";
+        return `${emoji} +${r.score}`;
+      })
+      .join("\n");
+
+    const text = `${header}${roundLines}\n\nhttps://ultrakidle.online/`;
+    const success = await copyToClipboard(text);
+    if (success) {
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    }
+  };
 
   if (loading) {
     return (
@@ -501,7 +523,198 @@ const InfernoPlayPage = () => {
           </div>
 
           <div className="flex flex-col md:max-w-[1000px] w-full gap-4">
-            {!showFinalResults ? (
+            {showFinalResults ? (
+              safeGameData.status === "completed" && (
+                <motion.div className="flex flex-col w-full gap-6">
+                  <div className="flex flex-col items-start gap-2">
+                    <Typewriter
+                      text="MISSION EVALUATION"
+                      className="text-white opacity-50 font-bold uppercase tracking-widest"
+                    />
+                    <div className="flex flex-col gap-1">
+                      <Typewriter
+                        delay={0.4}
+                        className="text-green-500 opacity-50 font-bold tracking-wider uppercase"
+                        text={`TOTAL SCORE: ${safeGameData.total_score} / 500`}
+                      />
+                      <Typewriter
+                        delay={0.6}
+                        className="text-white opacity-50 font-bold tracking-wider uppercase"
+                        text={`TOTAL TIME: ${formatTime(totalTimeSeconds)}`}
+                      />
+                    </div>
+
+                    <motion.div
+                      initial="hidden"
+                      animate="visible"
+                      variants={{
+                        visible: {
+                          transition: {
+                            staggerChildren: 0.08,
+                            delayChildren: 1.0,
+                          },
+                        },
+                      }}
+                      className="flex flex-col gap-0.5 mt-2"
+                    >
+                      {Array.from({ length: 5 }).map((_, i) => {
+                        const round = safeGameData.rounds[i];
+                        const status = round
+                          ? round.score === 100
+                            ? "green"
+                            : round.score >= 60
+                              ? "yellow"
+                              : "red"
+                          : "gray";
+                        return (
+                          <motion.div
+                            key={i}
+                            variants={{
+                              hidden: { opacity: 0, scale: 0.5 },
+                              visible: { opacity: 1, scale: 1 },
+                            }}
+                            className="flex items-center gap-2"
+                          >
+                            <div
+                              className={`w-4 h-4 border ${
+                                status === "green"
+                                  ? "border-green-500 bg-green-500/20"
+                                  : status === "yellow"
+                                    ? "border-yellow-500 bg-yellow-500/20"
+                                    : status === "red"
+                                      ? "border-red-500 bg-red-500/20"
+                                      : "border-zinc-500/30 bg-zinc-800/20"
+                              }`}
+                            />
+                            {round && (
+                              <span
+                                className={`text-sm font-bold tracking-wider ${
+                                  status === "green"
+                                    ? "text-green-500/70"
+                                    : status === "yellow"
+                                      ? "text-yellow-500/70"
+                                      : "text-red-500/70"
+                                }`}
+                              >
+                                +{round.score}
+                              </span>
+                            )}
+                          </motion.div>
+                        );
+                      })}
+                    </motion.div>
+
+                    <Button
+                      variant="ghost"
+                      size="lg"
+                      onClick={copyMissionLog}
+                      className="flex items-center gap-2 text-xl opacity-50 hover:opacity-100 mt-1"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{
+                        delay: 1.0 + safeGameData.rounds.length * 0.08 + 0.3,
+                      }}
+                    >
+                      {copySuccess ? <>✓ COPIED</> : <>⎘ COPY LOG</>}
+                    </Button>
+                  </div>
+
+                  <div className="border-t border-white/10 pt-4">
+                    <span className="text-white/30 text-xs uppercase tracking-widest">
+                      ROUND DETAILS
+                    </span>
+                  </div>
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.6 }}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-3"
+                  >
+                    {safeGameData.rounds.map((round) => (
+                      <div
+                        key={round.round_number}
+                        className="border border-white/10 p-3 flex flex-col gap-3 bg-white/[0.02]"
+                      >
+                        <div className="flex justify-between items-center text-sm text-white/30 uppercase tracking-widest">
+                          <span>Round {round.round_number}</span>
+                          <span
+                            className={`font-bold ${
+                              round.score === 100
+                                ? "text-green-500"
+                                : round.score >= 60
+                                  ? "text-yellow-500"
+                                  : "text-red-500"
+                            }`}
+                          >
+                            +{round.score}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-white/30 uppercase">
+                            Captured by
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <img
+                              src={round.submitted_by.avatar_url}
+                              alt=""
+                              className="w-3 h-3 rounded-full"
+                            />
+                            <span className="text-sm text-white/50 font-bold">
+                              {round.submitted_by.name}
+                            </span>
+                          </div>
+                        </div>
+                        <div
+                          className="aspect-video border border-white/10 overflow-hidden cursor-pointer hover:border-white/30 transition-colors"
+                          onClick={() =>
+                            setLightboxUrl(resolveExternalUrl(round.image_url))
+                          }
+                        >
+                          <img
+                            src={resolveExternalUrl(round.image_url)}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1 text-sm">
+                          <div className="flex items-center justify-between">
+                            <span className="text-white/30 uppercase">
+                              Time
+                            </span>
+                            <span className="font-bold text-white/70 uppercase">
+                              {round.time_spent_seconds.toFixed(3)}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-white/30 uppercase">
+                              Target
+                            </span>
+                            <span className="font-bold text-green-400 uppercase truncate max-w-[120px]">
+                              {round.correct_level.level_number}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-white/30 uppercase">
+                              Distance
+                            </span>
+                            <span
+                              className={`font-bold ${
+                                round.distance === 0
+                                  ? "text-green-400"
+                                  : "text-red-400"
+                              }`}
+                            >
+                              {round.distance}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </motion.div>
+                </motion.div>
+              )
+            ) : (
               <>
                 <div className="relative aspect-video bg-black border border-white/10 overflow-hidden group">
                   <div
@@ -547,7 +760,6 @@ const InfernoPlayPage = () => {
                       onError={handleImageError}
                     />
                   </div>
-
                   <div className="absolute bottom-3 right-3 flex flex-col gap-2 transition-opacity z-10">
                     <div className="bg-black/80 p-2 border border-white/10 flex flex-col gap-3">
                       <div className="flex flex-col gap-1">
@@ -580,7 +792,6 @@ const InfernoPlayPage = () => {
                       </div>
                     </div>
                   </div>
-
                   <div className="absolute top-3 right-3 flex items-center gap-2 px-2 py-1 bg-black/60 border border-white/10 z-10">
                     <span className="text-[12px] text-white/50 uppercase tracking-widest">
                       CAPTURED BY:
@@ -682,13 +893,13 @@ const InfernoPlayPage = () => {
 
                       const guessIdx = lastRoundResult
                         ? sortedLevels.findIndex(
-                          (l) => l.id === lastRoundResult.guessed_level.id
-                        )
+                            (l) => l.id === lastRoundResult.guessed_level.id
+                          )
                         : -1;
                       const correctIdx = lastRoundResult
                         ? sortedLevels.findIndex(
-                          (l) => l.id === lastRoundResult.correct_level.id
-                        )
+                            (l) => l.id === lastRoundResult.correct_level.id
+                          )
                         : -1;
                       const minIdx = Math.min(guessIdx, correctIdx);
                       const maxIdx = Math.max(guessIdx, correctIdx);
@@ -707,16 +918,18 @@ const InfernoPlayPage = () => {
                           onClick={() =>
                             !lastRoundResult && setSelectedLevelId(level.id)
                           }
-                          className={`group relative flex flex-col hover:cursor-pointer items-center gap-1 min-w-32 w-[15vw] max-w-48 flex-shrink-0 transition-all ${isSelected
+                          className={`group relative flex flex-col hover:cursor-pointer items-center gap-1 min-w-32 w-[15vw] max-w-48 flex-shrink-0 transition-all ${
+                            isSelected
                               ? "scale-105 opacity-100 grayscale-0"
                               : lastRoundResult &&
                                 (isCorrect || isGuessed || isInBetween)
                                 ? "scale-105 opacity-100 grayscale-0"
                                 : "opacity-60 grayscale hover:grayscale-0 hover:opacity-100"
-                            }`}
+                          }`}
                         >
                           <div
-                            className={`w-full aspect-video border-2 transition-colors duration-500 overflow-hidden relative ${isSelected
+                            className={`w-full aspect-video border-2 transition-colors duration-500 overflow-hidden relative ${
+                              isSelected
                                 ? "border-white/70"
                                 : lastRoundResult && isCorrect
                                   ? "border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]"
@@ -725,24 +938,26 @@ const InfernoPlayPage = () => {
                                     : isInBetween
                                       ? "border-red-500/50"
                                       : "border-white/10"
-                              }`}
+                            }`}
                           >
                             <img
                               src={resolveExternalUrl(level.thumbnail || "")}
                               alt={level.name}
-                              className={`w-full h-full object-cover transition-all duration-500 ${lastRoundResult && isCorrect
+                              className={`w-full h-full object-cover transition-all duration-500 ${
+                                lastRoundResult && isCorrect
                                   ? "brightness-110"
                                   : isInBetween
                                     ? "brightness-75"
                                     : ""
-                                }`}
+                              }`}
                             />
                             {isInBetween && (
                               <div className="absolute inset-0 bg-red-500/20 animate-pulse pointer-events-none z-10" />
                             )}
                           </div>
                           <span
-                            className={`text-base truncate w-full text-center transition-colors ${isSelected
+                            className={`text-base truncate w-full text-center transition-colors ${
+                              isSelected
                                 ? "text-white"
                                 : lastRoundResult && isCorrect
                                   ? "text-green-500"
@@ -751,7 +966,7 @@ const InfernoPlayPage = () => {
                                     : isInBetween
                                       ? "text-red-400"
                                       : "text-white/50 group-hover:text-white"
-                              }`}
+                            }`}
                           >
                             {level.levelNumber}
                           </span>
@@ -830,116 +1045,6 @@ const InfernoPlayPage = () => {
                   <div ref={resultsRef} />
                 </div>
               </>
-            ) : (
-              safeGameData.status === "completed" && (
-                <motion.div className="flex flex-col w-full gap-6">
-                  <div className="flex flex-col items-start gap-1">
-                    <Typewriter
-                      text="MISSION EVALUATION"
-                      className="text-white opacity-50 font-bold uppercase tracking-widest"
-                    />
-                    <div className="flex flex-col">
-                      <Typewriter
-                        delay={0.4}
-                        className="text-green-500 opacity-50 font-bold tracking-wider uppercase"
-                        text={`TOTAL SCORE: ${(safeGameData as GameCompleted).total_score} / 500`}
-                      />
-                      <Typewriter
-                        delay={0.6}
-                        className="text-white opacity-50 font-bold tracking-wider uppercase "
-                        text={`TOTAL TIME: ${formatTime(totalTimeSeconds)}`}
-                      />
-                    </div>
-                  </div>
-
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1.2 }}
-                    className="grid grid-cols-1 md:grid-cols-3 gap-3"
-                  >
-                    {(safeGameData as GameCompleted).rounds.map((round) => (
-                      <div
-                        key={round.round_number}
-                        className="border border-white/10 p-3 flex flex-col gap-3 bg-white/[0.02]"
-                      >
-                        <div className="flex justify-between items-center text-sm text-white/30 uppercase tracking-widest">
-                          <span>Round {round.round_number}</span>
-                          <span
-                            className={`font-bold ${round.score === 100
-                                ? "text-green-500"
-                                : round.score >= 50
-                                  ? "text-yellow-500"
-                                  : "text-red-500"
-                              }`}
-                          >
-                            +{round.score}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-white/30 uppercase">
-                            Captured by
-                          </span>
-                          <div className="flex items-center gap-1.5">
-                            <img
-                              src={round.submitted_by.avatar_url}
-                              alt=""
-                              className="w-3 h-3 rounded-full"
-                            />
-                            <span className="text-sm text-white/50 font-bold">
-                              {round.submitted_by.name}
-                            </span>
-                          </div>
-                        </div>
-
-                          <div
-                            className="aspect-video border border-white/10 overflow-hidden cursor-pointer hover:border-white/30 transition-colors"
-                            onClick={() => setLightboxUrl(resolveExternalUrl(round.image_url))}
-                          >
-                            <img
-                              src={resolveExternalUrl(round.image_url)}
-                              alt=""
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-
-                        <div className="flex flex-col gap-1 text-sm">
-                          <div className="flex items-center justify-between">
-                            <span className="text-white/30 uppercase">
-                              Time
-                            </span>
-                            <span className="font-bold text-white/70 uppercase">
-                              {round.time_spent_seconds.toFixed(3)}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-white/30 uppercase">
-                              Target
-                            </span>
-                            <span className="font-bold text-green-400 uppercase truncate max-w-[120px]">
-                              {round.correct_level.level_number}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-white/30 uppercase">
-                              Distance
-                            </span>
-                            <span
-                              className={`font-bold ${round.distance === 0
-                                  ? "text-green-400"
-                                  : "text-red-400"
-                                }`}
-                            >
-                              {round.distance}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </motion.div>
-                </motion.div>
-              )
             )}
           </div>
         </motion.div>
@@ -953,10 +1058,11 @@ const InfernoPlayPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className={`fixed inset-0 z-50 bg-black/90 backdrop-blur-sm ${lightboxZoomed
+            className={`fixed inset-0 z-50 bg-black/90 backdrop-blur-sm ${
+              lightboxZoomed
                 ? "overflow-auto"
                 : "flex items-center justify-center"
-              }`}
+            }`}
             onClick={() => setLightboxUrl(null)}
           >
             <div
