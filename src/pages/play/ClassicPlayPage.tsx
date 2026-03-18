@@ -20,7 +20,7 @@ import type { GameMode } from "../../components/ui/ModeTabs";
 const ClassicPlayPage = () => {
     const {
         loading,
-        dailyId,
+        dayNumber,
         guessHistory,
         dailyChanged,
         setDailyChanged,
@@ -63,13 +63,10 @@ const ClassicPlayPage = () => {
 
         setIsSubmitting(true);
         try {
-            const { data, error } = await supabase.rpc(
-                "submit_daily_guess",
-                {
-                    guess_id: enemyId,
-                    version: CURRENT_VERSION,
-                }
-            );
+            const { data, error } = await supabase.rpc("submit_daily_guess", {
+                guess_id: enemyId,
+                version: CURRENT_VERSION,
+            });
 
             if (error) {
                 console.error("Submit guess error:", error.message);
@@ -117,11 +114,7 @@ const ClassicPlayPage = () => {
         : null;
 
     const guessGridData = guesses.map((g) => {
-        const getStatus = (
-            value: any,
-            result: string,
-            color?: string
-        ) => {
+        const getStatus = (value: any, result: string, color?: string) => {
             if (value === undefined || value === null) return "gray";
             if (color === "green" || result === "correct") return "green";
             if (color === "yellow") return "yellow";
@@ -173,9 +166,9 @@ const ClassicPlayPage = () => {
         const attempts = hasWon
             ? guesses.length
             : hasReachedLimit
-                ? "X"
-                : guesses.length;
-        const header = `ULTRAKIDLE #${dailyId || ""} ${attempts}/5\n\n`;
+              ? "X"
+              : guesses.length;
+        const header = `ULTRAKIDLE #${dayNumber || ""} ${attempts}/5\n\n`;
         const success = await copyToClipboard(
             `${header}${emojiGrid}\n\nhttps://ultrakidle.online/`
         );
@@ -209,7 +202,6 @@ const ClassicPlayPage = () => {
             </>
         );
     }
-
 
     return (
         <>
@@ -246,9 +238,7 @@ const ClassicPlayPage = () => {
                             disabled={isSubmitting || isGameOver}
                             excludeIds={guesses
                                 .map((g: GuessResult) => g.guess_id)
-                                .filter(
-                                    (id): id is number => id !== undefined
-                                )}
+                                .filter((id): id is number => id !== undefined)}
                         />
                     </div>
 
@@ -256,29 +246,35 @@ const ClassicPlayPage = () => {
                         animate={
                             shouldFlash
                                 ? {
-                                    backgroundColor: [
-                                        "rgba(255, 255, 255, 0.6)",
-                                        "rgba(255, 255, 255, 0)",
-                                    ],
-                                }
+                                      backgroundColor: [
+                                          "rgba(255, 255, 255, 0.6)",
+                                          "rgba(255, 255, 255, 0)",
+                                      ],
+                                  }
                                 : {
-                                    backgroundColor: "rgba(255, 255, 255, 0)",
-                                }
+                                      backgroundColor: "rgba(255, 255, 255, 0)",
+                                  }
                         }
                         transition={
                             shouldFlash
                                 ? { duration: 1.5, ease: "easeOut" }
                                 : { duration: 0 }
                         }
-                        className="md:max-w-[1000px] w-full"
+                        className="md:max-w-[1000px] w-full mt-4"
                     >
+                        <div className="w-full flex justify-left">
+                            <span className="text-white/50 text-sm text-left place-self-start w-full justify-left">
+                                * All data mirrors that of the official wiki,
+                                which can be subject to change
+                            </span>
+                        </div>
                         <GuessBoard guesses={guesses} />
                     </motion.div>
 
                     <div className="mt-2 text-white flex flex-col items-start gap-1 font-bold uppercase tracking-wider">
                         <span className="opacity-50">
-                            GUESSES REMAINING:{" "}
-                            {Math.max(0, 5 - guesses.length)} / 5
+                            GUESSES REMAINING: {Math.max(0, 5 - guesses.length)}{" "}
+                            / 5
                         </span>
                         {hasWon && (
                             <div className="flex items-center gap-4">
@@ -301,8 +297,9 @@ const ClassicPlayPage = () => {
                                                 enemies.find(
                                                     (e) =>
                                                         e.name ===
-                                                        guesses.find((g) => g.correct)
-                                                            ?.enemy_name
+                                                        guesses.find(
+                                                            (g) => g.correct
+                                                        )?.enemy_name
                                                 )?.icon || []
                                             }
                                             size={32}
@@ -329,8 +326,14 @@ const ClassicPlayPage = () => {
                                         />
                                         <div className="flex items-center gap-2">
                                             <motion.div
-                                                initial={{ opacity: 0, scale: 0.5 }}
-                                                animate={{ opacity: 1, scale: 1 }}
+                                                initial={{
+                                                    opacity: 0,
+                                                    scale: 0.5,
+                                                }}
+                                                animate={{
+                                                    opacity: 1,
+                                                    scale: 1,
+                                                }}
                                                 transition={{
                                                     delay: 1.8,
                                                     duration: 0.5,
@@ -382,38 +385,42 @@ const ClassicPlayPage = () => {
                                                     key={rowIndex}
                                                     className="flex gap-1"
                                                 >
-                                                    {Array.from({ length: 6 }).map(
-                                                        (_, colIndex) => {
-                                                            const status = row
-                                                                ? row[colIndex]
-                                                                : "gray";
-                                                            return (
-                                                                <motion.div
-                                                                    key={colIndex}
-                                                                    variants={{
-                                                                        hidden: {
-                                                                            opacity: 0,
-                                                                            scale: 0.5,
-                                                                        },
-                                                                        visible: {
-                                                                            opacity: 1,
-                                                                            scale: 1,
-                                                                        },
-                                                                    }}
-                                                                    className={`w-6 h-6 border ${status === "green"
-                                                                        ? "bg-green-500/20 border-green-500"
-                                                                        : status === "yellow"
-                                                                            ? colorblindMode
-                                                                                ? "bg-blue-500/20 border-blue-500"
-                                                                                : "bg-yellow-500/20 border-yellow-500"
-                                                                            : status === "gray"
-                                                                                ? "bg-zinc-800/20 border-zinc-500/30"
-                                                                                : "bg-red-500/20 border-red-500"
-                                                                        }`}
-                                                                />
-                                                            );
-                                                        }
-                                                    )}
+                                                    {Array.from({
+                                                        length: 6,
+                                                    }).map((_, colIndex) => {
+                                                        const status = row
+                                                            ? row[colIndex]
+                                                            : "gray";
+                                                        return (
+                                                            <motion.div
+                                                                key={colIndex}
+                                                                variants={{
+                                                                    hidden: {
+                                                                        opacity: 0,
+                                                                        scale: 0.5,
+                                                                    },
+                                                                    visible: {
+                                                                        opacity: 1,
+                                                                        scale: 1,
+                                                                    },
+                                                                }}
+                                                                className={`h-6 w-6 border ${
+                                                                    status ===
+                                                                    "green"
+                                                                        ? "border-green-500 bg-green-500/20"
+                                                                        : status ===
+                                                                          "yellow"
+                                                                          ? colorblindMode
+                                                                              ? "border-blue-500 bg-blue-500/20"
+                                                                              : "border-yellow-500 bg-yellow-500/20"
+                                                                          : status ===
+                                                                            "gray"
+                                                                            ? "border-zinc-500/30 bg-zinc-800/20"
+                                                                            : "border-red-500 bg-red-500/20"
+                                                                }`}
+                                                            />
+                                                        );
+                                                    })}
                                                 </div>
                                             );
                                         }
@@ -423,7 +430,7 @@ const ClassicPlayPage = () => {
                                     variant="ghost"
                                     size="lg"
                                     onClick={copyMissionLog}
-                                    className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100 mb-4"
+                                    className="mb-4 flex items-center gap-2 text-xl opacity-50 hover:opacity-100"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{
@@ -445,34 +452,34 @@ const ClassicPlayPage = () => {
             </div>
 
             {(!hasWon && hasReachedLimit && (
-                <div className="-z-10 h-dvh w-dvw bg-black fixed top-0 left-0 flex items-center justify-center overflow-visible">
-                    <div className="w-1/3 h-1/3 overflow-visible">
+                <div className="fixed left-0 top-0 -z-10 flex h-dvh w-dvw items-center justify-center overflow-visible bg-black">
+                    <div className="h-1/3 w-1/3 overflow-visible">
                         <img
-                            className="opacity-10 overflow-visible object-cover w-full h-full mx-auto"
+                            className="mx-auto h-full w-full object-cover opacity-10 overflow-visible"
                             src={`${import.meta.env.BASE_URL}images/ultrakill-death.gif`}
                             alt="Death"
                         />
                     </div>
                 </div>
             )) || (
-                    <div className="-z-10 h-dvh w-dvw bg-black/40 fixed top-0 left-0 overflow-visible"></div>
-                )}
+                <div className="fixed left-0 top-0 -z-10 h-dvh w-dvw overflow-visible bg-black/40"></div>
+            )}
 
             {dailyChanged && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="bg-zinc-900 border border-red-500/30 p-8 max-w-md w-full flex flex-col items-center gap-6"
+                        className="flex w-full max-w-md flex-col items-center gap-6 border border-red-500/30 bg-zinc-900 p-8"
                     >
                         <Typewriter
                             text="TIME IS UP"
-                            className="text-3xl text-red-500 font-bold tracking-widest"
+                            className="text-3xl font-bold tracking-widest text-red-500"
                             speed={0.05}
                         />
                         <Typewriter
                             text="A NEW DAILY CHALLENGE IS AVAILABLE"
-                            className="text-white/70 text-center"
+                            className="text-center text-white/70"
                             speed={0.03}
                             delay={0.5}
                         />

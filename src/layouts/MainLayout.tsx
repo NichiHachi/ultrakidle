@@ -202,7 +202,7 @@ const MainLayout = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-4 text-sm">
+                  <div className="uppercase space-y-4 text-sm">
                     <p>IDENTIFY THE TARGET LEVEL FROM A SCREENSHOT IN <span className="text-white font-bold">3 ROUNDS</span>.</p>
                     <div className="space-y-2">
                       <p className="opacity-50 underline uppercase">Mechanics:</p>
@@ -210,14 +210,8 @@ const MainLayout = () => {
                         <li>You get <span className="text-white">one attempt</span> per round.</li>
                         <li>Distance is calculated based on the position of your guess relative to the correct answer in our <button onClick={() => { setIsHowToPlayOpen(false); navigate("/levels"); }} className="underline hover:text-white/80 cursor-pointer">Levels</button> page list.</li>
                         <li>A guess of 0-3 while the answer is 0-5 results in a <span className="text-white font-bold">distance of 2</span>.</li>
+                        <li>The base score for a round is 100pts. This base score decreases exponentially the further away your guess is from the target level.</li>
                       </ul>
-                    </div>
-                    <div className="space-y-2 pt-2 border-t border-white/10">
-                      <p className="opacity-50 underline uppercase">Scoring Formula:</p>
-                      <div className="font-mono bg-white/5 p-3 rounded text-center text-cyan-300">
-                        score = round(100 * (0.85 ^ distance))
-                      </div>
-                      <p className="opacity-80">The closer your guess is in level progression, the higher your score!</p>
                     </div>
                   </div>
                 )}
