@@ -275,12 +275,12 @@ const HomePage = () => {
                     delay={0.3}
                   />
                   <Typewriter
-                    text={`├ POINTS: ${infernoTotal?.total_score ?? 0}`}
+                    text={`├ TOTAL_PTS: ${infernoTotal?.total_score ?? 0}`}
                     speed={0.02}
                     delay={0.4}
                   />
                   <Typewriter
-                    text={`├ DEPLOYED: ${infernoTotal?.games_played ?? 0}`}
+                    text={`├ DEPLOYED: ${infernoAvg?.total_completed ?? 0}`}
                     speed={0.02}
                     delay={0.5}
                   />
