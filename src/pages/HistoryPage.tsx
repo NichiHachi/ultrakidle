@@ -4,7 +4,7 @@ import Button from '../components/ui/Button';
 import { usePlayHistory } from '../hooks/usePlayHistory';
 import { Typewriter } from '../components/Typewriter';
 import ModeTabs from '../components/ui/ModeTabs';
-import type { GameMode } from "../../components/ui/ModeTabs";
+import type { GameMode } from "../components/ui/ModeTabs";
 
 const HistoryPage = () => {
     const { loading, history, infernoHistory, longestStreak } = usePlayHistory();
@@ -35,31 +35,31 @@ const HistoryPage = () => {
             <div className="flex flex-col w-full h-[700px] max-h-full max-w-2xl bg-black/40 border-2 border-white/10 p-4 uppercase font-bold tracking-widest text-white overflow-hidden">
 
 
-                    {loading ? (
-                        <div className="text-2xl animate-pulse mt-2">ACCESSING ARCHIVES...</div>
-                    ) : (
-                        activeMode === "classic" && (
-                                <>
-                <div className="flex flex-col gap-2 pb-4 border-b border-white/10 flex-shrink-0">
-                    <h1 className="text-xl opacity-50">SERVICE_RECORD</h1>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mt-6">
-                                <div className="flex flex-col items-center text-center bg-white/5 p-3 md:p-0 border-l-2 md:border-l-0 border-white/20 relative overflow-hidden group">
-                                    <span className="opacity-50 text-[10px] md:text-sm tracking-tighter">TOTAL DEPLOYMENTS</span>
-                                    <span className="text-2xl md:text-3xl font-black">{totalMissions}</span>
-                                </div>
-                                <div className="flex flex-col items-center text-center bg-white/5 p-3 md:p-0 border-l-2 md:border-l-0 border-yellow-500/20 relative overflow-hidden group">
-                                    <span className="opacity-50 text-[10px] md:text-sm tracking-tighter">LONGEST STREAK</span>
-                                    <span className="text-2xl md:text-3xl font-black text-yellow-500">{longestStreak}</span>
-                                </div>
-                                <div className="flex flex-col items-center text-center bg-white/5 p-3 md:p-0 border-l-2 md:border-l-0 border-green-500/20 relative overflow-hidden group">
-                                    <span className="opacity-50 text-[10px] md:text-sm tracking-tighter">SUCCESS RATE</span>
-                                    <span className="text-2xl md:text-3xl font-black text-green-500">{successRate}%</span>
+                {loading ? (
+                    <div className="text-2xl animate-pulse mt-2">ACCESSING ARCHIVES...</div>
+                ) : (
+                    activeMode === "classic" && (
+                        <>
+                            <div className="flex flex-col gap-2 pb-4 border-b border-white/10 flex-shrink-0">
+                                <h1 className="text-xl opacity-50">SERVICE_RECORD</h1>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mt-6">
+                                    <div className="flex flex-col items-center text-center bg-white/5 p-3 md:p-0 border-l-2 md:border-l-0 border-white/20 relative overflow-hidden group">
+                                        <span className="opacity-50 text-[10px] md:text-sm tracking-tighter">TOTAL DEPLOYMENTS</span>
+                                        <span className="text-2xl md:text-3xl font-black">{totalMissions}</span>
+                                    </div>
+                                    <div className="flex flex-col items-center text-center bg-white/5 p-3 md:p-0 border-l-2 md:border-l-0 border-yellow-500/20 relative overflow-hidden group">
+                                        <span className="opacity-50 text-[10px] md:text-sm tracking-tighter">LONGEST STREAK</span>
+                                        <span className="text-2xl md:text-3xl font-black text-yellow-500">{longestStreak}</span>
+                                    </div>
+                                    <div className="flex flex-col items-center text-center bg-white/5 p-3 md:p-0 border-l-2 md:border-l-0 border-green-500/20 relative overflow-hidden group">
+                                        <span className="opacity-50 text-[10px] md:text-sm tracking-tighter">SUCCESS RATE</span>
+                                        <span className="text-2xl md:text-3xl font-black text-green-500">{successRate}%</span>
+                                    </div>
                                 </div>
                             </div>
-                </div>
-                                </>
-                        )
-                    )}
+                        </>
+                    )
+                )}
 
                 <div className="mt-6 flex flex-col flex-1 min-h-0">
                     <div className="flex flex-col gap-2 flex-1 min-h-0">
