@@ -893,16 +893,16 @@ const InfernoPlayPage = () => {
                           </div>
                         </div>
 
-                        <div
-                          className="aspect-video border border-white/10 overflow-hidden cursor-pointer hover:border-white/30 transition-colors"
-                          onClick={() => setLightboxUrl(round.image_url)}
-                        >
-                          <img
-                            src={round.image_url}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                          <div
+                            className="aspect-video border border-white/10 overflow-hidden cursor-pointer hover:border-white/30 transition-colors"
+                            onClick={() => setLightboxUrl(resolveExternalUrl(round.image_url))}
+                          >
+                            <img
+                              src={resolveExternalUrl(round.image_url)}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
 
                         <div className="flex flex-col gap-1 text-sm">
                           <div className="flex items-center justify-between">
