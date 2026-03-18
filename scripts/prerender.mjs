@@ -3,13 +3,19 @@
 import { launch } from 'puppeteer';
 import { createServer } from 'http';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join, resolve } from 'path';
+import { join, resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const DIST = resolve(import.meta.dirname, '..', 'dist');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const DIST = resolve(__dirname, '..', 'dist');
+
+console.log(`[prerender] Starting...`);
+console.log(`[prerender] __dirname: ${__dirname}`);
+console.log(`[prerender] DIST: ${DIST}`);
 const PORT = 45678;
 
 const ROUTES = [
-  '/',
   '/about',
   '/enemies',
   '/credits',
@@ -17,7 +23,6 @@ const ROUTES = [
   '/tos',
   '/privacy',
   '/messages',
-  '/levels',
 ];
 
 function serve() {
@@ -69,8 +74,7 @@ function serve() {
 }
 
 function fixRelativePaths(html, route) {
-  const depth =
-    route === '/' ? 0 : route.replace(/^\//, '').split('/').length;
+  const depth = route.replace(/^\//, '').split('/').length;
   if (depth === 0) return html;
   const prefix = '../'.repeat(depth);
   return html.replaceAll(/\.\/(assets\/)/g, `${prefix}$1`);
@@ -89,10 +93,6 @@ async function prerender() {
     console.log(`[prerender] Rendering ${route} ...`);
 
     const page = await browser.newPage();
-
-    await page.evaluateOnNewDocument(() => {
-      window.__PRERENDER_INJECTED = true;
-    });
 
     await page.setRequestInterception(true);
     page.on('request', (req) => {
@@ -115,8 +115,7 @@ async function prerender() {
 
     const fixedHtml = fixRelativePaths(html, route);
 
-    const outDir =
-      route === '/' ? DIST : join(DIST, route.replace(/^\//, ''));
+    const outDir = join(DIST, route.replace(/^\//, ''));
 
     if (!existsSync(outDir)) {
       mkdirSync(outDir, { recursive: true });

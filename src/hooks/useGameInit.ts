@@ -60,6 +60,7 @@ export interface InfernoRoundData {
 export function useGameInit() {
   const [loading, setLoading] = useState(true);
   const [dailyId, setDailyId] = useState<number | null>(null);
+  const [dayNumber, setDayNumber] = useState<number | null>(null);
   const [guessHistory, setGuessHistory] = useState<GuessHistoryEntry[]>([]);
   const [dailyStats, setDailyStats] = useState<DailyStats | null>(null);
   const [streak, setStreak] = useState<number>(0);
@@ -101,6 +102,7 @@ export function useGameInit() {
         if (error) throw error;
 
         setDailyId(data.daily_id);
+        setDayNumber(data.day_number);
         setGuessHistory(data.history ?? []);
         setDailyStats(data.stats);
         setStreak(data.streak);
@@ -133,6 +135,7 @@ export function useGameInit() {
   return {
     loading,
     dailyId,
+    dayNumber,
     guessHistory,
     dailyStats,
     streak,
