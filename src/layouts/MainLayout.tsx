@@ -203,7 +203,7 @@ const MainLayout = () => {
                   </div>
                 ) : (
                   <div className="uppercase space-y-4 text-sm">
-                    <p>IDENTIFY THE TARGET LEVEL FROM A SCREENSHOT IN <span className="text-white font-bold">3 ROUNDS</span>.</p>
+                    <p>IDENTIFY THE TARGET LEVEL FROM A SCREENSHOT FOR <span className="text-white font-bold">5 ROUNDS</span>.</p>
                     <div className="space-y-2">
                       <p className="opacity-50 underline uppercase">Mechanics:</p>
                       <ul className="list-disc [&>*]:text-left pl-4 list-outside space-y-1 opacity-80">

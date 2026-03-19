@@ -657,13 +657,6 @@ if (stale?.length) {
     try {
       await new Promise((r) => setTimeout(r, 1000));
 
-      await removeReaction(sub.channel_id, sub.message_id, "👀");
-      await sendMessage(
-        sub.channel_id,
-        "⏰ **Submission expired** — This thread has been open for over 2 days without reaching the vote threshold. Feel free to resubmit!",
-      );
-      await closeThread(sub.channel_id);
-
       await supabase
         .from("image_submissions")
         .update({
@@ -671,6 +664,13 @@ if (stale?.length) {
           resolved_at: new Date().toISOString(),
         })
         .eq("id", sub.id);
+      await removeReaction(sub.channel_id, sub.message_id, "👀");
+      await sendMessage(
+        sub.channel_id,
+        "⏰ **Submission expired** — This thread has been open for over 2 days without reaching the vote threshold. Feel free to resubmit!",
+      );
+      await closeThread(sub.channel_id);
+
 
       console.log(`[stale] ✓ Archived #${sub.id}`);
       totalStale++;

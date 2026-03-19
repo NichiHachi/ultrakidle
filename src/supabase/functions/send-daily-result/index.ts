@@ -55,11 +55,25 @@ function generateResultsSvg(
   const CARD_W = AVATAR_R * 2 + CARD_PAD + GRID_W + CARD_PAD * 2;
   const CARD_H = GRID_H + CARD_PAD * 2;
   const CARD_GAP = 16;
-
-  const COLS = 3;
-  const totalRows = Math.ceil(results.length / COLS);
-
   const PAD = 24;
+
+ const TARGET_RATIO = 16 / 9;
+ let bestCols = 1;
+ let bestDiff = Infinity;
+ for (let c = 1; c <= results.length; c++) {
+   const rows = Math.ceil(results.length / c);
+   const w = PAD * 2 + c * CARD_W + (c - 1) * CARD_GAP;
+   const h = PAD * 2 + rows * CARD_H + (rows - 1) * CARD_GAP;
+   const diff = Math.abs(w / h - TARGET_RATIO);
+   if (diff < bestDiff) {
+     bestDiff = diff;
+     bestCols = c;
+   }
+ }
+
+ const COLS = bestCols;
+ const totalRows = Math.ceil(results.length / COLS);
+
   const totalW = PAD * 2 + COLS * CARD_W + (COLS - 1) * CARD_GAP;
   const totalH = PAD * 2 + totalRows * CARD_H + (totalRows - 1) * CARD_GAP;
 

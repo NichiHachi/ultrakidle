@@ -381,7 +381,7 @@ const InfernoPlayPage = () => {
     if (gameData?.status !== "completed") return;
     const completed = gameData as GameCompleted;
 
-    const header = `INFERNOGUESSR #${infernoNumber || ""}\n${completed.total_score}/500\nTIME: ${formatTime(totalTimeSeconds)}\n\n`;
+    const header = `INFERNOGUESSR #${infernoNumber || ""}\nPTS: ${completed.total_score}/500\nTIME: ${formatTime(totalTimeSeconds)}\n\n`;
 
     const roundLines = completed.rounds
       .map((r) => {
