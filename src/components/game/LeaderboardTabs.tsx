@@ -13,7 +13,7 @@ export const LeaderboardTabs = ({
   guildId,
   layout = "vertical",
 }: LeaderboardTabsProps) => {
-  const [mode, setMode] = useState<"classic" | "inferno">("classic");
+  const [mode, setMode] = useState<"classic" | "infernoguessr">("classic");
   const classic = useLeaderboard(guildId);
   const inferno = useInfernoLeaderboard(guildId);
 

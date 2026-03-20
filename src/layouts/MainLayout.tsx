@@ -7,14 +7,12 @@ import { isRunningInDiscord, getGuildId } from '../lib/discord';
 import { supabase } from '../lib/supabaseClient';
 import { LeaderboardTabs } from '../components/game/LeaderboardTabs';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useLeaderboard } from '../hooks/useLeaderboard';
 import { ExternalLink } from '../components/ui/ExternalLink';
 
 const MainLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const guildId = getGuildId();
-  const { users, loading } = useLeaderboard(guildId);
   const { colorblindMode, toggleColorblindMode } = useSettings();
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [isRankingOpen, setIsRankingOpen] = useState(true);
