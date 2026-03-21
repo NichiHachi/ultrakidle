@@ -1,0 +1,14 @@
+{
+  "rewrites": [
+    { "source": "/about", "destination": "/about/index.html" },
+    { "source": "/enemies", "destination": "/enemies/index.html" },
+    { "source": "/credits", "destination": "/credits/index.html" },
+    { "source": "/contact", "destination": "/contact/index.html" },
+    { "source": "/tos", "destination": "/tos/index.html" },
+    { "source": "/privacy", "destination": "/privacy/index.html" },
+    { "source": "/messages", "destination": "/messages/index.html" },
+    { "source": "/levels", "destination": "/levels/index.html" },
+    { "source": "/history", "destination": "/history/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
