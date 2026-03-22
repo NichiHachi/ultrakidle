@@ -113,6 +113,10 @@ const InfernoPlayPage = () => {
       [...levels].sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)),
     []
   );
+  const maxSearchLength = useMemo(
+    () => Math.max(...sortedLevels.map((l) => l.name.length)),
+    [sortedLevels]
+  );
 
   const filteredLevels = useMemo(() => {
     if (!searchQuery.trim()) return sortedLevels;
@@ -911,10 +915,10 @@ const InfernoPlayPage = () => {
                       ref={searchInputRef}
                       type="text"
                       value={searchQuery}
-                      onChange={(e) => {
-                        const val = e.target.value.toUpperCase();
-                        if (val.length <= 3) setSearchQuery(val);
-                      }}
+                        onChange={(e) => {
+                          const val = e.target.value.toUpperCase();
+                          if (val.length <= maxSearchLength) setSearchQuery(val);
+                        }}
                       onKeyDown={(e) => {
                         if (
                           e.key === "Enter" &&
