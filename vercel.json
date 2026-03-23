@@ -9,6 +9,7 @@
     { "source": "/messages", "destination": "/messages/index.html" },
     { "source": "/levels", "destination": "/levels/index.html" },
     { "source": "/history", "destination": "/history/index.html" },
+    { "source": "/faq", "destination": "/faq/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
