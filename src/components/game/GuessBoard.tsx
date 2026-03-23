@@ -50,6 +50,14 @@ const getResultColorClass = (result: 'correct' | 'incorrect' | 'gray' | string, 
         : 'bg-red-600/20 border-red-500 text-red-500';
 };
 
+const StatusIcon = ({ result, color, enabled }: { result: string; color?: 'green' | 'yellow' | 'red'; enabled: boolean }) => {
+    if (!enabled) return null;
+    let icon = '⨯';
+    if (color === 'green' || result === 'correct') icon = '✓';
+    else if (color === 'yellow') icon = 'ǃ';
+    return <span className="mr-1.5 opacity-80 font-bold">{icon}</span>;
+};
+
 export const GuessBoard = ({ guesses }: GuessBoardProps) => {
     const { colorblindMode } = useSettings();
     return (
@@ -74,23 +82,33 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                                 <td className={`px-4 py-4 font-bold max-w-[200px] border-l-4 border-black/50 ${getResultColorClass(guess.correct ? 'correct' : 'incorrect', undefined, colorblindMode)}`}>
                                     <div className="flex items-center gap-3">
                                         {enemy && <EnemyIcon icons={enemy.icon} size={32} className="shrink-0" />}
-                                        <span className="truncate">{guess.enemy_name}</span>
+                                        <div className="flex items-center truncate">
+                                            <StatusIcon result={guess.correct ? 'correct' : 'incorrect'} enabled={colorblindMode} />
+                                            <span className="truncate">{guess.enemy_name}</span>
+                                        </div>
                                     </div>
                                 </td>
 
                                 {/* Enemy Type */}
                                 <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.enemy_type.value ? guess.properties.enemy_type.result : 'gray', undefined, colorblindMode)}`}>
-                                    {guess.properties.enemy_type.value || '???'}
+                                    <div className="flex items-center">
+                                        <StatusIcon result={guess.properties.enemy_type.result} enabled={colorblindMode && !!guess.properties.enemy_type.value} />
+                                        {guess.properties.enemy_type.value || '???'}
+                                    </div>
                                 </td>
 
                                 {/* Weight Class */}
                                 <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.weight_class.value ? guess.properties.weight_class.result : 'gray', undefined, colorblindMode)}`}>
-                                    {guess.properties.weight_class.value || '???'}
+                                    <div className="flex items-center">
+                                        <StatusIcon result={guess.properties.weight_class.result} enabled={colorblindMode && !!guess.properties.weight_class.value} />
+                                        {guess.properties.weight_class.value || '???'}
+                                    </div>
                                 </td>
 
                                 {/* Health */}
                                 <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.health.value !== undefined ? guess.properties.health.result : 'gray', guess.properties.health.value !== undefined ? guess.properties.health.color : undefined, colorblindMode)}`}>
                                     <div className="flex items-center gap-2 h-full">
+                                        <StatusIcon result={guess.properties.health.result} color={guess.properties.health.color} enabled={colorblindMode && guess.properties.health.value !== undefined} />
                                         {guess.properties.health.value !== undefined ? guess.properties.health.value : '???'}
                                         {guess.properties.health.value !== undefined && guess.properties.health.result === 'higher' && <span className="text-lg">▲</span>}
                                         {guess.properties.health.value !== undefined && guess.properties.health.result === 'lower' && <span className="text-lg">▼</span>}
@@ -100,6 +118,7 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                                 {/* Levels */}
                                 <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.level_count.value !== undefined ? guess.properties.level_count.result : 'gray', guess.properties.level_count.value !== undefined ? guess.properties.level_count.color : undefined, colorblindMode)}`}>
                                     <div className="flex items-center gap-2 h-full">
+                                        <StatusIcon result={guess.properties.level_count.result} color={guess.properties.level_count.color} enabled={colorblindMode && guess.properties.level_count.value !== undefined} />
                                         {guess.properties.level_count.value !== undefined ? guess.properties.level_count.value : '???'}
                                         {guess.properties.level_count.value !== undefined && guess.properties.level_count.result === 'higher' && <span className="text-lg">▲</span>}
                                         {guess.properties.level_count.value !== undefined && guess.properties.level_count.result === 'lower' && <span className="text-lg">▼</span>}
@@ -109,6 +128,7 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                                 {/* Appearance */}
                                 <td className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(guess.properties.appearance.value ? guess.properties.appearance.result : 'gray', guess.properties.appearance.value ? guess.properties.appearance.color : undefined, colorblindMode)}`}>
                                     <div className="flex items-center gap-2 h-full">
+                                        <StatusIcon result={guess.properties.appearance.result} color={guess.properties.appearance.color} enabled={colorblindMode && !!guess.properties.appearance.value} />
                                         {guess.properties.appearance.value && guess.properties.appearance.result === 'earlier' && <span className="text-lg">◄</span>}
                                         {guess.properties.appearance.value || '???'}
                                         {guess.properties.appearance.value && guess.properties.appearance.result === 'later' && <span className="text-lg">►</span>}

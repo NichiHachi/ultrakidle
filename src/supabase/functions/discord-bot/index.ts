@@ -90,6 +90,76 @@ serve(async (req) => {
       });
     }
 
+    if (payload.data.name === "ping-me") {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+        { auth: { autoRefreshToken: false, persistSession: false } },
+      );
+
+      const discordId = payload.member.user.id;
+
+        const { error, count } = await supabase
+        .from("profiles")
+        .update({ pings_opted_in: true }, { count: "exact" })
+        .eq("discord_id", discordId);
+
+      if (error || count === 0) {
+        return Response.json({
+          type: 4,
+          data: {
+            content:
+              "Couldn't update your preference. Make sure you have opened ULTRAKIDLE on discord before.",
+            flags: 64,
+          },
+        });
+      }
+
+      return Response.json({
+        type: 4,
+        data: {
+          content:
+            "✅ You'll be pinged in daily notifications from now on.",
+          flags: 64,
+        },
+      });
+    }
+
+    if (payload.data.name === "dont-ping-me") {
+      const supabase = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+        { auth: { autoRefreshToken: false, persistSession: false } },
+      );
+
+      const discordId = payload.member.user.id;
+
+      const { error, count } = await supabase
+      .from("profiles")
+      .update({ pings_opted_in: false }, { count: "exact" })
+      .eq("discord_id", discordId);
+
+      if (error || count === 0) {
+        return Response.json({
+          type: 4,
+          data: {
+            content:
+              "Couldn't update your preference. Make sure you have opened ULTRAKIDLE on discord before.",
+            flags: 64,
+          },
+        });
+      }
+
+      return Response.json({
+        type: 4,
+        data: {
+          content:
+            "🛑 You'll no longer be pinged in daily notifications.",
+          flags: 64,
+        },
+      });
+    }
+
     if (payload.data.name === "stats") {
       const supabase = createClient(
         Deno.env.get("SUPABASE_URL")!,

@@ -166,8 +166,8 @@ const ClassicPlayPage = () => {
         const attempts = hasWon
             ? guesses.length
             : hasReachedLimit
-              ? "X"
-              : guesses.length;
+                ? "X"
+                : guesses.length;
         const header = `ULTRAKIDLE #${dayNumber || ""} ${attempts}/5\n\n`;
         const success = await copyToClipboard(
             `${header}${emojiGrid}\n\nhttps://ultrakidle.online/`
@@ -246,14 +246,14 @@ const ClassicPlayPage = () => {
                         animate={
                             shouldFlash
                                 ? {
-                                      backgroundColor: [
-                                          "rgba(255, 255, 255, 0.6)",
-                                          "rgba(255, 255, 255, 0)",
-                                      ],
-                                  }
+                                    backgroundColor: [
+                                        "rgba(255, 255, 255, 0.6)",
+                                        "rgba(255, 255, 255, 0)",
+                                    ],
+                                }
                                 : {
-                                      backgroundColor: "rgba(255, 255, 255, 0)",
-                                  }
+                                    backgroundColor: "rgba(255, 255, 255, 0)",
+                                }
                         }
                         transition={
                             shouldFlash
@@ -404,21 +404,31 @@ const ClassicPlayPage = () => {
                                                                         scale: 1,
                                                                     },
                                                                 }}
-                                                                className={`h-6 w-6 border ${
-                                                                    status ===
-                                                                    "green"
+                                                                className={`h-6 w-6 border flex items-center justify-center ${status ===
+                                                                        "green"
                                                                         ? "border-green-500 bg-green-500/20"
                                                                         : status ===
-                                                                          "yellow"
-                                                                          ? colorblindMode
-                                                                              ? "border-blue-500 bg-blue-500/20"
-                                                                              : "border-yellow-500 bg-yellow-500/20"
-                                                                          : status ===
-                                                                            "gray"
-                                                                            ? "border-zinc-500/30 bg-zinc-800/20"
-                                                                            : "border-red-500 bg-red-500/20"
-                                                                }`}
-                                                            />
+                                                                            "yellow"
+                                                                            ? colorblindMode
+                                                                                ? "border-blue-500 bg-blue-500/20"
+                                                                                : "border-yellow-500 bg-yellow-500/20"
+                                                                            : status ===
+                                                                                "gray"
+                                                                                ? "border-zinc-500/30 bg-zinc-800/20"
+                                                                                : "border-red-500 bg-red-500/20"
+                                                                    }`}
+                                                            >
+                                                                {colorblindMode && status !== "gray" && (
+                                                                    <span className={`text-[10px] font-bold ${status === "green"
+                                                                            ? "text-green-500"
+                                                                            : status === "yellow"
+                                                                                ? "text-blue-500"
+                                                                                : "text-red-500"
+                                                                        }`}>
+                                                                        {status === "green" ? "✓" : status === "yellow" ? "ǃ" : "⨯"}
+                                                                    </span>
+                                                                )}
+                                                            </motion.div>
                                                         );
                                                     })}
                                                 </div>
@@ -462,8 +472,8 @@ const ClassicPlayPage = () => {
                     </div>
                 </div>
             )) || (
-                <div className="fixed left-0 top-0 -z-10 h-dvh w-dvw overflow-visible bg-black/40"></div>
-            )}
+                    <div className="fixed left-0 top-0 -z-10 h-dvh w-dvw overflow-visible bg-black/40"></div>
+                )}
 
             {dailyChanged && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">

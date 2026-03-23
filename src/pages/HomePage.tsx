@@ -119,6 +119,7 @@ const HomePage = () => {
     infernoTotal,
     infernoAvg,
     infernoStatus,
+    ranks,
   } = useGameInit();
 
   const navigate = useNavigate();
@@ -217,6 +218,14 @@ const HomePage = () => {
                           : ""
                       }
                     />
+                    {ranks?.classic.rank != null && classicStatus !== "READY" && (
+                      <Typewriter
+                        text={`[RANK #${ranks.classic.rank}]`}
+                        speed={0.02}
+                        delay={0.3}
+                        className="text-white/40"
+                      />
+                    )}
                   </div>
                   <div className="flex gap-1">
                     <Typewriter
@@ -234,6 +243,14 @@ const HomePage = () => {
                           : ""
                       }
                     />
+                    {ranks?.inferno.rank != null && infernoStatusText !== "READY" && (
+                      <Typewriter
+                        text={`[RANK #${ranks.inferno.rank}]`}
+                        speed={0.02}
+                        delay={0.5}
+                        className="text-white/40"
+                      />
+                    )}
                   </div>
                 </>
               )}
@@ -430,6 +447,14 @@ const HomePage = () => {
                   </AnimatePresence>
                 </div>
               </div>
+              <Button
+                variant="outline"
+                size="xl"
+                onClick={() => navigate("/faq")}
+                className=""
+              >
+                FAQ
+              </Button>
             </div>
             {!isRunningInDiscord() && (
               <div className="grid grid-cols-1 gap-2">

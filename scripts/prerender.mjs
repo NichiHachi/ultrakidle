@@ -24,6 +24,7 @@ const ROUTES = [
   '/credits',
   '/contact',
   '/tos',
+  '/faq',
   '/privacy',
   '/messages',
 ];

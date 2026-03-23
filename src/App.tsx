@@ -15,6 +15,7 @@ import AboutPage from './pages/AboutPage';
 import EnemiesPage from './pages/EnemiesPage';
 import LevelsPage from './pages/LevelsPage';
 import MessagesPage from './pages/MessagesPage';
+import FaqPage from './pages/FaqPage';
 import './App.css';
 
 import { VersionProvider, useVersion } from './context/VersionContext';
@@ -48,6 +49,7 @@ function AppContent() {
           <Route path="enemies" element={<EnemiesPage />} />
           <Route path="levels" element={<LevelsPage />} />
           <Route path="messages" element={<MessagesPage />} />
+          <Route path="faq" element={<FaqPage />} />
           <Route path="contact" element={<ContactPage />} />
           <Route path="discord-install" element={<DiscordRedirect />} />
           {/* Redirect any unknown routes to home */}

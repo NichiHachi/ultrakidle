@@ -9,6 +9,24 @@ export interface Donor {
   created_at: string;
 }
 
+export interface ClassicRank {
+  rank: number | null;
+  tied_with: number | null;
+  streak: number;
+}
+
+export interface InfernoRank {
+  rank: number | null;
+  total_players: number | null;
+  score: number | null;
+  time: number | null;
+}
+
+export interface Ranks {
+  classic: ClassicRank;
+  inferno: InfernoRank;
+}
+
 export interface GuessHistoryEntry {
   guess_enemy_id: number;
   hint_data: {
@@ -66,6 +84,7 @@ export function useGameInit() {
   const [streak, setStreak] = useState<number>(0);
   const [donors, setDonors] = useState<Donor[]>([]);
   const [rates, setRates] = useState<Record<string, number>>({ USD: 1 });
+  const [ranks, setRanks] = useState<Ranks | null>(null);
 
   const [infernoTotal, setInfernoTotal] = useState<InfernoTotalScore | null>(null);
   const [infernoAvg, setInfernoAvg] = useState<InfernoDailyAvg | null>(null);
@@ -106,6 +125,7 @@ export function useGameInit() {
         setGuessHistory(data.history ?? []);
         setDailyStats(data.stats);
         setStreak(data.streak);
+        setRanks(data.ranks ?? null);
         setDonors(data.donors ?? []);
         setInfernoTotal(data.inferno?.total ?? null);
         setInfernoAvg(data.inferno?.daily_avg ?? null);
@@ -139,6 +159,7 @@ export function useGameInit() {
     guessHistory,
     dailyStats,
     streak,
+    ranks,
     donors,
     rates,
     refresh,

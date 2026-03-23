@@ -22,9 +22,10 @@ const AboutPage = () => {
 
                     <p className="font-bold uppercase">How It Works</p>
                     <p>
-                        Every day, a new enemy (and more things to come!) is selected as the target. Players must use clues
-                        provided by their guesses, such as type, weight, health, and more, to identify the
+                        Every day, two new daily missions drop in the form of Classic and InfernoGuessr modes.
+                        In classic, users try to find the identity of an enemy using clues provided by their guesses, such as type, weight, health, and more, to identify the
                         correct answer within a limited number of attempts.
+                        In InfernoGuessr, they are presented with screenshots of 5 different ULTRAKILL levels provided by the community, the goal is to guess which levels the screenshots were taken in with using the least amount of time.
                     </p>
 
                     <p className="font-bold uppercase">The Team</p>

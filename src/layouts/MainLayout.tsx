@@ -176,16 +176,22 @@ const MainLayout = () => {
                     <div className="space-y-2">
                       <p className="opacity-50 underline uppercase">Color Indicators:</p>
                       <div className="flex gap-3 items-center">
-                        <div className="w-4 h-4 bg-green-500/20 border border-green-500" />
-                        <span>CORRECT PROPERTY MATCH</span>
+                        <div className="w-4 h-4 bg-green-500/20 border border-green-500 flex items-center justify-center">
+                          {colorblindMode && <span className="text-[10px] font-bold text-green-500">✓</span>}
+                        </div>
+                        <span>CORRECT PROPERTY MATCH {colorblindMode && <span className="opacity-50">(✓)</span>}</span>
                       </div>
                       <div className="flex gap-3 items-center">
-                        <div className={`w-4 h-4 border ${colorblindMode ? 'bg-blue-500/20 border-blue-500' : 'bg-yellow-500/20 border-yellow-500'}`} />
-                        <span>PARTIAL PROPERTY MATCH</span>
+                        <div className={`w-4 h-4 border flex items-center justify-center ${colorblindMode ? 'bg-blue-500/20 border-blue-500' : 'bg-yellow-500/20 border-yellow-500'}`}>
+                          {colorblindMode && <span className="text-[10px] font-bold text-blue-500">ǃ</span>}
+                        </div>
+                        <span>PARTIAL PROPERTY MATCH {colorblindMode && <span className="opacity-50">(ǃ)</span>}</span>
                       </div>
                       <div className="flex gap-3 items-center">
-                        <div className="w-4 h-4 bg-red-500/20 border border-red-500" />
-                        <span>INCORRECT PROPERTY MATCH</span>
+                        <div className="w-4 h-4 bg-red-500/20 border border-red-500 flex items-center justify-center">
+                          {colorblindMode && <span className="text-[10px] font-bold text-red-500">⨯</span>}
+                        </div>
+                        <span>INCORRECT PROPERTY MATCH {colorblindMode && <span className="opacity-50">(⨯)</span>}</span>
                       </div>
                     </div>
                     <div className="space-y-2 pt-2 border-t border-white/10">
