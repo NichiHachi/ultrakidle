@@ -29,28 +29,50 @@ const MainLayout = () => {
     const checkNewPlayer = async () => {
       const { data: { session } } = await supabase.auth.getSession();
 
-      if (session?.user) {
-        // Check classic mode (using the RPC)
-        const { data: neverPlayedClassic, error: classicError } = await supabase.rpc('has_never_played');
-        if (!classicError) {
-          setHasNeverPlayedClassic(neverPlayedClassic);
+      if (!session?.user) {
+        return;
+      }
+
+      const uid = session.user.id;
+      const classicKey = `ultrakilldle_has_played_classic_${uid}`;
+      const infernoKey = `ultrakilldle_has_played_inferno_${uid}`;
+
+      if (location.pathname === '/play/classic' && !hasSeenClassicGuide) {
+        const cached = localStorage.getItem(classicKey);
+
+        if (cached === 'true') {
+          setHasNeverPlayedClassic(false);
+        } else {
+          const { data, error } = await supabase.rpc('has_never_played');
+          if (!error) {
+            setHasNeverPlayedClassic(data);
+            if (!data) localStorage.setItem(classicKey, 'true');
+          }
         }
+      }
 
-        // Check inferno mode (checking the table)
-        const { data: infernoData, error: infernoError } = await supabase
-          .from('inferno_guesses')
-          .select('id')
-          .eq('user_id', session.user.id)
-          .limit(1);
+      if (location.pathname === '/play/infernoguessr' && !hasSeenInfernoGuide) {
+        const cached = localStorage.getItem(infernoKey);
 
-        if (!infernoError) {
-          setHasNeverPlayedInferno(!infernoData || infernoData.length === 0);
+        if (cached === 'true') {
+          setHasNeverPlayedInferno(false);
+        } else {
+          const { data, error } = await supabase
+            .from('inferno_guesses')
+            .select('id')
+            .eq('user_id', uid)
+            .limit(1);
+          if (!error) {
+            const neverPlayed = !data || data.length === 0;
+            setHasNeverPlayedInferno(neverPlayed);
+            if (!neverPlayed) localStorage.setItem(infernoKey, 'true');
+          }
         }
       }
     };
 
     checkNewPlayer();
-  }, []);
+  }, [location.pathname]);
 
   const isHome = location.pathname === '/';
   const isPlay = location.pathname.startsWith('/play');
