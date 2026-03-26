@@ -332,7 +332,8 @@ serve(async (req) => {
 
       const { data: enemies } = await supabase
         .from("ultrakill_enemies")
-        .select("name, icon_urls, wiki_link");
+        .select("name, icon_urls, wiki_link")
+        .eq("active", true);
 
       if (!enemies || enemies.length === 0) {
         return Response.json({

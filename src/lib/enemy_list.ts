@@ -6,10 +6,6 @@ export const enemies = [
   { id: 5, name: "Deathcatcher", icon: ["/external/wiki/images/Deathcatcher.webp"], wikiLink: "/external/wiki/Deathcatcher" },
   { id: 6, name: "Drone", icon: ["/external/wiki/images/Drone.webp"], wikiLink: "/external/wiki/Drone" },
   { id: 7, name: "Earthmover (Central Brain)", icon: ["/external/wiki/images/Earthmover_Brain.png"], wikiLink: "/external/wiki/Earthmover#Central_Brain-0" },
-  { id: 8, name: "1000-THR Defence System (Mainframe)", icon: ["/external/wiki/images/Earthmover_Defence_Mainframe.png"], wikiLink: "/external/wiki/Earthmover#Mainframe-0" },
-  { id: 9, name: "1000-THR Defence System (Rocket Launchers)", icon: ["/external/wiki/images/CentaurRocketLauncher.webp"], wikiLink: "/external/wiki/Earthmover#Rocket_Launchers-0" },
-  { id: 10, name: "1000-THR Defence System (Mortar Launchers)", icon: ["/external/wiki/images/CentaurMortar.webp"], wikiLink: "/external/wiki/Earthmover#Mortar_Launchers-0" },
-  { id: 11, name: "1000-THR Defence System (Towers)", icon: ["/external/wiki/images/CentaurTower.webp"], wikiLink: "/external/wiki/Earthmover#Towers-0" },
   { id: 12, name: "Ferryman", icon: ["/external/wiki/images/Ferryman.webp"], wikiLink: "/external/wiki/Ferryman" },
   { id: 13, name: "Filth", icon: ["/external/wiki/images/Filth.webp"], wikiLink: "/external/wiki/Filth" },
   { id: 14, name: "Flesh Panopticon", icon: ["/external/wiki/images/Flesh_Panopticon.webp"], wikiLink: "/external/wiki/Flesh_Panopticon" },
@@ -73,5 +69,23 @@ export const enemies = [
     name: "Malicious Spawn",
     icon: ["/external/wiki/images/Malicious_Face.webp"],
     wikiLink: "/external/wiki/Flesh_Prison",
+  },
+  {
+    id: 70,
+    name: "1000-THR Defence System (Mainframe/Towers)",
+    icon: [
+      "/external/wiki/images/Earthmover_Defence_Mainframe.png",
+      "/external/wiki/images/CentaurTower.webp",
+    ],
+    wikiLink: "/external/wiki/Earthmover",
+  },
+  {
+    id: 71,
+    name: "1000-THR Defence System (Rockets/Mortars)",
+    icon: [
+      "/external/wiki/images/CentaurRocketLauncher.webp",
+      "/external/wiki/images/CentaurMortar.webp",
+    ],
+    wikiLink: "/external/wiki/Earthmover",
   },
 ];

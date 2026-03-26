@@ -9,6 +9,26 @@ export interface Message {
 
 export const MESSAGES: Message[] = [
   {
+  id: 'earthmover-grouping',
+  date: '2026-03-26',
+  content: (
+    <div className="space-y-4 lg:space-y-6 text-justify">
+      <p className="text-zinc-400 text-sm">
+        SYSTEM UPDATE LOG // [26-MAR-2026]
+      </p>
+      <p className="text-cyan-300 lg:text-base text-sm">
+        BALANCE CHANGE: EARTHMOVER DEFENSE SYSTEM
+      </p>
+      <p className="text-white/70 lg:text-base text-sm">
+        The Earthmover's defense system enemies that shared
+        identical stats have been grouped into pairs. This
+        means they now appear as a single entry rather than
+        separate duplicates.
+      </p>
+    </div>
+  ),
+},
+  {
   id: 'infernoguessr-release',
   date: '2026-03-18',
   content: (
