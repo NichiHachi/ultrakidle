@@ -3,6 +3,8 @@ import { EnemyIcon } from './EnemyIcon';
 import { useSettings } from '../../context/SettingsContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const isValueEclipsed = (val: any) => val === undefined || val === null || val === '';
+
 export interface GuessResult {
     guess_id?: number;
     enemy_name: string;
@@ -100,14 +102,12 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: 20 }}
                                     transition={{ duration: 0.2 }}
-                                    className={`border-b border-white/5 last:border-0 hover:bg-white/5 ${
-                                        guess.is_penance ? 'bg-amber-500/5' : ''
-                                    }`}
+                                    className={`border-b border-white/5 last:border-0 hover:bg-white/5 ${guess.is_penance ? 'bg-amber-500/5' : ''
+                                        }`}
                                 >
                                     <td
-                                        className={`px-4 py-4 font-bold max-w-[200px] border-l-4 ${
-                                            guess.is_penance ? 'border-l-amber-400' : 'border-black/50'
-                                        } ${getResultColorClass(guess.correct ? 'correct' : 'incorrect', undefined, colorblindMode)}`}
+                                        className={`px-4 py-4 font-bold max-w-[200px] border-l-4 ${guess.is_penance ? 'border-l-amber-400' : 'border-black/50'
+                                            } ${getResultColorClass(guess.correct ? 'correct' : 'incorrect', undefined, colorblindMode)}`}
                                     >
                                         <div className="flex items-center gap-3">
                                             {enemy && (
@@ -140,9 +140,11 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                                         <div className="flex items-center">
                                             <StatusIcon
                                                 result={guess.properties.enemy_type.result}
-                                                enabled={colorblindMode && !!guess.properties.enemy_type.value}
+                                                enabled={colorblindMode && !isValueEclipsed(guess.properties.enemy_type.value)}
                                             />
-                                            {guess.properties.enemy_type.value || '[ECLIPSED]'}
+                                            {!isValueEclipsed(guess.properties.enemy_type.value)
+                                                ? guess.properties.enemy_type.value
+                                                : '[ECLIPSED]'}
                                         </div>
                                     </td>
 
@@ -160,7 +162,9 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                                                 result={guess.properties.weight_class.result}
                                                 enabled={colorblindMode && !!guess.properties.weight_class.value}
                                             />
-                                            {guess.properties.weight_class.value || '[ECLIPSED]'}
+                                            {!isValueEclipsed(guess.properties.weight_class.value)
+                                                ? guess.properties.weight_class.value
+                                                : '[ECLIPSED]'}
                                         </div>
                                     </td>
 
@@ -179,16 +183,16 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                                             <StatusIcon
                                                 result={guess.properties.health.result}
                                                 color={guess.properties.health.color}
-                                                enabled={colorblindMode && guess.properties.health.value !== undefined}
+                                                enabled={colorblindMode && !isValueEclipsed(guess.properties.health.value)}
                                             />
-                                            {guess.properties.health.value !== undefined
+                                            {!isValueEclipsed(guess.properties.health.value)
                                                 ? guess.properties.health.value
                                                 : '[ECLIPSED]'}
-                                            {guess.properties.health.value !== undefined &&
+                                            {!isValueEclipsed(guess.properties.health.value) &&
                                                 guess.properties.health.result === 'higher' && (
                                                     <span className="text-lg">▲</span>
                                                 )}
-                                            {guess.properties.health.value !== undefined &&
+                                            {!isValueEclipsed(guess.properties.health.value) &&
                                                 guess.properties.health.result === 'lower' && (
                                                     <span className="text-lg">▼</span>
                                                 )}
@@ -197,10 +201,10 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
 
                                     <td
                                         className={`px-4 py-4 font-bold border-l-4 border-black/50 ${getResultColorClass(
-                                            guess.properties.level_count.value !== undefined
+                                            !isValueEclipsed(guess.properties.level_count.value)
                                                 ? guess.properties.level_count.result
                                                 : 'gray',
-                                            guess.properties.level_count.value !== undefined
+                                            !isValueEclipsed(guess.properties.level_count.value)
                                                 ? guess.properties.level_count.color
                                                 : undefined,
                                             colorblindMode
@@ -211,17 +215,17 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                                                 result={guess.properties.level_count.result}
                                                 color={guess.properties.level_count.color}
                                                 enabled={
-                                                    colorblindMode && guess.properties.level_count.value !== undefined
+                                                    colorblindMode && !isValueEclipsed(guess.properties.level_count.value)
                                                 }
                                             />
-                                            {guess.properties.level_count.value !== undefined
+                                            {!isValueEclipsed(guess.properties.level_count.value)
                                                 ? guess.properties.level_count.value
                                                 : '[ECLIPSED]'}
-                                            {guess.properties.level_count.value !== undefined &&
+                                            {!isValueEclipsed(guess.properties.level_count.value) &&
                                                 guess.properties.level_count.result === 'higher' && (
                                                     <span className="text-lg">▲</span>
                                                 )}
-                                            {guess.properties.level_count.value !== undefined &&
+                                            {!isValueEclipsed(guess.properties.level_count.value) &&
                                                 guess.properties.level_count.result === 'lower' && (
                                                     <span className="text-lg">▼</span>
                                                 )}
@@ -249,7 +253,9 @@ export const GuessBoard = ({ guesses }: GuessBoardProps) => {
                                                 guess.properties.appearance.result === 'earlier' && (
                                                     <span className="text-lg">◄</span>
                                                 )}
-                                            {guess.properties.appearance.value || '[ECLIPSED]'}
+                                            {!isValueEclipsed(guess.properties.appearance.value)
+                                                ? guess.properties.appearance.value
+                                                : '[ECLIPSED]'}
                                             {guess.properties.appearance.value &&
                                                 guess.properties.appearance.result === 'later' && (
                                                     <span className="text-lg">►</span>
