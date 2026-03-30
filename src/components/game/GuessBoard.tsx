@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { enemies } from "../../lib/enemy_list";
 import { EnemyIcon } from "./EnemyIcon";
 import { useSettings } from "../../context/SettingsContext";
@@ -191,21 +191,19 @@ export const GuessBoard = ({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.2 }}
-                  className={`border-b border-white/5 last:border-0 hover:bg-white/5 ${
-                    isPenance ? "bg-amber-500/5" : ""
-                  }`}
+                  className={`border-b border-white/5 last:border-0 hover:bg-white/5 ${isPenance ? "bg-amber-500/5" : ""
+                    }`}
                 >
                   {/* Enemy Name */}
                   <td
-                    className={`border-l-4 ${
-                      isPenance
+                    className={`border-l-4 ${isPenance
                         ? "border-l-amber-400"
                         : "border-black/50"
-                    } ${getResultColorClass(
-                      guess.correct ? "correct" : "incorrect",
-                      undefined,
-                      colorblindMode,
-                    )}`}
+                      } ${getResultColorClass(
+                        guess.correct ? "correct" : "incorrect",
+                        undefined,
+                        colorblindMode,
+                      )}`}
                   >
                     <CellTooltip
                       tooltip={
@@ -245,19 +243,18 @@ export const GuessBoard = ({
 
                   {/* Enemy Type */}
                   <td
-                    className={`border-l-4 border-black/50 ${
-                      eclipsedType
+                    className={`border-l-4 border-black/50 ${eclipsedType
                         ? "bg-zinc-800/20 border-zinc-500/30 text-zinc-500/50"
                         : getResultColorClass(
-                            hasValue(
-                              guess.properties.enemy_type.value,
-                            )
-                              ? guess.properties.enemy_type.result
-                              : "gray",
-                            undefined,
-                            colorblindMode,
+                          hasValue(
+                            guess.properties.enemy_type.value,
                           )
-                    }`}
+                            ? guess.properties.enemy_type.result
+                            : "gray",
+                          undefined,
+                          colorblindMode,
+                        )
+                      }`}
                   >
                     <CellTooltip
                       tooltip={
@@ -297,20 +294,19 @@ export const GuessBoard = ({
 
                   {/* Weight Class */}
                   <td
-                    className={`border-l-4 border-black/50 ${
-                      eclipsedWeight
+                    className={`border-l-4 border-black/50 ${eclipsedWeight
                         ? "bg-zinc-800/20 border-zinc-500/30 text-zinc-500/50"
                         : getResultColorClass(
-                            hasValue(
-                              guess.properties.weight_class.value,
-                            )
-                              ? guess.properties.weight_class
-                                  .result
-                              : "gray",
-                            undefined,
-                            colorblindMode,
+                          hasValue(
+                            guess.properties.weight_class.value,
                           )
-                    }`}
+                            ? guess.properties.weight_class
+                              .result
+                            : "gray",
+                          undefined,
+                          colorblindMode,
+                        )
+                      }`}
                   >
                     <CellTooltip
                       tooltip={
@@ -388,12 +384,12 @@ export const GuessBoard = ({
                           : "[ECLIPSED]"}
                         {hasValue(guess.properties.health.value) &&
                           guess.properties.health.result ===
-                            "higher" && (
+                          "higher" && (
                             <span className="text-lg">▲</span>
                           )}
                         {hasValue(guess.properties.health.value) &&
                           guess.properties.health.result ===
-                            "lower" && (
+                          "lower" && (
                             <span className="text-lg">▼</span>
                           )}
                       </div>
@@ -449,14 +445,14 @@ export const GuessBoard = ({
                           guess.properties.level_count.value,
                         ) &&
                           guess.properties.level_count.result ===
-                            "higher" && (
+                          "higher" && (
                             <span className="text-lg">▲</span>
                           )}
                         {hasValue(
                           guess.properties.level_count.value,
                         ) &&
                           guess.properties.level_count.result ===
-                            "lower" && (
+                          "lower" && (
                             <span className="text-lg">▼</span>
                           )}
                       </div>
@@ -505,7 +501,7 @@ export const GuessBoard = ({
                           guess.properties.appearance.value,
                         ) &&
                           guess.properties.appearance.result ===
-                            "earlier" && (
+                          "earlier" && (
                             <span className="text-lg">◄</span>
                           )}
                         {hasValue(
@@ -517,7 +513,7 @@ export const GuessBoard = ({
                           guess.properties.appearance.value,
                         ) &&
                           guess.properties.appearance.result ===
-                            "later" && (
+                          "later" && (
                             <span className="text-lg">►</span>
                           )}
                       </div>
