@@ -44,7 +44,7 @@ interface GuessBoardProps {
 }
 
 const BADGE_TOOLTIPS: Record<string, string> = {
-  P: "PENANCE: Automatically selected wrong guess. All hints for this guess are visible and truthful",
+  P: "PENANCE: Automatically selected wrong guess",
   F: "FALSIFIER: This hint's arrow might be flipped",
   E: "ECLIPSE: This column is completely obscured for this round",
 };
@@ -168,7 +168,7 @@ export const GuessBoard = ({
                 isEclipsed(guess.properties.weight_class);
 
               const showFalsifier =
-                hasFalsifier && !isPenance && !guess.correct;
+                hasFalsifier && !guess.correct;
 
               const falsifierHealth =
                 showFalsifier &&

@@ -23,14 +23,14 @@ const MODIFIER_DISPLAY_ORDER: string[] = [
 
 const MODIFIER_TOOLTIPS: Record<string, string> = {
   PENANCE:
-    "Automatically select a wrong guess at the start of the round. Hints for this guess are always visible and truthful",
+    "Automatically select a wrong guess at the start of the round",
   FALSIFIER:
     "Flips the arrow of a random hint. Only triggers if there is a hint where this can be applied",
   LETHE: "You can only see your 2 most recent guesses",
   ECLIPSE:
     "Completely obscures a random column without arrows for the entire round",
   RADIANCE:
-    "Double the effects of another randomly selected modifier",
+    "Double the effects of 1 random modifier. Starting at wave 36, select 1 additional modifier every 15 waves",
 };
 
 const sortModifiers = (mods: string[]): string[] =>
@@ -80,9 +80,7 @@ const CybergrindClassicPage = () => {
   >("loading");
   const [currentWave, setCurrentWave] = useState(1);
   const [modifiers, setModifiers] = useState<string[]>([]);
-  const [radianceTarget, setRadianceTarget] = useState<string | null>(
-    null,
-  );
+  const [radianceTargets, setRadianceTargets] = useState<string[]>([]);
   const [guesses, setGuesses] = useState<GuessResult[]>([]);
   const [guessesLeft, setGuessesLeft] = useState(6);
 
@@ -98,7 +96,7 @@ const CybergrindClassicPage = () => {
   const applyRoundState = (s: any) => {
     setCurrentWave(s.current_wave);
     setModifiers(s.modifiers || []);
-    setRadianceTarget(s.radiance_target || null);
+    setRadianceTargets(s.radiance_targets || []);
     setGuessesLeft(
       s.guesses_left ?? Math.max(0, 6 - (s.guess_count || 0)),
     );
@@ -127,7 +125,7 @@ const CybergrindClassicPage = () => {
       setStatus("active");
       setCurrentWave(data.round_number);
       setModifiers(data.modifiers || []);
-      setRadianceTarget(null);
+      setRadianceTargets([]);
       setGuesses([]);
       setGuessesLeft(6);
     } catch (err) {
@@ -249,7 +247,7 @@ const CybergrindClassicPage = () => {
     setGuesses([]);
     setGuessesLeft(6);
     setModifiers([]);
-    setRadianceTarget(null);
+    setRadianceTargets([]);
     setCurrentWave(1);
     pendingNextState.current = null;
     setStatus("loading");
@@ -331,11 +329,10 @@ const CybergrindClassicPage = () => {
               </span>
               <div className="flex gap-2 items-center flex-wrap">
                 {sortedModifiers.length > 0 ? (
-                  sortedModifiers.map((mod) => {
+                sortedModifiers.map((mod) => {
                     const isRadiance = mod === "RADIANCE";
-                    const isTarget = mod === radianceTarget;
-                    const baseTooltip =
-                      MODIFIER_TOOLTIPS[mod] || mod;
+                    const isTarget = radianceTargets.includes(mod);
+                    const baseTooltip = MODIFIER_TOOLTIPS[mod] || mod;
                     const tooltip = isTarget
                       ? `${baseTooltip} | RADIANCE: Effect is doubled`
                       : baseTooltip;
@@ -348,12 +345,12 @@ const CybergrindClassicPage = () => {
                       >
                         <span
                           className={`font-bold uppercase italic tracking-wider cursor-help ${
-                            isRadiance
-                              ? "text-purple-400"
-                              : isTarget
-                                ? "text-yellow-400"
-                                : "text-red-500"
-                          }`}
+isRadiance
+? "text-purple-400"
+: isTarget
+? "text-yellow-400"
+: "text-red-500"
+}`}
                         >
                           {mod}
                           {isTarget && (
