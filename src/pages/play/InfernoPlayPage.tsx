@@ -936,6 +936,7 @@ const InfernoPlayPage = () => {
                   </Button>
                 </div>
 
+
                 {!lastRoundResult && (
                   <div className="w-full">
                     <input
@@ -961,6 +962,11 @@ const InfernoPlayPage = () => {
                     />
                   </div>
                 )}
+                  <div className="w-full flex justify-left">
+                    <span className="text-white/50 text-sm text-left place-self-start w-full justify-left">
+                      * Levels may appear multiple times in a single day
+                    </span>
+                  </div>
 
                 <motion.div
                   className="w-full overflow-x-auto custom-scrollbar pb-2 will-change-transform"
