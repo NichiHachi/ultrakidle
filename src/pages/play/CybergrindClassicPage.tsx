@@ -23,7 +23,8 @@ const MODIFIER_DISPLAY_ORDER: string[] = [
 
 const RADIANCE_DESCRIPTIONS: Record<string, string> = {
   PENANCE: "RADIANCE: 2 wrong guesses instead of 1",
-  FALSIFIER: "RADIANCE: Up to 2 arrows flipped instead of 1. Can flip the same arrow twice",
+  FALSIFIER:
+    "RADIANCE: Up to 2 arrows flipped instead of 1. Can flip the same arrow twice",
   LETHE: "RADIANCE: Only your most recent guess is visible",
   ECLIPSE: "RADIANCE: Both Type and Weight columns are hidden",
 };
@@ -65,7 +66,8 @@ const mapGuess = (
       weight_class:
         hint_data.properties.weight_class || defaultHintData,
       health: hint_data.properties.health || defaultHintData,
-      level_count: hint_data.properties.level_count || defaultHintData,
+      level_count:
+        hint_data.properties.level_count || defaultHintData,
       appearance: hint_data.properties.appearance || defaultHintData,
     },
   };
@@ -75,6 +77,20 @@ const mapGuessesFromServer = (guesses: any[]): GuessResult[] =>
   (guesses || []).map((g: any) =>
     mapGuess(g.guess_enemy_id, g.hint_data, g.is_penance),
   );
+
+interface BestRecord {
+  best_wave: number;
+  total_guesses: number;
+  hint_accuracy: number;
+}
+
+interface GameOverStats {
+  waves_reached: number;
+  is_new_record: boolean;
+  correct_id?: number;
+  total_guesses?: number;
+  hint_accuracy?: number;
+}
 
 const CybergrindClassicPage = () => {
   const { setUpdateAvailable } = useVersion();
@@ -87,18 +103,20 @@ const CybergrindClassicPage = () => {
   >("loading");
   const [currentWave, setCurrentWave] = useState(1);
   const [modifiers, setModifiers] = useState<string[]>([]);
-  const [radianceTargets, setRadianceTargets] = useState<string[]>([]);
+  const [radianceTargets, setRadianceTargets] = useState<string[]>(
+    [],
+  );
   const [guesses, setGuesses] = useState<GuessResult[]>([]);
   const [guessesLeft, setGuessesLeft] = useState(6);
+  const [bestRecord, setBestRecord] = useState<BestRecord | null>(
+    null,
+  );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shouldFlash, setShouldFlash] = useState(false);
   const [isAbandonModalOpen, setIsAbandonModalOpen] = useState(false);
-  const [gameOverStats, setGameOverStats] = useState<{
-    waves_reached: number;
-    is_new_record: boolean;
-    correct_id?: number;
-  } | null>(null);
+  const [gameOverStats, setGameOverStats] =
+    useState<GameOverStats | null>(null);
 
   const applyRoundState = (s: any) => {
     setCurrentWave(s.current_wave);
@@ -151,6 +169,8 @@ const CybergrindClassicPage = () => {
       );
       if (error) throw error;
 
+      if (data.best) setBestRecord(data.best);
+
       if (data.status === "no_run") {
         await handleStartRun();
       } else if (data.status === "active") {
@@ -182,27 +202,36 @@ const CybergrindClassicPage = () => {
       }
 
       if (data.result === "correct") {
-        // Append the winning guess to current board for display
         const winningGuess = mapGuess(enemyId, data.hint_data, false);
         setGuesses((prev) => [...prev, winningGuess]);
         setGuessesLeft((prev) => Math.max(0, prev - 1));
 
-        // Store next round state to apply on CONTINUE
         pendingNextState.current = data.state;
 
         setShouldFlash(true);
         setTimeout(() => setShouldFlash(false), 1500);
       } else if (data.game_over) {
-        // Apply final round state from server (includes all visible guesses)
         applyRoundState(data.state);
-        setGameOverStats({
+
+        const stats: GameOverStats = {
           waves_reached: data.waves_reached,
           is_new_record: data.is_new_record,
           correct_id: data.correct_id,
-        });
+          total_guesses: data.total_guesses,
+          hint_accuracy: data.hint_accuracy,
+        };
+        setGameOverStats(stats);
+
+        if (data.is_new_record) {
+          setBestRecord({
+            best_wave: data.waves_reached,
+            total_guesses: data.total_guesses,
+            hint_accuracy: data.hint_accuracy,
+          });
+        }
+
         setStatus("game_over");
       } else {
-        // Incorrect, continue — apply server state directly
         applyRoundState(data.state);
       }
     } catch (err) {
@@ -235,11 +264,24 @@ const CybergrindClassicPage = () => {
         { version: CURRENT_VERSION },
       );
       if (error) throw error;
-      setGameOverStats({
+
+      const stats: GameOverStats = {
         waves_reached: data.waves_reached,
         is_new_record: data.is_new_record,
         correct_id: data.correct_id,
-      });
+        total_guesses: data.total_guesses,
+        hint_accuracy: data.hint_accuracy,
+      };
+      setGameOverStats(stats);
+
+      if (data.is_new_record) {
+        setBestRecord({
+          best_wave: data.waves_reached,
+          total_guesses: data.total_guesses,
+          hint_accuracy: data.hint_accuracy,
+        });
+      }
+
       setStatus("game_over");
       setIsAbandonModalOpen(false);
     } catch (err) {
@@ -268,6 +310,8 @@ const CybergrindClassicPage = () => {
   const hasWon = guesses.some((g) => g.correct);
   const isRoundOver = hasWon || guessesLeft <= 0;
   const isGameOver = status === "game_over";
+
+  const completedWaves = currentWave - 1;
 
   const revealedEnemy =
     isGameOver && gameOverStats?.correct_id
@@ -321,13 +365,20 @@ const CybergrindClassicPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 w-full md:max-w-[1000px] border-b border-white/5 pb-6">
-            <div className="flex items-baseline gap-2">
-              <span className="text-white/60 font-bold uppercase tracking-widest whitespace-nowrap">
-                WAVE:
-              </span>
-              <span className="text-2xl font-black text-white italic leading-none">
-                {currentWave}
-              </span>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-baseline gap-2">
+                <span className="text-white/60 font-bold uppercase tracking-widest whitespace-nowrap">
+                  WAVE:
+                </span>
+                <span className="text-2xl font-black text-white italic leading-none">
+                  {currentWave}
+                </span>
+              {bestRecord && (
+                <span className="text-white/30 text-sm text-left font-bold uppercase tracking-wider">
+                  (BEST: {bestRecord.best_wave})
+                </span>
+              )}
+              </div>
             </div>
 
             <div className="flex items-baseline gap-2 min-h-6">
@@ -338,8 +389,10 @@ const CybergrindClassicPage = () => {
                 {sortedModifiers.length > 0 ? (
                   sortedModifiers.map((mod) => {
                     const isRadiance = mod === "RADIANCE";
-                    const isTarget = radianceTargets.includes(mod);
-                    const baseTooltip = MODIFIER_TOOLTIPS[mod] || mod;
+                    const isTarget =
+                      radianceTargets.includes(mod);
+                    const baseTooltip =
+                      MODIFIER_TOOLTIPS[mod] || mod;
                     const tooltip = isTarget
                       ? `${baseTooltip} | ${RADIANCE_DESCRIPTIONS[mod]}`
                       : baseTooltip;
@@ -352,12 +405,12 @@ const CybergrindClassicPage = () => {
                       >
                         <span
                           className={`font-bold uppercase italic tracking-wider cursor-help ${
-isRadiance
-? "text-purple-400"
-: isTarget
-? "text-yellow-400"
-: "text-red-500"
-}`}
+                            isRadiance
+                              ? "text-purple-400"
+                              : isTarget
+                                ? "text-yellow-400"
+                                : "text-red-500"
+                          }`}
                         >
                           {mod}
                           {isTarget && (
@@ -405,8 +458,8 @@ isRadiance
           >
             <div className="w-full flex justify-left">
               <span className="text-white/50 text-sm text-left place-self-start w-full justify-left">
-                * All data mirrors that of the official wiki, which can
-                be subject to change
+                * All data mirrors that of the official wiki, which
+                can be subject to change
               </span>
             </div>
             <GuessBoard guesses={guesses} modifiers={modifiers} />
@@ -465,17 +518,29 @@ isRadiance
                   speed={0.02}
                 />
                 <Typewriter
-                  text={`WAVES REACHED: ${gameOverStats.waves_reached}`}
+                  text={`WAVES COMPLETED: ${gameOverStats.waves_reached}`}
                   className="opacity-50"
                   speed={0.02}
                   delay={0.4}
+                />
+                <Typewriter
+                  text={`TOTAL GUESSES: ${gameOverStats.total_guesses}`}
+                  className="opacity-50"
+                  speed={0.02}
+                  delay={0.7}
+                />
+                <Typewriter
+                  text={`GUESS ACCURACY: ${((gameOverStats.hint_accuracy / gameOverStats.total_guesses)/(5/100)).toFixed(2)}%`}
+                  className="opacity-50"
+                  speed={0.02}
+                  delay={1.0}
                 />
                 {gameOverStats.is_new_record && (
                   <Typewriter
                     text="★ NEW BEST ★"
                     className="text-yellow-500 font-black italic tracking-tighter animate-pulse"
                     speed={0.05}
-                    delay={0.8}
+                    delay={1.4}
                   />
                 )}
 
@@ -485,14 +550,16 @@ isRadiance
                       text="TARGET DESIGNATION: "
                       className="opacity-50 text-xs"
                       speed={0.02}
-                      delay={1.2}
+                      delay={gameOverStats.is_new_record ? 1.8 : 1.4}
                     />
                     <div className="flex items-center gap-2">
                       <motion.div
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{
-                          delay: 2.2,
+                          delay: gameOverStats.is_new_record
+                            ? 2.8
+                            : 2.4,
                           duration: 0.5,
                         }}
                       >
@@ -505,7 +572,9 @@ isRadiance
                         text={revealedEnemy.name}
                         className="animate-pulse font-bold"
                         speed={0.04}
-                        delay={1.8}
+                        delay={
+                          gameOverStats.is_new_record ? 2.4 : 2.0
+                        }
                       />
                     </div>
                   </div>
@@ -515,7 +584,13 @@ isRadiance
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{
-                    delay: revealedEnemy ? 2.5 : 1.2,
+                    delay: revealedEnemy
+                      ? gameOverStats.is_new_record
+                        ? 3.2
+                        : 2.8
+                      : gameOverStats.is_new_record
+                        ? 1.8
+                        : 1.4,
                   }}
                 >
                   <Button
