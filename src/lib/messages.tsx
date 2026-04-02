@@ -9,6 +9,39 @@ export interface Message {
 
 export const MESSAGES: Message[] = [
   {
+    id: 'cybergrind-release',
+    date: '2026-04-02',
+    content: (
+      <div className="space-y-4 lg:space-y-6 text-justify">
+        <p className="text-zinc-400 text-sm">
+          SYSTEM UPDATE LOG // [02-APR-2026]
+        </p>
+        <p className="text-green-500 lg:text-xl text-base font-bold tracking-wide">
+          CYBERGRIND HAS BEEN DEPLOYED
+        </p>
+        <p className="text-white/70 lg:text-base text-sm">
+          A new endless gamemode has been added to ULTRAKIDLE. Identify
+          enemies wave after wave, each correct guess advances you to
+          the next round. Fail to identify the target in 6 guesses and
+          your run is over.
+        </p>
+        <p className="text-white/70 lg:text-base text-sm">
+          As you progress, random{" "}
+          <span className="text-red-500 font-bold">modifiers</span>{" "}
+          are introduced to mess with your hints. Hover over (or tap) them
+          in-game to see what each one does. Later waves can stack up
+          to 5 modifiers at once, with{" "}
+          <span className="text-purple-400 font-bold">RADIANCE</span>{" "}
+          amplifying others for extra difficulty.
+        </p>
+        <p className="text-white/70 lg:text-base text-sm">
+          Your best run is tracked by waves cleared, total guesses, and
+          guess accuracy. See how far you can get.
+        </p>
+      </div>
+    ),
+  },
+  {
   id: 'earthmover-grouping',
   date: '2026-03-26',
   content: (
