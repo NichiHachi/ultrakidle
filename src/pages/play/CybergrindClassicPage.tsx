@@ -311,8 +311,6 @@ const CybergrindClassicPage = () => {
   const isRoundOver = hasWon || guessesLeft <= 0;
   const isGameOver = status === "game_over";
 
-  const completedWaves = currentWave - 1;
-
   const revealedEnemy =
     isGameOver && gameOverStats?.correct_id
       ? enemies.find((e) => e.id === gameOverStats.correct_id)
@@ -373,11 +371,11 @@ const CybergrindClassicPage = () => {
                 <span className="text-2xl font-black text-white italic leading-none">
                   {currentWave}
                 </span>
-              {bestRecord && (
-                <span className="text-white/30 text-sm text-left font-bold uppercase tracking-wider">
-                  (BEST: {bestRecord.best_wave})
-                </span>
-              )}
+                {bestRecord && (
+                  <span className="text-white/30 text-sm text-left font-bold uppercase tracking-wider">
+                    (BEST: {bestRecord.best_wave})
+                  </span>
+                )}
               </div>
             </div>
 
@@ -404,13 +402,12 @@ const CybergrindClassicPage = () => {
                         wrapperClassName=""
                       >
                         <span
-                          className={`font-bold uppercase italic tracking-wider cursor-help ${
-                            isRadiance
+                          className={`font-bold uppercase italic tracking-wider cursor-help ${isRadiance
                               ? "text-purple-400"
                               : isTarget
                                 ? "text-yellow-400"
                                 : "text-red-500"
-                          }`}
+                            }`}
                         >
                           {mod}
                           {isTarget && (
@@ -442,11 +439,11 @@ const CybergrindClassicPage = () => {
             animate={
               shouldFlash
                 ? {
-                    backgroundColor: [
-                      "rgba(255, 255, 255, 0.6)",
-                      "rgba(255, 255, 255, 0)",
-                    ],
-                  }
+                  backgroundColor: [
+                    "rgba(255, 255, 255, 0.6)",
+                    "rgba(255, 255, 255, 0)",
+                  ],
+                }
                 : { backgroundColor: "rgba(255, 255, 255, 0)" }
             }
             transition={
@@ -530,7 +527,10 @@ const CybergrindClassicPage = () => {
                   delay={0.7}
                 />
                 <Typewriter
-                  text={`GUESS ACCURACY: ${((gameOverStats.hint_accuracy / gameOverStats.total_guesses)/(5/100)).toFixed(2)}%`}
+                  text={`GUESS ACCURACY: ${gameOverStats.hint_accuracy && gameOverStats.total_guesses
+                      ? ((gameOverStats.hint_accuracy / gameOverStats.total_guesses) / (5 / 100)).toFixed(2)
+                      : "0.00"
+                    }%`}
                   className="opacity-50"
                   speed={0.02}
                   delay={1.0}
