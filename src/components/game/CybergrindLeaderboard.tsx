@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCybergrindLeaderboard } from "../../hooks/useCybergrindLeaderboard";
 
 export const CybergrindLeaderboard = () => {
-  const { entries, loading, hasEllipsis } = useCybergrindLeaderboard();
+  const { entries, loading } = useCybergrindLeaderboard();
 
   if (loading) {
     return (
@@ -30,7 +30,9 @@ export const CybergrindLeaderboard = () => {
 
       <AnimatePresence initial={false}>
         {entries.map((entry, index) => {
-          const renderEllipsis = hasEllipsis && index === 3;
+          const prevRank =
+            index > 0 ? entries[index - 1].rank : entry.rank - 1;
+          const hasGap = entry.rank - prevRank > 1;
 
           const isTop3 = entry.rank <= 3;
           const medalColor =
@@ -61,7 +63,7 @@ export const CybergrindLeaderboard = () => {
 
           return (
             <div key={entry.user_id}>
-              {renderEllipsis && (
+              {hasGap && (
                 <div className="flex justify-center my-1 opacity-30 py-1">
                   <span className="text-white tracking-[0.3em] text-xs">
                     · · ·
