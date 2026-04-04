@@ -12,6 +12,7 @@ interface ModalProps {
   allowBackdropClose?: boolean;
   showFooterButton?: boolean;
   footerButtonText?: string;
+  footerText?: string;
   maxWidth?: string;
 }
 
@@ -24,6 +25,7 @@ const Modal = ({
   isOpen,
   onClose,
   title,
+  footerText,
   children,
   showCloseButton = true,
   allowBackdropClose = true,
@@ -83,12 +85,17 @@ const Modal = ({
                   {children}
                 </div>
 
+                { footerText && (
+                  <p className="mt-2 border-t-white border-t-2 text-sm">
+                    {footerText}
+                  </p>
+                )}
                 {showFooterButton && (
-                  <div className="mt-8 shrink-0">
+                  <div className="mt-2 shrink-0">
                     <Button
                       onClick={onClose}
                       variant="outline"
-                      size="xl"
+                      size="lg"
                       className="w-full"
                     >
                       {footerButtonText}
