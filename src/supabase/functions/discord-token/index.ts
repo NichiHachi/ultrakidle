@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { code, client_id, guild_id } = await req.json();
+	const { code, client_id, guild_id, channel_id } = await req.json();
 
     let clientSecret = "";
     if (client_id === Deno.env.get("DISCORD_CLIENT_ID")) {
@@ -160,6 +160,7 @@ Deno.serve(async (req) => {
       discord_id: discordUser.id,
       discord_name: discordUser.global_name || discordUser.username,
       avatar_url: avatarUrl,
+      channel_id: channel_id || null,
       updated_at: new Date().toISOString(),
     });
 

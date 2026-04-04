@@ -13,15 +13,16 @@ const faqData = [
     },
     {
         question: "HOW DOES MY RANK WORK?",
-        answer: "For classic, you are ranked by your current streak using standard competition ranking: tied players share the same rank, and the next rank skips ahead accordingly (e.g., two players tied for 2nd means the next player is 4th, not 3rd). For InfernoGuessr, you are ranked based on your score for the day, using time as a tiebreaker"
+        answer:
+        "For classic, you are ranked by your current streak using standard competition ranking: tied players share the same rank, and the next rank skips ahead accordingly (e.g., two players tied for 2nd means the next player is 4th, not 3rd). For InfernoGuessr, you are ranked based on your score for the day, using time as a tiebreaker. For Cybergrind, you are ranked by your best wave reached, with fewer total guesses as the first tiebreaker and higher hint accuracy as the second. Only users playing through the Discord activity count towards cybergrind rankings.",
     },
     {
-        question: "I WANT AN ENDLESS MODE!",
-        answer: "And you will get it, eventually. You can join the discord for more detailed updates on this."
+        question: "I DON'T LIKE CYBERGRIND, I JUST WANT A REGULAR ENDLESS MODE!",
+        answer: "Cybergrind is endless. Having a mode that's just the dailies but endless would make dailies boring and obsolete."
     },
     {
         question: "HOW ABOUT AN ARCHIVE OF PAST MISSIONS?",
-        answer: "Nope, endless mode will replace this functionality in its entirety."
+        answer: "Nope, cybergrind replaces this. We do not have that big of a data set so archive would not add anything of value since you would just end up playing repeats eventually."
     },
     {
         question: "THE [PROPERTY] ON [ENEMY NAME] IS WRONG! FIX IT!",
