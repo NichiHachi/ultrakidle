@@ -24,7 +24,7 @@ const MODIFIER_DISPLAY_ORDER: string[] = [
 const RADIANCE_DESCRIPTIONS: Record<string, string> = {
   PENANCE: "RADIANCE: 2 wrong guesses instead of 1",
   FALSIFIER:
-  "RADIANCE: Flips up to 2 arrows instead of 1. Can flip the same arrow twice, canceling itself out",
+  "RADIANCE: Flips 2 arrows instead of 1. Can flip the same arrow twice, canceling itself out",
   LETHE: "RADIANCE: Only your most recent guess is visible",
   ECLIPSE: "RADIANCE: Both Type and Weight columns are hidden",
 };
