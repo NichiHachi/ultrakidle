@@ -68,6 +68,7 @@ export const enemies = [
     id: 69,
     name: "Malicious Spawn",
     icon: ["/external/wiki/images/Malicious_Face.webp"],
+    isSpawn: true,
     wikiLink: "/external/wiki/Flesh_Prison",
   },
   {

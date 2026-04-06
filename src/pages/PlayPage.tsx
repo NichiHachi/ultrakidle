@@ -199,11 +199,17 @@ const PlayPage = () => {
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ delay: 0.5, duration: 0.5 }}
                                 >
-                                    <EnemyIcon
-                                        icons={enemies.find(e => e.name === guesses.find(g => g.correct)?.enemy_name)?.icon || []}
-                                        size={32}
-                                        className="border border-green-500/20 p-0.5 bg-green-500/5"
-                                    />
+                                    {(() => {
+                                        const enemy = enemies.find(e => e.name === guesses.find(g => g.correct)?.enemy_name);
+                                        return (
+                                            <EnemyIcon
+                                                icons={enemy?.icon || []}
+                                                size={32}
+                                                isSpawn={(enemy as any)?.isSpawn}
+                                                className="border border-green-500/20 p-0.5 bg-green-500/5"
+                                            />
+                                        );
+                                    })()}
                                 </motion.div>
                             )}
                         </div>
@@ -229,7 +235,7 @@ const PlayPage = () => {
                                             animate={{ opacity: 1, scale: 1 }}
                                             transition={{ delay: 1.8, duration: 0.5 }}
                                         >
-                                            <EnemyIcon icons={revealedEnemy.icon} size={32} className="" />
+                                            <EnemyIcon icons={revealedEnemy.icon} size={32} isSpawn={(revealedEnemy as any).isSpawn} className="" />
                                         </motion.div>
                                         <Typewriter
                                             text={revealedEnemy.name}

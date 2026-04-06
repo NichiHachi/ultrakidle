@@ -24,7 +24,7 @@ const MODIFIER_DISPLAY_ORDER: string[] = [
 const RADIANCE_DESCRIPTIONS: Record<string, string> = {
   PENANCE: "RADIANCE: 2 wrong guesses instead of 1",
   FALSIFIER:
-  "RADIANCE: Flips 2 arrows instead of 1. Can flip the same arrow twice, canceling itself out",
+    "RADIANCE: Flips 2 arrows instead of 1. Can flip the same arrow twice, canceling itself out",
   LETHE: "RADIANCE: Only your most recent guess is visible",
   ECLIPSE: "RADIANCE: Both Type and Weight columns are hidden",
 };
@@ -33,7 +33,7 @@ const MODIFIER_TOOLTIPS: Record<string, string> = {
   PENANCE:
     "Automatically select a wrong guess at the start of the round",
   FALSIFIER:
-  "For a random hint with arrows, flip its arrow to the opposite direction. The hint this applies to is re-rolled on every guess",
+    "For a random hint with arrows, flip its arrow to the opposite direction. The hint this applies to is re-rolled on every guess",
   LETHE: "You can only see your 2 most recent guesses",
   ECLIPSE:
     "Completely obscures a random column without arrows for the entire round",
@@ -400,13 +400,12 @@ const CybergrindClassicPage = () => {
                         )}
                         <Tooltip content={tooltip} wrapperClassName="">
                           <span
-                            className={`font-bold uppercase italic tracking-wider cursor-help ${
-isRadiance
-? "text-purple-400"
-: isTarget
-? "text-yellow-400"
-: "text-red-500"
-}`}
+                            className={`font-bold uppercase italic tracking-wider cursor-help ${isRadiance
+                                ? "text-purple-400"
+                                : isTarget
+                                  ? "text-yellow-400"
+                                  : "text-red-500"
+                              }`}
                           >
                             {mod}
                             {isTarget && (
@@ -420,10 +419,10 @@ isRadiance
                     );
                   })
                 ) : (
-                    <span className="text-white/40 uppercase tracking-widest italic font-bold">
-                      NONE
-                    </span>
-                  )}
+                  <span className="text-white/40 uppercase tracking-widest italic font-bold">
+                    NONE
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -528,8 +527,8 @@ isRadiance
                 />
                 <Typewriter
                   text={`GUESS ACCURACY: ${gameOverStats.hint_accuracy && gameOverStats.total_guesses
-                      ? ((gameOverStats.hint_accuracy / gameOverStats.total_guesses) / (5 / 100)).toFixed(2)
-                      : "0.00"
+                    ? ((gameOverStats.hint_accuracy / gameOverStats.total_guesses) / (5 / 100)).toFixed(2)
+                    : "0.00"
                     }%`}
                   className="opacity-50"
                   speed={0.02}
@@ -566,6 +565,7 @@ isRadiance
                         <EnemyIcon
                           icons={revealedEnemy.icon}
                           size={32}
+                          isSpawn={(revealedEnemy as any).isSpawn}
                         />
                       </motion.div>
                       <Typewriter

@@ -88,7 +88,7 @@ export const EnemySearch = ({ onGuess, disabled = false, excludeIds = [] }: Enem
                                 onClick={() => handleSelect(enemy.id)}
                                 className="p-3 hover:bg-white/10 cursor-pointer uppercase text-left border-b border-white/10 last:border-b-0 flex items-center gap-3"
                             >
-                                <EnemyIcon icons={enemy.icon} size={24} />
+                                <EnemyIcon icons={enemy.icon} size={24} isSpawn={(enemy as any).isSpawn} />
                                 <span>{enemy.name}</span>
                             </li>
                         ))

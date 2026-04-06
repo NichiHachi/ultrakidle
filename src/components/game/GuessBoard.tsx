@@ -197,8 +197,8 @@ export const GuessBoard = ({
                   {/* Enemy Name */}
                   <td
                     className={`border-l-4 ${isPenance
-                        ? "border-l-amber-400"
-                        : "border-black/50"
+                      ? "border-l-amber-400"
+                      : "border-black/50"
                       } ${getResultColorClass(
                         guess.correct ? "correct" : "incorrect",
                         undefined,
@@ -215,6 +215,7 @@ export const GuessBoard = ({
                           <EnemyIcon
                             icons={enemy.icon}
                             size={32}
+                            isSpawn={(enemy as any).isSpawn}
                             className="shrink-0"
                           />
                         )}
@@ -244,16 +245,16 @@ export const GuessBoard = ({
                   {/* Enemy Type */}
                   <td
                     className={`border-l-4 border-black/50 ${eclipsedType
-                        ? "bg-zinc-800/20 border-zinc-500/30 text-zinc-500/50"
-                        : getResultColorClass(
-                          hasValue(
-                            guess.properties.enemy_type.value,
-                          )
-                            ? guess.properties.enemy_type.result
-                            : "gray",
-                          undefined,
-                          colorblindMode,
+                      ? "bg-zinc-800/20 border-zinc-500/30 text-zinc-500/50"
+                      : getResultColorClass(
+                        hasValue(
+                          guess.properties.enemy_type.value,
                         )
+                          ? guess.properties.enemy_type.result
+                          : "gray",
+                        undefined,
+                        colorblindMode,
+                      )
                       }`}
                   >
                     <CellTooltip
@@ -295,17 +296,17 @@ export const GuessBoard = ({
                   {/* Weight Class */}
                   <td
                     className={`border-l-4 border-black/50 ${eclipsedWeight
-                        ? "bg-zinc-800/20 border-zinc-500/30 text-zinc-500/50"
-                        : getResultColorClass(
-                          hasValue(
-                            guess.properties.weight_class.value,
-                          )
-                            ? guess.properties.weight_class
-                              .result
-                            : "gray",
-                          undefined,
-                          colorblindMode,
+                      ? "bg-zinc-800/20 border-zinc-500/30 text-zinc-500/50"
+                      : getResultColorClass(
+                        hasValue(
+                          guess.properties.weight_class.value,
                         )
+                          ? guess.properties.weight_class
+                            .result
+                          : "gray",
+                        undefined,
+                        colorblindMode,
+                      )
                       }`}
                   >
                     <CellTooltip

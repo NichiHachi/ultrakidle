@@ -292,19 +292,23 @@ const ClassicPlayPage = () => {
                                             duration: 0.5,
                                         }}
                                     >
-                                        <EnemyIcon
-                                            icons={
-                                                enemies.find(
-                                                    (e) =>
-                                                        e.name ===
-                                                        guesses.find(
-                                                            (g) => g.correct
-                                                        )?.enemy_name
-                                                )?.icon || []
-                                            }
-                                            size={32}
-                                            className="border border-green-500/20 p-0.5 bg-green-500/5"
-                                        />
+                                        {(() => {
+                                            const enemy = enemies.find(
+                                                (e) =>
+                                                    e.name ===
+                                                    guesses.find(
+                                                        (g) => g.correct
+                                                    )?.enemy_name
+                                            );
+                                            return (
+                                                <EnemyIcon
+                                                    icons={enemy?.icon || []}
+                                                    size={32}
+                                                    isSpawn={(enemy as any)?.isSpawn}
+                                                    className="border border-green-500/20 p-0.5 bg-green-500/5"
+                                                />
+                                            );
+                                        })()}
                                     </motion.div>
                                 )}
                             </div>
@@ -342,6 +346,7 @@ const ClassicPlayPage = () => {
                                                 <EnemyIcon
                                                     icons={revealedEnemy.icon}
                                                     size={32}
+                                                    isSpawn={(revealedEnemy as any).isSpawn}
                                                     className=""
                                                 />
                                             </motion.div>
