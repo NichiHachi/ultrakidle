@@ -12,7 +12,9 @@ import Button from "../../components/ui/Button";
 import { supabase } from "../../lib/supabaseClient";
 import { CURRENT_VERSION, useVersion } from "../../context/VersionContext";
 import { Typewriter } from "../../components/Typewriter";
+import AlertDialog from "../../components/ui/AlertDialog";
 import { getMsUntilNicaraguaMidnight } from "../../lib/time";
+import { useSettings } from "../../context/SettingsContext";
 
 interface Submitter {
   name: string;
@@ -64,6 +66,7 @@ const InfernoPlayPage = () => {
   const navigate = useNavigate();
   const { setUpdateAvailable } = useVersion();
   const { dayNumber, infernoImageUrls } = useGameInit();
+  const { settings, syncWithDbSettings } = useSettings();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,6 +89,7 @@ const InfernoPlayPage = () => {
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [lightboxZoomed, setLightboxZoomed] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [activeTimer, setActiveTimer] = useState(0);
   const [isListVisible, setIsListVisible] = useState(false);
@@ -149,8 +153,9 @@ const InfernoPlayPage = () => {
         return;
       }
 
-      const res = data as GameData;
+      const res = data as any;
       setGameData(res);
+      syncWithDbSettings(res.settings ?? null);
 
       if (res.status === "in_progress") {
         setActiveTimer(res.elapsed_seconds);
@@ -226,7 +231,7 @@ const InfernoPlayPage = () => {
       }
     } else if (
       autoSelectedRef.current !== null &&
-        selectedLevelId === autoSelectedRef.current
+      selectedLevelId === autoSelectedRef.current
     ) {
       setSelectedLevelId(null);
       autoSelectedRef.current = null;
@@ -270,12 +275,22 @@ const InfernoPlayPage = () => {
   const infernoNumber = dayNumber ? dayNumber - 23 : null;
 
   const resolveRoundImage = (roundNumber: number, fallbackUrl: string) =>
-  infernoImageUrls[roundNumber] || resolveExternalUrl(fallbackUrl);
+    infernoImageUrls[roundNumber] || resolveExternalUrl(fallbackUrl);
 
   const handleGuess = async () => {
     if (!selectedLevelId || isSubmitting || gameData?.status !== "in_progress")
       return;
 
+    if (settings.confirmDialogs?.infernoguessr) {
+      setShowConfirm(true);
+      return;
+    }
+
+    executeGuess();
+  };
+
+  const executeGuess = async () => {
+    if (!selectedLevelId || gameData?.status !== "in_progress") return;
     setIsSubmitting(true);
     try {
       const { data, error: rpcError } = await supabase.rpc(
@@ -545,6 +560,25 @@ const InfernoPlayPage = () => {
 
   return (
     <>
+      <AlertDialog
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={() => {
+          setShowConfirm(false);
+          executeGuess();
+        }}
+        title="CONFIRM GUESS"
+        description={
+          selectedLevel ? (
+            <span>
+              Are you sure you want to guess{" "}
+              <span className="text-white font-bold">{selectedLevel.levelNumber}: {selectedLevel.name}</span>?
+            </span>
+          ) : ""
+        }
+        confirmText="SUBMIT"
+        cancelText="CANCEL"
+      />
       <div className="z-40 flex flex-col w-full pt-4 min-h-full justify-start items-start text-white">
         <SEO
           title={
@@ -640,25 +674,23 @@ const InfernoPlayPage = () => {
                             className="flex items-center gap-2"
                           >
                             <div
-                              className={`w-4 h-4 border ${
-                                status === "green"
-                                  ? "border-green-500 bg-green-500/20"
-                                  : status === "yellow"
-                                    ? "border-yellow-500 bg-yellow-500/20"
-                                    : status === "red"
-                                      ? "border-red-500 bg-red-500/20"
-                                      : "border-zinc-500/30 bg-zinc-800/20"
-                              }`}
+                              className={`w-4 h-4 border ${status === "green"
+                                ? "border-green-500 bg-green-500/20"
+                                : status === "yellow"
+                                  ? "border-yellow-500 bg-yellow-500/20"
+                                  : status === "red"
+                                    ? "border-red-500 bg-red-500/20"
+                                    : "border-zinc-500/30 bg-zinc-800/20"
+                                }`}
                             />
                             {round && (
                               <span
-                                className={`text-sm font-bold tracking-wider ${
-                                  status === "green"
-                                    ? "text-green-500/70"
-                                    : status === "yellow"
-                                      ? "text-yellow-500/70"
-                                      : "text-red-500/70"
-                                }`}
+                                className={`text-sm font-bold tracking-wider ${status === "green"
+                                  ? "text-green-500/70"
+                                  : status === "yellow"
+                                    ? "text-yellow-500/70"
+                                    : "text-red-500/70"
+                                  }`}
                               >
                                 +{round.score}
                               </span>
@@ -704,13 +736,12 @@ const InfernoPlayPage = () => {
                         <div className="flex justify-between items-center text-sm text-white/30 uppercase tracking-widest">
                           <span>Round {round.round_number}</span>
                           <span
-                            className={`font-bold ${
-                              round.score === 100
-                                ? "text-green-500"
-                                : round.score >= 60
-                                  ? "text-yellow-500"
-                                  : "text-red-500"
-                            }`}
+                            className={`font-bold ${round.score === 100
+                              ? "text-green-500"
+                              : round.score >= 60
+                                ? "text-yellow-500"
+                                : "text-red-500"
+                              }`}
                           >
                             +{round.score}
                           </span>
@@ -772,11 +803,10 @@ const InfernoPlayPage = () => {
                               Distance
                             </span>
                             <span
-                              className={`font-bold ${
-                                round.distance === 0
-                                  ? "text-green-400"
-                                  : "text-red-400"
-                              }`}
+                              className={`font-bold ${round.distance === 0
+                                ? "text-green-400"
+                                : "text-red-400"
+                                }`}
                             >
                               {round.distance}
                             </span>
@@ -819,15 +849,15 @@ const InfernoPlayPage = () => {
                       </div>
                     )}
                     <img
-                        src={
-                          resolveRoundImage(
-                            displayRound.round_number,
-                            displayRound.image_url
-                          ) +
-                            (imgRetry > 0
-                              ? `${resolveRoundImage(displayRound.round_number, displayRound.image_url).includes("?") ? "&" : "?"}_r=${imgRetry}`
-                              : "")
-                        }
+                      src={
+                        resolveRoundImage(
+                          displayRound.round_number,
+                          displayRound.image_url
+                        ) +
+                        (imgRetry > 0
+                          ? `${resolveRoundImage(displayRound.round_number, displayRound.image_url).includes("?") ? "&" : "?"}_r=${imgRetry}`
+                          : "")
+                      }
                       alt="Target"
                       className="w-full h-full object-contain pointer-events-none"
                       draggable={false}
@@ -961,11 +991,11 @@ const InfernoPlayPage = () => {
                     />
                   </div>
                 )}
-                  <div className="w-full flex justify-left">
-                    <span className="text-white/50 text-sm text-left place-self-start w-full justify-left">
-                      * Levels may appear multiple times in a single day
-                    </span>
-                  </div>
+                <div className="w-full flex justify-left">
+                  <span className="text-white/50 text-sm text-left place-self-start w-full justify-left">
+                    * Levels may appear multiple times in a single day
+                  </span>
+                </div>
 
                 <motion.div
                   className="w-full overflow-x-auto custom-scrollbar pb-2 will-change-transform"
@@ -989,15 +1019,15 @@ const InfernoPlayPage = () => {
 
                       const guessIdx = lastRoundResult
                         ? sortedLevels.findIndex(
-                            (l) =>
-                              l.id === lastRoundResult.guessed_level.id
-                          )
+                          (l) =>
+                            l.id === lastRoundResult.guessed_level.id
+                        )
                         : -1;
                       const correctIdx = lastRoundResult
                         ? sortedLevels.findIndex(
-                            (l) =>
-                              l.id === lastRoundResult.correct_level.id
-                          )
+                          (l) =>
+                            l.id === lastRoundResult.correct_level.id
+                        )
                         : -1;
                       const minIdx = Math.min(guessIdx, correctIdx);
                       const maxIdx = Math.max(guessIdx, correctIdx);
@@ -1017,59 +1047,55 @@ const InfernoPlayPage = () => {
                             !lastRoundResult &&
                             setSelectedLevelId(level.id)
                           }
-                          className={`group relative flex flex-col hover:cursor-pointer items-center gap-1 min-w-32 w-[15vw] max-w-48 flex-shrink-0 transition-all ${
-                            isSelected
+                          className={`group relative flex flex-col hover:cursor-pointer items-center gap-1 min-w-32 w-[15vw] max-w-48 flex-shrink-0 transition-all ${isSelected
+                            ? "scale-105 opacity-100 grayscale-0"
+                            : lastRoundResult &&
+                              (isCorrect ||
+                                isGuessed ||
+                                isInBetween)
                               ? "scale-105 opacity-100 grayscale-0"
-                              : lastRoundResult &&
-                                  (isCorrect ||
-                                    isGuessed ||
-                                    isInBetween)
-                                ? "scale-105 opacity-100 grayscale-0"
-                                : "opacity-60 grayscale hover:grayscale-0 hover:opacity-100"
-                          }`}
+                              : "opacity-60 grayscale hover:grayscale-0 hover:opacity-100"
+                            }`}
                         >
                           <div
-                            className={`w-full aspect-video border-2 transition-colors duration-500 overflow-hidden relative ${
-                              isSelected
-                                ? "border-white/70"
-                                : lastRoundResult && isCorrect
-                                  ? "border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]"
-                                  : isGuessed
-                                    ? "border-red-400"
-                                    : isInBetween
-                                      ? "border-red-500/50"
-                                      : "border-white/10"
-                            }`}
+                            className={`w-full aspect-video border-2 transition-colors duration-500 overflow-hidden relative ${isSelected
+                              ? "border-white/70"
+                              : lastRoundResult && isCorrect
+                                ? "border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+                                : isGuessed
+                                  ? "border-red-400"
+                                  : isInBetween
+                                    ? "border-red-500/50"
+                                    : "border-white/10"
+                              }`}
                           >
                             <img
                               src={resolveExternalUrl(
                                 level.thumbnail || ""
                               )}
                               alt={level.name}
-                              className={`w-full h-full object-cover transition-all duration-500 ${
-                                lastRoundResult && isCorrect
-                                  ? "brightness-110"
-                                  : isInBetween
-                                    ? "brightness-75"
-                                    : ""
-                              }`}
+                              className={`w-full h-full object-cover transition-all duration-500 ${lastRoundResult && isCorrect
+                                ? "brightness-110"
+                                : isInBetween
+                                  ? "brightness-75"
+                                  : ""
+                                }`}
                             />
                             {isInBetween && (
                               <div className="absolute inset-0 bg-red-500/20 animate-pulse pointer-events-none z-10" />
                             )}
                           </div>
                           <span
-                            className={`text-base truncate w-full text-center transition-colors ${
-                              isSelected
-                                ? "text-white"
-                                : lastRoundResult && isCorrect
-                                  ? "text-green-500"
-                                  : isGuessed
+                            className={`text-base truncate w-full text-center transition-colors ${isSelected
+                              ? "text-white"
+                              : lastRoundResult && isCorrect
+                                ? "text-green-500"
+                                : isGuessed
+                                  ? "text-red-400"
+                                  : isInBetween
                                     ? "text-red-400"
-                                    : isInBetween
-                                      ? "text-red-400"
-                                      : "text-white/50 group-hover:text-white"
-                            }`}
+                                    : "text-white/50 group-hover:text-white"
+                              }`}
                           >
                             {level.levelNumber}
                           </span>
@@ -1178,11 +1204,10 @@ const InfernoPlayPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className={`fixed inset-0 z-50 bg-black/90 backdrop-blur-sm ${
-              lightboxZoomed
-                ? "overflow-auto"
-                : "flex items-center justify-center"
-            }`}
+            className={`fixed inset-0 z-50 bg-black/90 backdrop-blur-sm ${lightboxZoomed
+              ? "overflow-auto"
+              : "flex items-center justify-center"
+              }`}
             onClick={() => setLightboxUrl(null)}
           >
             <div

@@ -50,7 +50,7 @@ const Modal = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={allowBackdropClose ? onClose : undefined}
-            className={`fixed inset-0 bg-black/80 z-[100] backdrop-blur-sm ${!allowBackdropClose ? "cursor-default" : "cursor-pointer"}`}
+            className={`fixed inset-0 bg-black/80 z-[100] ${!allowBackdropClose ? "cursor-default" : "cursor-pointer"}`}
           />
           <div className="fixed inset-0 flex items-center justify-center z-[101] p-4 pointer-events-none">
             <motion.div

@@ -9,6 +9,47 @@ export interface Message {
 
 export const MESSAGES: Message[] = [
   {
+  id: 'settings-page',
+  date: '2026-04-06',
+  content: (
+    <div className="space-y-4 lg:space-y-6 text-justify">
+      <p className="text-zinc-400 text-sm">
+        SYSTEM UPDATE LOG // [06-APR-2026]
+      </p>
+      <p className="text-green-500 lg:text-xl text-base font-bold tracking-wide">
+        SETTINGS PAGE DEPLOYED
+      </p>
+      <p className="text-white/70 lg:text-base text-sm">
+        A dedicated settings page has been added to the site. It's accessible from the home page.
+      </p>
+      <p className="text-white/70 lg:text-base text-sm">
+        <span className="text-white font-semibold">
+          Colorblind mode
+        </span>{" "}
+        has been relocated here from its previous location.
+        Additionally, you can now configure{" "}
+        <span className="text-white font-semibold">
+          custom color schemes
+        </span>{" "}
+        for the hint tiles to your liking.
+      </p>
+      <p className="text-white/70 lg:text-base text-sm">
+        The guessboard columns can now be{" "}
+        <span className="text-white font-semibold">reordered</span>{" "}
+        to match your preferred layout.
+      </p>
+      <p className="text-white/70 lg:text-base text-sm">
+        All gamemodes now have small
+         small{" "}
+        <span className="text-white font-semibold">
+          tweakable behavior options
+        </span>
+        . Check them out and adjust things to how you like to play.
+      </p>
+    </div>
+  ),
+},
+  {
     id: 'cybergrind-release',
     date: '2026-04-02',
     content: (

@@ -15,10 +15,38 @@ const MainLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const guildId = getGuildId();
-  const { colorblindMode, toggleColorblindMode } = useSettings();
+  const { settings } = useSettings();
+  const showIcons = settings.showHintIcons || settings.cellColors === 'colorblind';
   const [isHowToPlayOpen, setIsHowToPlayOpen] = useState(false);
   const [isCGLeaderboardOpen, setIsCGLeaderboardOpen] = useState(false);
   const [isRankingOpen, setIsRankingOpen] = useState(true);
+
+  const getLegendStyles = (logicalColor: 'green' | 'yellow' | 'red') => {
+    if (settings.cellColors === 'custom') {
+      const rgb =
+        logicalColor === 'green' ? settings.customColors.correct :
+          logicalColor === 'yellow' ? settings.customColors.partial :
+            settings.customColors.incorrect;
+      const rgbString = `${Math.round(rgb.r * 255)}, ${Math.round(rgb.g * 255)}, ${Math.round(rgb.b * 255)}`;
+      return {
+        wrapperClassName: "w-4 h-4 border flex items-center justify-center shrink-0",
+        wrapperStyle: { backgroundColor: `rgba(${rgbString}, 0.2)`, borderColor: `rgb(${rgbString})` },
+        textClassName: "text-[10px] font-bold",
+        textStyle: { color: `rgb(${rgbString})` }
+      };
+    }
+
+    let wClass = "w-4 h-4 border flex items-center justify-center shrink-0 ";
+    let tClass = "text-[10px] font-bold ";
+
+    if (logicalColor === 'green') { wClass += "bg-green-500/20 border-green-500"; tClass += "text-green-500"; }
+    else if (logicalColor === 'yellow') {
+      if (settings.cellColors === 'colorblind') { wClass += "bg-blue-500/20 border-blue-500"; tClass += "text-blue-500"; }
+      else { wClass += "bg-yellow-500/20 border-yellow-500"; tClass += "text-yellow-500"; }
+    } else { wClass += "bg-red-500/20 border-red-500"; tClass += "text-red-500"; }
+
+    return { wrapperClassName: wClass, wrapperStyle: {}, textClassName: tClass, textStyle: {} };
+  };
   const [hasNeverPlayedClassic, setHasNeverPlayedClassic] = useState(false);
   const [hasNeverPlayedInferno, setHasNeverPlayedInferno] = useState(false);
   const [hasNeverPlayedCG, setHasNeverPlayedCG] = useState(false);
@@ -32,7 +60,14 @@ const MainLayout = () => {
     return localStorage.getItem('ultrakilldle_seen_cg_guide') === 'true';
   });
 
-    const { session } = useSession();
+  const { session } = useSession();
+
+  useEffect(() => {
+    const container = document.getElementById('main-scroll-container');
+    if (container) {
+      container.scrollTo(0, 0);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     const checkNewPlayer = async () => {
@@ -197,7 +232,7 @@ const MainLayout = () => {
                           onClick={() => setIsCGLeaderboardOpen(true)}
                           className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100"
                         >
-                          <svg className="mr-2" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978"/><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978"/><path d="M18 9h1.5a1 1 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z"/><path d="M6 9H4.5a1 1 0 0 1 0-5H6"/></svg>
+                          <svg className="mr-2" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978" /><path d="M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978" /><path d="M18 9h1.5a1 1 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z" /><path d="M6 9H4.5a1 1 0 0 1 0-5H6" /></svg>
                           LEADERBOARDS
                         </Button>
                       )}
@@ -212,18 +247,6 @@ const MainLayout = () => {
                           </div>
                         )}
                     </div>
-
-                    <label className="flex items-center gap-2 cursor-pointer group px-2">
-                      <input
-                        type="checkbox"
-                        checked={colorblindMode}
-                        onChange={toggleColorblindMode}
-                        className="w-4 h-4 bg-black border border-white/20 rounded accent-indigo-500 cursor-pointer"
-                      />
-                      <span className="text-xs uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                        Colorblind Mode
-                      </span>
-                    </label>
                   </>
                 )}
               </div>
@@ -239,22 +262,22 @@ const MainLayout = () => {
                     <div className="space-y-2">
                       <p className="opacity-50 underline uppercase">Color Indicators:</p>
                       <div className="flex gap-3 items-center">
-                        <div className="w-4 h-4 bg-green-500/20 border border-green-500 flex items-center justify-center">
-                          {colorblindMode && <span className="text-[10px] font-bold text-green-500">✓</span>}
+                        <div className={getLegendStyles('green').wrapperClassName} style={getLegendStyles('green').wrapperStyle}>
+                          {showIcons && <span className={getLegendStyles('green').textClassName} style={getLegendStyles('green').textStyle}>✓</span>}
                         </div>
-                        <span>CORRECT PROPERTY MATCH {colorblindMode && <span className="opacity-50">(✓)</span>}</span>
+                        <span>CORRECT PROPERTY MATCH {showIcons && <span className="opacity-50">(✓)</span>}</span>
                       </div>
                       <div className="flex gap-3 items-center">
-                        <div className={`w-4 h-4 border flex items-center justify-center ${colorblindMode ? 'bg-blue-500/20 border-blue-500' : 'bg-yellow-500/20 border-yellow-500'}`}>
-                          {colorblindMode && <span className="text-[10px] font-bold text-blue-500">ǃ</span>}
+                        <div className={getLegendStyles('yellow').wrapperClassName} style={getLegendStyles('yellow').wrapperStyle}>
+                          {showIcons && <span className={getLegendStyles('yellow').textClassName} style={getLegendStyles('yellow').textStyle}>ǃ</span>}
                         </div>
-                        <span>PARTIAL PROPERTY MATCH {colorblindMode && <span className="opacity-50">(ǃ)</span>}</span>
+                        <span>APPROX. PROPERTY MATCH {showIcons && <span className="opacity-50">(ǃ)</span>}</span>
                       </div>
                       <div className="flex gap-3 items-center">
-                        <div className="w-4 h-4 bg-red-500/20 border border-red-500 flex items-center justify-center">
-                          {colorblindMode && <span className="text-[10px] font-bold text-red-500">⨯</span>}
+                        <div className={getLegendStyles('red').wrapperClassName} style={getLegendStyles('red').wrapperStyle}>
+                          {showIcons && <span className={getLegendStyles('red').textClassName} style={getLegendStyles('red').textStyle}>⨯</span>}
                         </div>
-                        <span>INCORRECT PROPERTY MATCH {colorblindMode && <span className="opacity-50">(⨯)</span>}</span>
+                        <span>INCORRECT PROPERTY MATCH {showIcons && <span className="opacity-50">(⨯)</span>}</span>
                       </div>
                     </div>
                     <div className="space-y-2 pt-2 border-t border-white/10">
@@ -262,9 +285,9 @@ const MainLayout = () => {
                       <ul className="list-disc [&>*]:text-left pl-4 list-outside space-y-1 opacity-80">
                         <li>TYPE: ???, DEMON, MACHINE, HUSK, ANGEL OR PRIME SOUL</li>
                         <li>WEIGHT: LIGHT, MEDIUM, HEAVY OR SUPERHEAVY</li>
-                        <li>HEALTH: NUMERIC COMPARISON. TARGET CAN BE HIGHER ▲ OR LOWER ▼. <span className={colorblindMode ? "text-blue-500" : "text-yellow-500"}>{colorblindMode ? "BLUE" : "YELLOW"}</span> INDICATES VALUE IS WITHIN 10 HP OF TARGET. FOR ENEMIES WITH MULTIPLE VARIANTS, THE HIGHEST VARIANT'S HEALTH IS USED. FOR ENEMIES WITH MULTIPLE PHASES, HEALTH IS THE SUM OF ALL PHASES</li>
-                        <li>TOTAL LEVELS: NUMBER OF LEVELS THE ENEMY APPEARS IN. TARGET CAN BE HIGHER ▲ OR LOWER ▼. <span className={colorblindMode ? "text-blue-500" : "text-yellow-500"}>{colorblindMode ? "BLUE" : "YELLOW"}</span> INDICATES VALUE IS WITHIN 3 LEVELS OF TARGET</li>
-                        <li>REGISTERED AT: LEVEL OF FIRST ENCOUNTER. TARGET CAN BE ◄ EARLIER OR LATER ► (ORDERED ACCORDING TO OUR <a href="/levels" target="_blank" className="underline hover:text-white/80">LEVEL LIST</a>). <span className={colorblindMode ? "text-blue-500" : "text-yellow-500"}>{colorblindMode ? "BLUE" : "YELLOW"}</span> INDICATES THE TARGET IS WITHIN 10 POSITIONS IN THE LEVEL LIST</li>
+                        <li>HEALTH: NUMERIC COMPARISON. TARGET CAN BE HIGHER ▲ OR LOWER ▼. <span className={settings.cellColors === 'colorblind' ? "text-blue-500" : (settings.cellColors === 'custom' ? "text-[rgb(234,179,8)]" : "text-yellow-500")}>{settings.cellColors === 'colorblind' ? "BLUE" : (settings.cellColors === 'custom' ? "APPROX." : "YELLOW")}</span> INDICATES VALUE IS WITHIN 10 HP OF TARGET. FOR ENEMIES WITH MULTIPLE VARIANTS, THE HIGHEST VARIANT'S HEALTH IS USED. FOR ENEMIES WITH MULTIPLE PHASES, HEALTH IS THE SUM OF ALL PHASES</li>
+                        <li>TOTAL LEVELS: NUMBER OF LEVELS THE ENEMY APPEARS IN. TARGET CAN BE HIGHER ▲ OR LOWER ▼. <span className={settings.cellColors === 'colorblind' ? "text-blue-500" : (settings.cellColors === 'custom' ? "text-[rgb(234,179,8)]" : "text-yellow-500")}>{settings.cellColors === 'colorblind' ? "BLUE" : (settings.cellColors === 'custom' ? "APPROX." : "YELLOW")}</span> INDICATES VALUE IS WITHIN 3 LEVELS OF TARGET</li>
+                        <li>REGISTERED AT: LEVEL OF FIRST ENCOUNTER. TARGET CAN BE ◄ EARLIER OR LATER ► (ORDERED ACCORDING TO OUR <a href="/levels" target="_blank" className="underline hover:text-white/80">LEVEL LIST</a>). <span className={settings.cellColors === 'colorblind' ? "text-blue-500" : (settings.cellColors === 'custom' ? "text-[rgb(234,179,8)]" : "text-yellow-500")}>{settings.cellColors === 'colorblind' ? "BLUE" : (settings.cellColors === 'custom' ? "APPROX." : "YELLOW")}</span> INDICATES THE TARGET IS WITHIN 10 POSITIONS IN THE LEVEL LIST</li>
                       </ul>
                     </div>
                   </div>
@@ -277,30 +300,30 @@ const MainLayout = () => {
                       <ul className="uppercase list-disc [&>*]:text-left pl-4 list-outside space-y-1 opacity-80">
                         <li>Each wave presents a random target enemy. You have <span className="text-white font-bold">6 guesses</span> to identify it.</li>
                         <li>Guess correctly to advance to the next wave. Fail to identify the target in 6 guesses and your run ends.</li>
-                          <li>Hints work the same as Classic mode: type, weight, health, total levels, and first appearance. </li>
-                          <li>Thresholds for <span className={colorblindMode ? "text-blue-500" : "text-yellow-500"}>{colorblindMode ? "BLUE" : "YELLOW"}</span> hints are also the same: 10 health, 3 total levels, and 10 level positions</li>
+                        <li>Hints work the same as Classic mode: type, weight, health, total levels, and first appearance. </li>
+                        <li>Thresholds for <span className={settings.cellColors === 'colorblind' ? "text-blue-500" : (settings.cellColors === 'custom' ? "text-[rgb(234,179,8)]" : "text-yellow-500")}>{settings.cellColors === 'colorblind' ? "BLUE" : (settings.cellColors === 'custom' ? "APPROX." : "YELLOW")}</span> hints are also the same: 10 health, 3 total levels, and 10 level positions</li>
                       </ul>
                     </div>
 
                     <div className="space-y-2 uppercase">
                       <p className="opacity-50 underline uppercase">COLOR INDICATORS:</p>
                       <div className="flex gap-3 items-center">
-                        <div className="w-4 h-4 bg-green-500/20 border border-green-500 flex items-center justify-center">
-                          {colorblindMode && <span className="text-[10px] font-bold text-green-500">✓</span>}
+                        <div className={getLegendStyles('green').wrapperClassName} style={getLegendStyles('green').wrapperStyle}>
+                          {showIcons && <span className={getLegendStyles('green').textClassName} style={getLegendStyles('green').textStyle}>✓</span>}
                         </div>
-                        <span>CORRECT PROPERTY MATCH {colorblindMode && <span className="opacity-50">(✓)</span>}</span>
+                        <span>CORRECT PROPERTY MATCH {showIcons && <span className="opacity-50">(✓)</span>}</span>
                       </div>
                       <div className="flex gap-3 items-center">
-                        <div className={`w-4 h-4 border flex items-center justify-center ${colorblindMode ? 'bg-blue-500/20 border-blue-500' : 'bg-yellow-500/20 border-yellow-500'}`}>
-                          {colorblindMode && <span className="text-[10px] font-bold text-blue-500">ǃ</span>}
+                        <div className={getLegendStyles('yellow').wrapperClassName} style={getLegendStyles('yellow').wrapperStyle}>
+                          {showIcons && <span className={getLegendStyles('yellow').textClassName} style={getLegendStyles('yellow').textStyle}>ǃ</span>}
                         </div>
-                        <span>PARTIAL PROPERTY MATCH {colorblindMode && <span className="opacity-50">(ǃ)</span>}</span>
+                        <span>APPROX. PROPERTY MATCH {showIcons && <span className="opacity-50">(ǃ)</span>}</span>
                       </div>
                       <div className="flex gap-3 items-center">
-                        <div className="w-4 h-4 bg-red-500/20 border border-red-500 flex items-center justify-center">
-                          {colorblindMode && <span className="text-[10px] font-bold text-red-500">⨯</span>}
+                        <div className={getLegendStyles('red').wrapperClassName} style={getLegendStyles('red').wrapperStyle}>
+                          {showIcons && <span className={getLegendStyles('red').textClassName} style={getLegendStyles('red').textStyle}>⨯</span>}
                         </div>
-                        <span>INCORRECT PROPERTY MATCH {colorblindMode && <span className="opacity-50">(⨯)</span>}</span>
+                        <span>INCORRECT PROPERTY MATCH {showIcons && <span className="opacity-50">(⨯)</span>}</span>
                       </div>
                     </div>
 
@@ -357,7 +380,7 @@ const MainLayout = () => {
 
                 {/* ... (inside MainLayout) */}
 
-                <div className="z-10 text-left lg:text-xl md:text-lg text-sm border-t border-white/5 ">
+                <div className="z-10 text-left lg:text-xl md:text-lg text-sm border-t border-white/5 pb-4">
                   <span className="opacity-50 uppercase ">
                     INTO SOCIALS... OK
                   </span>

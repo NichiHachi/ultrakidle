@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { resolveExternalUrl } from "../lib/urls";
 import { supabase } from "../lib/supabaseClient";
 import { getMsUntilNicaraguaMidnight } from "../lib/time";
+import { useSettings } from "../context/SettingsContext";
 
 export interface Donor {
   name: string;
@@ -86,6 +87,7 @@ function preloadImage(url: string): Promise<string> {
 }
 
 export function useGameInit() {
+  const { syncWithDbSettings } = useSettings();
   const [loading, setLoading] = useState(true);
   const [dailyId, setDailyId] = useState<number | null>(null);
   const [dayNumber, setDayNumber] = useState<number | null>(null);
@@ -140,6 +142,8 @@ export function useGameInit() {
         const { data, error } = await supabase.rpc("init_game");
         if (error) throw error;
 
+        syncWithDbSettings(data.settings ?? null);
+
         setDailyId(data.daily_id);
         setDayNumber(data.day_number);
         setGuessHistory(data.history ?? []);
@@ -152,9 +156,9 @@ export function useGameInit() {
         setInfernoStatus(data.inferno?.status ?? null);
 
         const paths: { round_number: number; image_url: string }[] =
-        data.inferno?.paths ?? [];
+          data.inferno?.paths ?? [];
 
-        
+
         if (paths.length > 0) {
           const urlMap: Record<number, string> = {};
           for (const p of paths) {
@@ -165,7 +169,7 @@ export function useGameInit() {
           setInfernoImageUrls(urlMap);
 
           Object.values(urlMap).forEach((url) => {
-            preloadImage(url).catch(() => {});
+            preloadImage(url).catch(() => { });
           });
         }
 

@@ -23,6 +23,7 @@ import EnemiesPage from "./pages/EnemiesPage";
 import LevelsPage from "./pages/LevelsPage";
 import MessagesPage from "./pages/MessagesPage";
 import FaqPage from "./pages/FaqPage";
+import SettingsPage from "./pages/SettingsPage";
 import "./App.css";
 
 import { VersionProvider, useVersion } from "./context/VersionContext";
@@ -67,6 +68,7 @@ function AppContent() {
           <Route path="levels" element={<LevelsPage />} />
           <Route path="messages" element={<MessagesPage />} />
           <Route path="faq" element={<FaqPage />} />
+          <Route path="settings" element={<SettingsPage />} />
           <Route path="contact" element={<ContactPage />} />
           <Route path="discord-install" element={<DiscordRedirect />} />
           <Route path="*" element={<Navigate to="/" replace />} />

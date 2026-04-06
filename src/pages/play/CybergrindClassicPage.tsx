@@ -201,8 +201,10 @@ const CybergrindClassicPage = () => {
         throw error;
       }
 
+      const actualEnemyId = enemyId === 0 ? (data.guess_enemy_id || data.guess_id) : enemyId;
+
       if (data.result === "correct") {
-        const winningGuess = mapGuess(enemyId, data.hint_data, false);
+        const winningGuess = mapGuess(actualEnemyId, data.hint_data, false);
         setGuesses((prev) => [...prev, winningGuess]);
         setGuessesLeft((prev) => Math.max(0, prev - 1));
 
@@ -401,10 +403,10 @@ const CybergrindClassicPage = () => {
                         <Tooltip content={tooltip} wrapperClassName="">
                           <span
                             className={`font-bold uppercase italic tracking-wider cursor-help ${isRadiance
-                                ? "text-purple-400"
-                                : isTarget
-                                  ? "text-yellow-400"
-                                  : "text-red-500"
+                              ? "text-purple-400"
+                              : isTarget
+                                ? "text-yellow-400"
+                                : "text-red-500"
                               }`}
                           >
                             {mod}

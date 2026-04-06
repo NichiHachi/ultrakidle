@@ -99,7 +99,7 @@ serve(async (req) => {
 
       const discordId = payload.member.user.id;
 
-        const { error, count } = await supabase
+      const { error, count } = await supabase
         .from("profiles")
         .update({ pings_opted_in: true }, { count: "exact" })
         .eq("discord_id", discordId);
@@ -135,9 +135,9 @@ serve(async (req) => {
       const discordId = payload.member.user.id;
 
       const { error, count } = await supabase
-      .from("profiles")
-      .update({ pings_opted_in: false }, { count: "exact" })
-      .eq("discord_id", discordId);
+        .from("profiles")
+        .update({ pings_opted_in: false }, { count: "exact" })
+        .eq("discord_id", discordId);
 
       if (error || count === 0) {
         return Response.json({
@@ -427,7 +427,7 @@ serve(async (req) => {
             "",
             "### Color Indicators",
             "🟩 Correct property match",
-            "🟨 Partial property match",
+            "🟨 Approx. property match",
             "🟥 Incorrect property match",
             "",
             "### Properties Tracked",
