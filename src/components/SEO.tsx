@@ -8,8 +8,10 @@ interface SEOProps {
 const SEO: React.FC<SEOProps> = ({ title, description }) => {
     useEffect(() => {
         // Update title
+        const suffix = 'ULTRAKIDLE';
+        const fullTitle = title ? `${title} | ${suffix}` : suffix;
         const prevTitle = document.title;
-        document.title = title.includes('ULTRAKIDLE') ? title : `${title} | ULTRAKIDLE`;
+        document.title = fullTitle;
 
         // Update meta description
         let metaDescription = document.querySelector('meta[name="description"]');
