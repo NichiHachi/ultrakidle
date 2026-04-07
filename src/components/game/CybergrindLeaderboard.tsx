@@ -53,13 +53,9 @@ export const CybergrindLeaderboard = () => {
                   ? "border-amber-600/20"
                   : "border-white/5";
 
-          const accuracy =
-            entry.hint_accuracy && entry.total_guesses
-              ? (
-                  (entry.hint_accuracy / entry.total_guesses) /
-                  0.05
-                ).toFixed(2)
-              : "0.00";
+          const accuracy = entry.avg_accuracy
+            ? (entry.avg_accuracy * 20).toFixed(2)
+            : "0.00";
 
           return (
             <div key={entry.user_id}>
@@ -101,11 +97,7 @@ export const CybergrindLeaderboard = () => {
                       W:{entry.best_wave}
                     </span>
                     <span className="text-white/20">|</span>
-                    <span className="whitespace-nowrap">
-                      {entry.total_guesses}
-                    </span>
-                    <span className="text-white/20">|</span>
-                    <span className="whitespace-nowrap">{accuracy}%</span>
+                    <span className="whitespace-nowrap">ACC: {accuracy}%</span>
                   </div>
                 </div>
               </motion.div>

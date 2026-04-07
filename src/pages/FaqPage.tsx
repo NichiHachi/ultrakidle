@@ -14,7 +14,7 @@ const faqData = [
     {
         question: "HOW DOES MY RANK WORK?",
         answer:
-        "For classic, you are ranked by your current streak using standard competition ranking: tied players share the same rank, and the next rank skips ahead accordingly (e.g., two players tied for 2nd means the next player is 4th, not 3rd). For InfernoGuessr, you are ranked based on your score for the day, using time as a tiebreaker. For Cybergrind, you are ranked by your best wave reached, with fewer total guesses as the first tiebreaker and higher hint accuracy as the second. Only users playing through the Discord activity count towards cybergrind rankings.",
+        "For classic, you are ranked by your current streak using standard competition ranking: tied players share the same rank, and the next rank skips ahead accordingly (e.g., two players tied for 2nd means the next player is 4th, not 3rd). For InfernoGuessr, you are ranked based on your score for the day, using time as a tiebreaker. For Cybergrind, you are ranked by your best wave reached, with higher guess accuracy as a tiebreaker. Only users playing through the Discord activity count towards cybergrind rankings.",
     },
     {
         question: "I DON'T LIKE CYBERGRIND, I JUST WANT A REGULAR ENDLESS MODE!",

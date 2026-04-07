@@ -9,6 +9,7 @@ export interface CGLeaderboardEntry {
     total_guesses: number;
     hint_accuracy: number;
     achieved_at: string;
+    avg_accuracy: number;
     rank: number;
 }
 
