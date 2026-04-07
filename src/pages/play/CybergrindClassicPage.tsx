@@ -133,93 +133,114 @@ const CybergrindClassicPage = () => {
     setGuesses(mapGuessesFromServer(s.guesses));
   };
 
+  const updateSelectedStartWave = (wave: number) => {
+    setSelectedStartWave(wave);
+    localStorage.setItem("ultrakidle_cybergrind_start_wave", wave.toString());
+  };
+
   const handleVersionError = (error: any) => {
     if (error?.message?.includes("CLIENT_OUTDATED"))
       setUpdateAvailable(true);
   };
 
   const handleStartRun = async (wave: number = 1) => {
-  if (startingRef.current) return;
-  startingRef.current = true;
-  setIsSubmitting(true);
-  try {
-    const { data, error } = await supabase.rpc(
-      "start_cybergrind_run",
-      { start_wave: wave, version: CURRENT_VERSION },
-    );
-    if (error) {
-      handleVersionError(error);
-      throw error;
-    }
+    if (startingRef.current) return;
+    startingRef.current = true;
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.rpc(
+        "start_cybergrind_run",
+        { start_wave: wave, version: CURRENT_VERSION },
+      );
+      if (error) {
+        handleVersionError(error);
+        throw error;
+      }
 
-    // Existing run was returned via get_cybergrind_state
-    if (data.status === "active") {
+      // Existing run was returned via get_cybergrind_state
+      if (data.status === "active") {
+        setStatus("active");
+        if (data.best) setBestRecord(data.best);
+        applyRoundState(data);
+        return;
+      }
+
+      // New run was created
       setStatus("active");
+      setCurrentWave(data.round_number);
+      setModifiers(data.modifiers || []);
+      setRadianceTargets(data.radiance_targets || []);
+      setGuesses(mapGuessesFromServer(data.guesses));
+      setGuessesLeft(Math.max(0, 6 - (data.guesses?.length || 0)));
+    } catch (err) {
+      console.error("Error starting cybergrind run:", err);
+    } finally {
+      setIsSubmitting(false);
+      startingRef.current = false;
+    }
+  };
+
+  const fetchState = async () => {
+    try {
+      const { data, error } = await supabase.rpc(
+        "get_cybergrind_state",
+      );
+      if (error) throw error;
+
       if (data.best) setBestRecord(data.best);
-      applyRoundState(data);
-      return;
-    }
 
-    // New run was created
-    setStatus("active");
-    setCurrentWave(data.round_number);
-    setModifiers(data.modifiers || []);
-    setRadianceTargets(data.radiance_targets || []);
-    setGuesses(mapGuessesFromServer(data.guesses));
-    setGuessesLeft(Math.max(0, 6 - (data.guesses?.length || 0)));
-  } catch (err) {
-    console.error("Error starting cybergrind run:", err);
-  } finally {
-    setIsSubmitting(false);
-    startingRef.current = false;
-  }
-};
+      if (data.status === "no_run") {
+        const unlockedWaves = data.start_waves || [];
+        setStartWaves(unlockedWaves);
 
-const fetchState = async () => {
-  try {
-    const { data, error } = await supabase.rpc(
-      "get_cybergrind_state",
-    );
-    if (error) throw error;
+        const savedWave = localStorage.getItem(
+          "ultrakidle_cybergrind_start_wave",
+        );
+        if (savedWave) {
+          const waveNum = parseInt(savedWave, 10);
+          if (waveNum === 1 || unlockedWaves.includes(waveNum)) {
+            setSelectedStartWave(waveNum);
+          } else {
+            localStorage.removeItem("ultrakidle_cybergrind_start_wave");
+            setSelectedStartWave(1);
+          }
+        } else {
+          setSelectedStartWave(1);
+        }
 
-    if (data.best) setBestRecord(data.best);
-
-    if (data.status === "no_run") {
-      setStartWaves(data.start_waves || []);
-      setSelectedStartWave(1);
+        setStatus("no_run");
+      } else if (data.status === "active") {
+        setStatus("active");
+        applyRoundState(data);
+      }
+    } catch (err) {
+      console.error("Error fetching cybergrind state:", err);
       setStatus("no_run");
-    } else if (data.status === "active") {
-      setStatus("active");
-      applyRoundState(data);
     }
-  } catch (err) {
-    console.error("Error fetching cybergrind state:", err);
-    setStatus("no_run");
-  }
-};
+  };
 
   useEffect(() => {
     fetchState();
   }, []);
 
   const handleGuess = async (enemyId: number) => {
-  if (isSubmitting || status !== "active") return;
+    if (isSubmitting || status !== "active") return;
 
-  setIsSubmitting(true);
-  try {
-    const { data, error } = await supabase.rpc(
-      "submit_cybergrind_guess",
-      { guess_id: enemyId, version: CURRENT_VERSION },
-    );
-    if (error) {
-      handleVersionError(error);
-      if (error.message?.includes("No active Cybergrind run")) {
-        setStatus("loading");
-        await fetchState();
-        return;
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.rpc(
+        "submit_cybergrind_guess",
+        { guess_id: enemyId, version: CURRENT_VERSION },
+      );
+      if (error) {
+        handleVersionError(error);
+        if (error.message?.includes("No active Cybergrind run")) {
+          setStatus("loading");
+          await fetchState();
+          return;
+        }
+        throw error;
       }
-      throw error;
-    }
 
       const actualEnemyId =
         enemyId === 0
@@ -288,21 +309,21 @@ const fetchState = async () => {
   const handleAbandon = () => setIsAbandonModalOpen(true);
 
   const confirmAbandon = async () => {
-  setIsSubmitting(true);
-  try {
-    const { data, error } = await supabase.rpc(
-      "abandon_cybergrind_run",
-      { version: CURRENT_VERSION },
-    );
-    if (error) {
-      if (error.message?.includes("No active Cybergrind run")) {
-        setIsAbandonModalOpen(false);
-        setStatus("loading");
-        await fetchState();
-        return;
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.rpc(
+        "abandon_cybergrind_run",
+        { version: CURRENT_VERSION },
+      );
+      if (error) {
+        if (error.message?.includes("No active Cybergrind run")) {
+          setIsAbandonModalOpen(false);
+          setStatus("loading");
+          await fetchState();
+          return;
+        }
+        throw error;
       }
-      throw error;
-    }
 
       const stats: GameOverStats = {
         waves_reached: data.waves_reached,
@@ -377,62 +398,62 @@ const fetchState = async () => {
   }
 
   if (status === "no_run") {
-  const allWaves = [5, 10, 15, 20, 25, 30, 35, 40];
+    const allWaves = [5, 10, 15, 20, 25, 30, 35, 40];
 
-  return (
-    <>
-      <div className="h-dvh w-dvw bg-black/40 fixed top-0 left-0 overflow-visible pointer-events-none" />
-      <div className="z-40 flex flex-col w-full pt-4 min-h-full justify-start items-start">
-        <SEO
-          title="Cybergrind"
-          description="Endless enemy-guessing mode."
-        />
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.2 }}
-          className="flex flex-col w-full items-start gap-6"
-        >
-          <div className="flex flex-col gap-0 w-full lg:text-xl md:text-lg text-sm opacity-50 text-left">
-            <h1 className="tracking-widest">
-              CYBERGRIND_CLASSIC
-            </h1>
-          </div>
-
-          {bestRecord && bestRecord.best_wave > 0 && (
-            <div className="flex text-left flex-col gap-1 text-white/50 text-sm font-bold uppercase tracking-widest">
-              <span>
-                PERSONAL BEST: WAVE {bestRecord.best_wave}
-              </span>
-              <span>
-                ACCURACY:{" "}
-                {(bestRecord.avg_accuracy * 20).toFixed(2)}%
-              </span>
+    return (
+      <>
+        <div className="h-dvh w-dvw bg-black/40 fixed top-0 left-0 overflow-visible pointer-events-none" />
+        <div className="z-40 flex flex-col w-full pt-4 min-h-full justify-start items-start">
+          <SEO
+            title="Cybergrind"
+            description="Endless enemy-guessing mode."
+          />
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col w-full items-start gap-6"
+          >
+            <div className="flex flex-col gap-0 w-full lg:text-xl md:text-lg text-sm opacity-50 text-left">
+              <h1 className="tracking-widest">
+                CYBERGRIND_CLASSIC
+              </h1>
             </div>
-          )}
 
-          <div className="flex flex-col gap-2">
-            <span className="text-white/50 text-sm font-bold uppercase tracking-widest">
-              START WAVE:
-            </span>
-              <div className="gap-2 grid grid-cols-3"> 
-              <Button
-                onClick={() => setSelectedStartWave(1)}
-                variant={
-                  selectedStartWave === 1
-                    ? "primary"
-                    : "outline"
-                }
-              >
-                1
-              </Button>
+            {bestRecord && bestRecord.best_wave > 0 && (
+              <div className="flex text-left flex-col gap-1 text-white/50 text-sm font-bold uppercase tracking-widest">
+                <span>
+                  PERSONAL BEST: WAVE {bestRecord.best_wave}
+                </span>
+                <span>
+                  ACCURACY:{" "}
+                  {(bestRecord.avg_accuracy * 20).toFixed(2)}%
+                </span>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-2">
+              <span className="text-white/50 text-sm font-bold uppercase tracking-widest">
+                START WAVE:
+              </span>
+              <div className="gap-2 grid grid-cols-3">
+                <Button
+                  onClick={() => updateSelectedStartWave(1)}
+                  variant={
+                    selectedStartWave === 1
+                      ? "primary"
+                      : "outline"
+                  }
+                >
+                  1
+                </Button>
                 {allWaves.map((w) => {
                   const unlocked = startWaves.includes(w);
                   const button = (
                     <span className={!unlocked ? "cursor-not-allowed" : ""}>
                       <Button
                         onClick={() =>
-                          unlocked && setSelectedStartWave(w)
+                          unlocked && updateSelectedStartWave(w)
                         }
                         variant={
                           selectedStartWave === w
@@ -452,34 +473,34 @@ const fetchState = async () => {
                   return unlocked ? (
                     <Fragment key={w}>{button}</Fragment>
                   ) : (
-                      <Tooltip
-                        key={w}
-                        content={`Reach wave ${w * 2} to unlock`}
-                        wrapperClassName=""
-                      >
-                        {button}
-                      </Tooltip>
-                    );
+                    <Tooltip
+                      key={w}
+                      content={`Reach wave ${w * 2} to unlock`}
+                      wrapperClassName=""
+                    >
+                      {button}
+                    </Tooltip>
+                  );
                 })}
+              </div>
             </div>
-          </div>
 
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() =>
-              handleStartRun(selectedStartWave)
-            }
-            disabled={isSubmitting}
-            className="mt-2"
-          >
-            {isSubmitting ? "INITIALIZING..." : "START RUN"}
-          </Button>
-        </motion.div>
-      </div>
-    </>
-  );
-}
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() =>
+                handleStartRun(selectedStartWave)
+              }
+              disabled={isSubmitting}
+              className="mt-2"
+            >
+              {isSubmitting ? "INITIALIZING..." : "START RUN"}
+            </Button>
+          </motion.div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -549,13 +570,12 @@ const fetchState = async () => {
                           wrapperClassName=""
                         >
                           <span
-                            className={`font-bold uppercase italic tracking-wider cursor-help ${
-                              isRadiance
+                            className={`font-bold uppercase italic tracking-wider cursor-help ${isRadiance
                                 ? "text-purple-400"
                                 : isTarget
                                   ? "text-yellow-400"
                                   : "text-red-500"
-                            }`}
+                              }`}
                           >
                             {mod}
                             {isTarget && (
@@ -590,15 +610,15 @@ const fetchState = async () => {
             animate={
               shouldFlash
                 ? {
-                    backgroundColor: [
-                      "rgba(255, 255, 255, 0.6)",
-                      "rgba(255, 255, 255, 0)",
-                    ],
-                  }
+                  backgroundColor: [
+                    "rgba(255, 255, 255, 0.6)",
+                    "rgba(255, 255, 255, 0)",
+                  ],
+                }
                 : {
-                    backgroundColor:
-                      "rgba(255, 255, 255, 0)",
-                  }
+                  backgroundColor:
+                    "rgba(255, 255, 255, 0)",
+                }
             }
             transition={
               shouldFlash
@@ -684,13 +704,12 @@ const fetchState = async () => {
                   delay={0.7}
                 />
                 <Typewriter
-                  text={`GUESS ACCURACY: ${
-                    gameOverStats.avg_accuracy
+                  text={`GUESS ACCURACY: ${gameOverStats.avg_accuracy
                       ? (
-                          gameOverStats.avg_accuracy * 20
-                        ).toFixed(2)
+                        gameOverStats.avg_accuracy * 20
+                      ).toFixed(2)
                       : "0.00"
-                  }%`}
+                    }%`}
                   className="opacity-50"
                   speed={0.02}
                   delay={1.0}
