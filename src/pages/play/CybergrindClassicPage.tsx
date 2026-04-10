@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import AlertDialog from "../../components/ui/AlertDialog";
 import { EnemyIcon } from "../../components/game/EnemyIcon";
 import Tooltip from "../../components/ui/Tooltip";
+import DogHelpPrompt from "../../components/DogHelpPrompt";
 
 const MODIFIER_DISPLAY_ORDER: string[] = [
   "PENANCE",
@@ -404,6 +405,7 @@ const CybergrindClassicPage = () => {
       <>
         <div className="h-dvh w-dvw bg-black/40 fixed top-0 left-0 overflow-visible pointer-events-none" />
         <div className="z-40 flex flex-col w-full pt-4 min-h-full justify-start items-start">
+          <DogHelpPrompt />
           <SEO
             title="Cybergrind"
             description="Endless enemy-guessing mode."
@@ -505,6 +507,7 @@ const CybergrindClassicPage = () => {
   return (
     <>
       <div className="z-40 flex flex-col w-full pt-4 min-h-full justify-start items-start">
+        <DogHelpPrompt />
         <SEO
           title={`Cybergrind - Wave ${currentWave}`}
           description="Endless enemy-guessing mode."
@@ -571,10 +574,10 @@ const CybergrindClassicPage = () => {
                         >
                           <span
                             className={`font-bold uppercase italic tracking-wider cursor-help ${isRadiance
-                                ? "text-purple-400"
-                                : isTarget
-                                  ? "text-yellow-400"
-                                  : "text-red-500"
+                              ? "text-purple-400"
+                              : isTarget
+                                ? "text-yellow-400"
+                                : "text-red-500"
                               }`}
                           >
                             {mod}
@@ -705,10 +708,10 @@ const CybergrindClassicPage = () => {
                 />
                 <Typewriter
                   text={`GUESS ACCURACY: ${gameOverStats.avg_accuracy
-                      ? (
-                        gameOverStats.avg_accuracy * 20
-                      ).toFixed(2)
-                      : "0.00"
+                    ? (
+                      gameOverStats.avg_accuracy * 20
+                    ).toFixed(2)
+                    : "0.00"
                     }%`}
                   className="opacity-50"
                   speed={0.02}
