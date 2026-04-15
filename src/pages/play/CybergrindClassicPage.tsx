@@ -54,6 +54,7 @@ const mapGuess = (
   guess_enemy_id: number,
   hint_data: any,
   is_penance: boolean,
+  created_at?: string,
 ): GuessResult => {
   const enemyData = enemies.find((e) => e.id === guess_enemy_id);
   return {
@@ -61,6 +62,7 @@ const mapGuess = (
     enemy_name: enemyData?.name ?? "UNKNOWN",
     correct: hint_data.correct,
     is_penance,
+    created_at,
     properties: {
       enemy_type: hint_data.properties.enemy_type || defaultHintData,
       weight_class:
@@ -75,7 +77,7 @@ const mapGuess = (
 
 const mapGuessesFromServer = (guesses: any[]): GuessResult[] =>
   (guesses || []).map((g: any) =>
-    mapGuess(g.guess_enemy_id, g.hint_data, g.is_penance),
+    mapGuess(g.guess_enemy_id, g.hint_data, g.is_penance, g.created_at),
   );
 
 interface BestRecord {
@@ -252,6 +254,7 @@ const CybergrindClassicPage = () => {
           actualEnemyId,
           data.hint_data,
           false,
+          new Date().toISOString(),
         );
         setGuesses((prev) => [...prev, winningGuess]);
         setGuessesLeft((prev) => Math.max(0, prev - 1));

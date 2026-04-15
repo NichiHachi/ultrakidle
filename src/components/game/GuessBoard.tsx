@@ -11,6 +11,7 @@ export interface GuessResult {
   correct: boolean;
   correct_id?: number;
   is_penance?: boolean;
+  created_at?: string;
   properties: {
     enemy_type: {
       value: string;
@@ -543,7 +544,7 @@ export const GuessBoard = ({
 
               return (
                 <motion.tr
-                  key={guess.guess_id || idx}
+                  key={guess.created_at || `${guess.guess_id}-${idx}`}
                   layout
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
