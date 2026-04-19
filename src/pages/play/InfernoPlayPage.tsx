@@ -777,16 +777,6 @@ const InfernoPlayPage = () => {
                     </div>
                   ))}
                 </motion.div>
-                <div className="flex justify-start mt-4">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={() => setShowFinalResults(false)}
-                    className="opacity-50 hover:opacity-100"
-                  >
-                    BACK TO SUMMARY
-                  </Button>
-                </div>
               </motion.div>
             )
           ) : (
