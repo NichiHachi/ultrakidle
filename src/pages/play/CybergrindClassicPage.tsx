@@ -244,27 +244,20 @@ const CybergrindClassicPage = () => {
         throw error;
       }
 
-      const actualEnemyId =
-        enemyId === 0
-          ? data.guess_enemy_id || data.guess_id
-          : enemyId;
 
       if (data.result === "correct") {
-        const winningGuess = mapGuess(
-          actualEnemyId,
-          data.hint_data,
-          false,
-          new Date().toISOString(),
-        );
-        setGuesses((prev) => [...prev, winningGuess]);
-        setGuessesLeft((prev) => Math.max(0, prev - 1));
+        setGuesses(mapGuessesFromServer(data.round_guesses));
+        setGuessesLeft(0);
 
         pendingNextState.current = data.state;
 
         setShouldFlash(true);
         setTimeout(() => setShouldFlash(false), 1500);
       } else if (data.game_over) {
-        applyRoundState(data.state);
+        setGuesses(mapGuessesFromServer(data.round_guesses));
+        setGuessesLeft(0);
+        setModifiers(data.state.modifiers || []);
+        setRadianceTargets(data.state.radiance_targets || []);
 
         const stats: GameOverStats = {
           waves_reached: data.waves_reached,
