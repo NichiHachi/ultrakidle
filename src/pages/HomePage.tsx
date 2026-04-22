@@ -362,18 +362,10 @@ const HomePage = () => {
               <Button
                 variant="outline"
                 size="xl"
-                onClick={() => navigate("/enemies")}
-                className=""
+                onClick={() => navigate("/settings")}
+                className="w-full"
               >
-                ENEMIES
-              </Button>
-              <Button
-                variant="outline"
-                size="xl"
-                onClick={() => navigate("/levels")}
-                className=""
-              >
-                LEVELS
+                SETTINGS
               </Button>
 
               <div className="flex w-full h-fit gap-2 flex-row">
@@ -454,6 +446,24 @@ const HomePage = () => {
                     )}
                   </AnimatePresence>
                 </div>
+              </div>
+              <div className="flex gap-2 flex-row w-full">
+              <Button
+                variant="outline"
+                size="xl"
+                onClick={() => navigate("/enemies")}
+                className="w-full"
+              >
+                ENEMIES
+              </Button>
+              <Button
+                variant="outline"
+                size="xl"
+                onClick={() => navigate("/levels")}
+                className="w-full"
+              >
+                LEVELS
+              </Button>
               </div>
               <Button
                 variant="outline"

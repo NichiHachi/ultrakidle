@@ -17,7 +17,7 @@ import { copyToClipboard } from '../lib/clipboard';
 const PlayPage = () => {
     const { loading, dayNumber, guessHistory, dailyChanged, setDailyChanged, refresh } = useGameInit();
     const { setUpdateAvailable } = useVersion();
-    const { colorblindMode } = useSettings();
+    const { settings } = useSettings();
     const [guesses, setGuesses] = useState<GuessResult[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [shouldFlash, setShouldFlash] = useState(false);
@@ -199,11 +199,17 @@ const PlayPage = () => {
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ delay: 0.5, duration: 0.5 }}
                                 >
-                                    <EnemyIcon
-                                        icons={enemies.find(e => e.name === guesses.find(g => g.correct)?.enemy_name)?.icon || []}
-                                        size={32}
-                                        className="border border-green-500/20 p-0.5 bg-green-500/5"
-                                    />
+                                    {(() => {
+                                        const enemy = enemies.find(e => e.name === guesses.find(g => g.correct)?.enemy_name);
+                                        return (
+                                            <EnemyIcon
+                                                icons={enemy?.icon || []}
+                                                size={32}
+                                                isSpawn={(enemy as any)?.isSpawn}
+                                                className="border border-green-500/20 p-0.5 bg-green-500/5"
+                                            />
+                                        );
+                                    })()}
                                 </motion.div>
                             )}
                         </div>
@@ -229,7 +235,7 @@ const PlayPage = () => {
                                             animate={{ opacity: 1, scale: 1 }}
                                             transition={{ delay: 1.8, duration: 0.5 }}
                                         >
-                                            <EnemyIcon icons={revealedEnemy.icon} size={32} className="" />
+                                            <EnemyIcon icons={revealedEnemy.icon} size={32} isSpawn={(revealedEnemy as any).isSpawn} className="" />
                                         </motion.div>
                                         <Typewriter
                                             text={revealedEnemy.name}
@@ -277,7 +283,7 @@ const PlayPage = () => {
                                                             visible: { opacity: 1, scale: 1 }
                                                         }}
                                                         className={`w-6 h-6 border ${status === 'green' ? 'bg-green-500/20 border-green-500' :
-                                                            status === 'yellow' ? (colorblindMode ? 'bg-blue-500/20 border-blue-500' : 'bg-yellow-500/20 border-yellow-500') :
+                                                            status === 'yellow' ? (settings.cellColors === 'colorblind' ? 'bg-blue-500/20 border-blue-500' : 'bg-yellow-500/20 border-yellow-500') :
                                                                 status === 'gray' ? 'bg-zinc-800/20 border-zinc-500/30' :
                                                                     'bg-red-500/20 border-red-500'
                                                             }`}

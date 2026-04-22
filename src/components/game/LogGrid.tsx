@@ -23,12 +23,12 @@ const ROWS = 5;
 const TYPEWRITER_INTERVAL_MS = 80;
 
 export const LogGrid = ({ hintData, size = 'md', typewriter = false }: LogGridProps) => {
-    const { colorblindMode } = useSettings();
+    const { settings } = useSettings();
     const boxSize = size === 'sm' ? 'w-3 h-3' : 'w-4 h-4';
 
     const colorClasses: Record<string, string> = {
         green: 'bg-green-500/20 border-green-500',
-        yellow: colorblindMode ? 'bg-blue-500/20 border-blue-500' : 'bg-yellow-500/20 border-yellow-500',
+        yellow: settings.cellColors === 'colorblind' ? 'bg-blue-500/20 border-blue-500' : 'bg-yellow-500/20 border-yellow-500',
         red: 'bg-red-500/20 border-red-500',
         gray: 'bg-zinc-800/20 border-zinc-500/30',
     };

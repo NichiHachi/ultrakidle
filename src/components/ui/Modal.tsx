@@ -12,6 +12,7 @@ interface ModalProps {
   allowBackdropClose?: boolean;
   showFooterButton?: boolean;
   footerButtonText?: string;
+  footerText?: string;
   maxWidth?: string;
 }
 
@@ -24,6 +25,7 @@ const Modal = ({
   isOpen,
   onClose,
   title,
+  footerText,
   children,
   showCloseButton = true,
   allowBackdropClose = true,
@@ -48,7 +50,7 @@ const Modal = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={allowBackdropClose ? onClose : undefined}
-            className={`fixed inset-0 bg-black/80 z-[100] backdrop-blur-sm ${!allowBackdropClose ? "cursor-default" : "cursor-pointer"}`}
+            className={`fixed inset-0 bg-black/80 z-[100] ${!allowBackdropClose ? "cursor-default" : "cursor-pointer"}`}
           />
           <div className="fixed inset-0 flex items-center justify-center z-[101] p-4 pointer-events-none">
             <motion.div
@@ -83,12 +85,17 @@ const Modal = ({
                   {children}
                 </div>
 
+                { footerText && (
+                  <p className="pt-2 border-t-white border-t-2 text-sm">
+                    {footerText}
+                  </p>
+                )}
                 {showFooterButton && (
-                  <div className="mt-8 shrink-0">
+                  <div className="mt-2 shrink-0">
                     <Button
                       onClick={onClose}
                       variant="outline"
-                      size="xl"
+                      size="lg"
                       className="w-full"
                     >
                       {footerButtonText}

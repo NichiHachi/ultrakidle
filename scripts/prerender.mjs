@@ -27,6 +27,7 @@ const ROUTES = [
   '/faq',
   '/privacy',
   '/messages',
+  '/settings',
 ];
 
 function serve() {

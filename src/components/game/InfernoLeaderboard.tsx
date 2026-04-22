@@ -26,7 +26,7 @@ const getScoreColor = (score: number) => {
 };
 
 const InfernoScoreGrid = ({ scores }: { scores: number[] }) => {
-  const { colorblindMode } = useSettings();
+  const { settings } = useSettings();
 
   const totalFilled = scores.length;
   const prevTotalRef = useRef(0);
@@ -57,7 +57,7 @@ const InfernoScoreGrid = ({ scores }: { scores: number[] }) => {
 
   const colorClasses: Record<string, string> = {
     green: "bg-green-500/20 border-green-500 text-green-400",
-    yellow: colorblindMode
+    yellow: settings.cellColors === 'colorblind'
       ? "bg-blue-500/20 border-blue-500 text-blue-400"
       : "bg-yellow-500/20 border-yellow-500 text-yellow-400",
     red: "bg-red-500/20 border-red-500 text-red-400",
@@ -138,17 +138,15 @@ export const InfernoLeaderboard = ({
         key={user.user_id}
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`flex items-start gap-1 p-2 border transition-colors ${
-          layout === "horizontal"
+        className={`flex items-start gap-1 p-2 border transition-colors ${layout === "horizontal"
             ? "w-36 flex-shrink-0"
             : "w-[135px]"
-        } ${
-          user.status === "completed"
-            ? partialScore >= 0 
+          } ${user.status === "completed"
+            ? partialScore >= 0
               ? "bg-green-500/10 border-green-500/30"
               : "bg-white/5 border-white/20"
             : "bg-white/5 border-white/10"
-        }`}
+          }`}
       >
         <div className="flex flex-col items-center gap-1 flex-shrink-0">
           <span className="text-[10px] font-bold text-white/80">
@@ -209,11 +207,10 @@ export const InfernoLeaderboard = ({
       </AnimatePresence>
       {sortedUsers.length === 0 && (
         <div
-          className={`text-white/30 uppercase italic text-xs ${
-            layout === "horizontal"
+          className={`text-white/30 uppercase italic text-xs ${layout === "horizontal"
               ? "py-2 w-full text-center"
               : "text-center py-4"
-          }`}
+            }`}
         >
           {emptyMessage}
         </div>

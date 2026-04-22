@@ -1,15 +1,6 @@
 # Ultrakidle
 
-The daily character guessing game for ULTRAKILL fans.
+The daily character guessing game for machines.
 
-## Features
-- Daily challenges
-- Character guessing based on properties
-- Win streaks
-- Diagnostics-style UI
-
-## Tech Stack
-- React + TypeScript + Vite
-- Tailwind CSS
-- Framer Motion
-- Supabase
+## IMPORTANT
+I will *not* be tracking issues in this repo, since they will most likely all be UI/UX rather than directly related to code. You can instead submit issues through the [discord server](https://discord.gg/6dsMavu6mH). that's where discussion around the game happens

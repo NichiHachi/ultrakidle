@@ -19,18 +19,21 @@ interface MessagePayload {
   bot?: "main" | "automation";
   components?: unknown[];
   attachments?: Attachment[];
+  embeds?: unknown[];
 }
 
 function buildForm(
   message: string | undefined,
   components: unknown[] | undefined,
   attachments: Attachment[],
+  embeds: unknown[] | undefined,
 ): FormData {
   const form = new FormData();
   const payload: Record<string, unknown> = {};
 
   if (message) payload.content = message;
   if (components?.length) payload.components = components;
+  if (embeds?.length) payload.embeds = embeds;
 
   if (attachments.length) {
     payload.attachments = attachments.map((a, i) => ({
@@ -48,7 +51,9 @@ function buildForm(
     for (let j = 0; j < raw.length; j++) bytes[j] = raw.charCodeAt(j);
     form.append(
       `files[${i}]`,
-      new Blob([bytes], { type: a.content_type ?? "application/octet-stream" }),
+      new Blob([bytes], {
+        type: a.content_type ?? "application/octet-stream",
+      }),
       a.filename,
     );
   }
@@ -62,6 +67,7 @@ async function sendToDiscord(
   message: string | undefined,
   components: unknown[] | undefined,
   attachments: Attachment[],
+  embeds: unknown[] | undefined,
 ): Promise<{ ok: boolean; error?: string }> {
   const endpoint = `${DISCORD_API}/channels/${channelId}/messages`;
   let attempt = 0;
@@ -71,7 +77,7 @@ async function sendToDiscord(
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { Authorization: `Bot ${token}` },
-      body: buildForm(message, components, attachments),
+      body: buildForm(message, components, attachments, embeds),
     });
 
     if (res.ok) {
@@ -116,8 +122,14 @@ serve(async (req) => {
   }
 
   const body: MessagePayload = await req.json();
-  const { channel_id, message, bot = "main", components, attachments } =
-    body;
+  const {
+    channel_id,
+    message,
+    bot = "main",
+    components,
+    attachments,
+    embeds,
+  } = body;
 
   if (!channel_id) {
     return Response.json(
@@ -126,9 +138,9 @@ serve(async (req) => {
     );
   }
 
-  if (!message && !attachments?.length) {
+  if (!message && !attachments?.length && !embeds?.length) {
     return Response.json(
-      { ok: false, error: "Must provide message or attachments" },
+      { ok: false, error: "Must provide message, attachments, or embeds" },
       { status: 400 },
     );
   }
@@ -147,6 +159,7 @@ serve(async (req) => {
     message,
     components,
     attachments ?? [],
+    embeds,
   );
   return Response.json(result, { status: result.ok ? 200 : 502 });
 });

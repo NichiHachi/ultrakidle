@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, Fragment, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import SEO from "../../components/SEO";
 import { CURRENT_VERSION, useVersion } from "../../context/VersionContext";
@@ -24,7 +24,7 @@ const MODIFIER_DISPLAY_ORDER: string[] = [
 const RADIANCE_DESCRIPTIONS: Record<string, string> = {
   PENANCE: "RADIANCE: 2 wrong guesses instead of 1",
   FALSIFIER:
-    "RADIANCE: Up to 2 arrows flipped instead of 1. Can flip the same arrow twice",
+    "RADIANCE: Flips 2 arrows instead of 1. Can flip the same arrow twice, canceling itself out",
   LETHE: "RADIANCE: Only your most recent guess is visible",
   ECLIPSE: "RADIANCE: Both Type and Weight columns are hidden",
 };
@@ -33,7 +33,7 @@ const MODIFIER_TOOLTIPS: Record<string, string> = {
   PENANCE:
     "Automatically select a wrong guess at the start of the round",
   FALSIFIER:
-    "Flips the arrow of a random hint. Only triggers if there is a hint where this can be applied",
+    "For a random hint with arrows, flip its arrow to the opposite direction. The hint this applies to is re-rolled on every guess",
   LETHE: "You can only see your 2 most recent guesses",
   ECLIPSE:
     "Completely obscures a random column without arrows for the entire round",
@@ -54,6 +54,7 @@ const mapGuess = (
   guess_enemy_id: number,
   hint_data: any,
   is_penance: boolean,
+  created_at?: string,
 ): GuessResult => {
   const enemyData = enemies.find((e) => e.id === guess_enemy_id);
   return {
@@ -61,6 +62,7 @@ const mapGuess = (
     enemy_name: enemyData?.name ?? "UNKNOWN",
     correct: hint_data.correct,
     is_penance,
+    created_at,
     properties: {
       enemy_type: hint_data.properties.enemy_type || defaultHintData,
       weight_class:
@@ -75,13 +77,14 @@ const mapGuess = (
 
 const mapGuessesFromServer = (guesses: any[]): GuessResult[] =>
   (guesses || []).map((g: any) =>
-    mapGuess(g.guess_enemy_id, g.hint_data, g.is_penance),
+    mapGuess(g.guess_enemy_id, g.hint_data, g.is_penance, g.created_at),
   );
 
 interface BestRecord {
   best_wave: number;
   total_guesses: number;
   hint_accuracy: number;
+  avg_accuracy: number;
 }
 
 interface GameOverStats {
@@ -90,6 +93,7 @@ interface GameOverStats {
   correct_id?: number;
   total_guesses?: number;
   hint_accuracy?: number;
+  avg_accuracy?: number;
 }
 
 const CybergrindClassicPage = () => {
@@ -112,6 +116,9 @@ const CybergrindClassicPage = () => {
     null,
   );
 
+  const [startWaves, setStartWaves] = useState<number[]>([]);
+  const [selectedStartWave, setSelectedStartWave] = useState(1);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [shouldFlash, setShouldFlash] = useState(false);
   const [isAbandonModalOpen, setIsAbandonModalOpen] = useState(false);
@@ -128,34 +135,47 @@ const CybergrindClassicPage = () => {
     setGuesses(mapGuessesFromServer(s.guesses));
   };
 
+  const updateSelectedStartWave = (wave: number) => {
+    setSelectedStartWave(wave);
+    localStorage.setItem("ultrakidle_cybergrind_start_wave", wave.toString());
+  };
+
   const handleVersionError = (error: any) => {
     if (error?.message?.includes("CLIENT_OUTDATED"))
       setUpdateAvailable(true);
   };
 
-  const handleStartRun = async () => {
+  const handleStartRun = async (wave: number = 1) => {
     if (startingRef.current) return;
     startingRef.current = true;
     setIsSubmitting(true);
     try {
       const { data, error } = await supabase.rpc(
         "start_cybergrind_run",
-        { version: CURRENT_VERSION },
+        { start_wave: wave, version: CURRENT_VERSION },
       );
       if (error) {
         handleVersionError(error);
         throw error;
       }
 
+      // Existing run was returned via get_cybergrind_state
+      if (data.status === "active") {
+        setStatus("active");
+        if (data.best) setBestRecord(data.best);
+        applyRoundState(data);
+        return;
+      }
+
+      // New run was created
       setStatus("active");
       setCurrentWave(data.round_number);
       setModifiers(data.modifiers || []);
-      setRadianceTargets([]);
-      setGuesses([]);
-      setGuessesLeft(6);
+      setRadianceTargets(data.radiance_targets || []);
+      setGuesses(mapGuessesFromServer(data.guesses));
+      setGuessesLeft(Math.max(0, 6 - (data.guesses?.length || 0)));
     } catch (err) {
       console.error("Error starting cybergrind run:", err);
-      throw err;
     } finally {
       setIsSubmitting(false);
       startingRef.current = false;
@@ -172,7 +192,25 @@ const CybergrindClassicPage = () => {
       if (data.best) setBestRecord(data.best);
 
       if (data.status === "no_run") {
-        await handleStartRun();
+        const unlockedWaves = data.start_waves || [];
+        setStartWaves(unlockedWaves);
+
+        const savedWave = localStorage.getItem(
+          "ultrakidle_cybergrind_start_wave",
+        );
+        if (savedWave) {
+          const waveNum = parseInt(savedWave, 10);
+          if (waveNum === 1 || unlockedWaves.includes(waveNum)) {
+            setSelectedStartWave(waveNum);
+          } else {
+            localStorage.removeItem("ultrakidle_cybergrind_start_wave");
+            setSelectedStartWave(1);
+          }
+        } else {
+          setSelectedStartWave(1);
+        }
+
+        setStatus("no_run");
       } else if (data.status === "active") {
         setStatus("active");
         applyRoundState(data);
@@ -198,20 +236,29 @@ const CybergrindClassicPage = () => {
       );
       if (error) {
         handleVersionError(error);
+        if (error.message?.includes("No active Cybergrind run")) {
+          setStatus("loading");
+          await fetchState();
+          return;
+        }
         throw error;
       }
 
+
       if (data.result === "correct") {
-        const winningGuess = mapGuess(enemyId, data.hint_data, false);
-        setGuesses((prev) => [...prev, winningGuess]);
-        setGuessesLeft((prev) => Math.max(0, prev - 1));
+        const roundGuesses = data.round_guesses || [];
+        setGuesses(mapGuessesFromServer(roundGuesses));
+        setGuessesLeft(Math.max(0, 6 - roundGuesses.length));
 
         pendingNextState.current = data.state;
 
         setShouldFlash(true);
         setTimeout(() => setShouldFlash(false), 1500);
       } else if (data.game_over) {
-        applyRoundState(data.state);
+        setGuesses(mapGuessesFromServer(data.round_guesses));
+        setGuessesLeft(0);
+        setModifiers(data.state.modifiers || []);
+        setRadianceTargets(data.state.radiance_targets || []);
 
         const stats: GameOverStats = {
           waves_reached: data.waves_reached,
@@ -219,6 +266,7 @@ const CybergrindClassicPage = () => {
           correct_id: data.correct_id,
           total_guesses: data.total_guesses,
           hint_accuracy: data.hint_accuracy,
+          avg_accuracy: data.avg_accuracy,
         };
         setGameOverStats(stats);
 
@@ -227,6 +275,7 @@ const CybergrindClassicPage = () => {
             best_wave: data.waves_reached,
             total_guesses: data.total_guesses,
             hint_accuracy: data.hint_accuracy,
+            avg_accuracy: data.avg_accuracy,
           });
         }
 
@@ -263,7 +312,15 @@ const CybergrindClassicPage = () => {
         "abandon_cybergrind_run",
         { version: CURRENT_VERSION },
       );
-      if (error) throw error;
+      if (error) {
+        if (error.message?.includes("No active Cybergrind run")) {
+          setIsAbandonModalOpen(false);
+          setStatus("loading");
+          await fetchState();
+          return;
+        }
+        throw error;
+      }
 
       const stats: GameOverStats = {
         waves_reached: data.waves_reached,
@@ -271,6 +328,7 @@ const CybergrindClassicPage = () => {
         correct_id: data.correct_id,
         total_guesses: data.total_guesses,
         hint_accuracy: data.hint_accuracy,
+        avg_accuracy: data.avg_accuracy,
       };
       setGameOverStats(stats);
 
@@ -279,6 +337,7 @@ const CybergrindClassicPage = () => {
           best_wave: data.waves_reached,
           total_guesses: data.total_guesses,
           hint_accuracy: data.hint_accuracy,
+          avg_accuracy: data.avg_accuracy,
         });
       }
 
@@ -300,11 +359,7 @@ const CybergrindClassicPage = () => {
     setCurrentWave(1);
     pendingNextState.current = null;
     setStatus("loading");
-    try {
-      await handleStartRun();
-    } catch {
-      setStatus("no_run");
-    }
+    await fetchState();
   };
 
   const hasWon = guesses.some((g) => g.correct);
@@ -339,6 +394,116 @@ const CybergrindClassicPage = () => {
     );
   }
 
+  if (status === "no_run") {
+    const allWaves = [5, 10, 15, 20, 25, 30, 35, 40];
+
+    return (
+      <>
+        <div className="z-40 flex flex-col w-full pt-4 min-h-full justify-start items-start">
+          <SEO
+            title="Cybergrind"
+            description="Endless enemy-guessing mode."
+          />
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col w-full items-start gap-6"
+          >
+            <div className="flex flex-col gap-0 w-full lg:text-xl md:text-lg text-sm opacity-50 text-left">
+              <h1 className="tracking-widest">
+                CYBERGRIND_CLASSIC
+              </h1>
+            </div>
+
+            <div className="text-sm flex items-center gap-2 px-2 py-1 bg-green-500/10 border-2 border-green-500/20 max-w-[1000px] text-left w-fit text-white">
+              Leaderboards will be reset in the next few days in order to add a new modifier
+            <br/>
+              &#9888; Active runs during the update will be terminated when it drops
+            </div>
+
+            {bestRecord && bestRecord.best_wave > 0 && (
+              <div className="flex text-left flex-col gap-1 text-white/50 text-sm font-bold uppercase tracking-widest">
+                <span>
+                  PERSONAL BEST: WAVE {bestRecord.best_wave}
+                </span>
+                <span>
+                  ACCURACY:{" "}
+                  {(bestRecord.avg_accuracy * 20).toFixed(2)}%
+                </span>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-2">
+              <span className="text-white/50 text-sm font-bold uppercase tracking-widest">
+                START WAVE:
+              </span>
+              <div className="gap-2 grid grid-cols-3">
+                <Button
+                  onClick={() => updateSelectedStartWave(1)}
+                  variant={
+                    selectedStartWave === 1
+                      ? "primary"
+                      : "outline"
+                  }
+                >
+                  1
+                </Button>
+                {allWaves.map((w) => {
+                  const unlocked = startWaves.includes(w);
+                  const button = (
+                    <span className={!unlocked ? "cursor-not-allowed" : ""}>
+                      <Button
+                        onClick={() =>
+                          unlocked && updateSelectedStartWave(w)
+                        }
+                        variant={
+                          selectedStartWave === w
+                            ? "primary"
+                            : "outline"
+                        }
+                        disabled={!unlocked}
+                        className={
+                          !unlocked ? "opacity-30 pointer-events-none w-full" : "w-full"
+                        }
+                      >
+                        {w}
+                      </Button>
+                    </span>
+                  );
+
+                  return unlocked ? (
+                    <Fragment key={w}>{button}</Fragment>
+                  ) : (
+                    <Tooltip
+                      key={w}
+                      content={`Reach wave ${w * 2} to unlock`}
+                      wrapperClassName=""
+                    >
+                      {button}
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() =>
+                handleStartRun(selectedStartWave)
+              }
+              disabled={isSubmitting}
+              className="mt-2"
+            >
+              {isSubmitting ? "INITIALIZING..." : "START RUN"}
+            </Button>
+          </motion.div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <div className="z-40 flex flex-col w-full pt-4 min-h-full justify-start items-start">
@@ -361,6 +526,12 @@ const CybergrindClassicPage = () => {
               </h1>
             </div>
           </div>
+          <div className="mb-4 text-sm flex items-center gap-2 px-2 py-1 bg-green-500/10 border-2 border-green-500/20 max-w-[1000px] text-left w-fit text-white">
+            Leaderboards will be reset in the next few days in order to add a new modifier
+            <br/>
+            &#9888; Active runs during the update will be terminated when it drops
+          </div>
+
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 w-full md:max-w-[1000px] border-b border-white/5 pb-6">
             <div className="flex flex-col gap-1">
@@ -383,9 +554,9 @@ const CybergrindClassicPage = () => {
               <span className="text-white/60 font-bold uppercase tracking-widest whitespace-nowrap">
                 MODIFIERS:
               </span>
-              <div className="flex gap-2 items-center flex-wrap">
+              <div className="flex gap-1 items-center flex-wrap">
                 {sortedModifiers.length > 0 ? (
-                  sortedModifiers.map((mod) => {
+                  sortedModifiers.map((mod, index) => {
                     const isRadiance = mod === "RADIANCE";
                     const isTarget =
                       radianceTargets.includes(mod);
@@ -396,27 +567,33 @@ const CybergrindClassicPage = () => {
                       : baseTooltip;
 
                     return (
-                      <Tooltip
-                        key={mod}
-                        content={tooltip}
-                        wrapperClassName=""
-                      >
-                        <span
-                          className={`font-bold uppercase italic tracking-wider cursor-help ${isRadiance
+                      <Fragment key={mod}>
+                        {index > 0 && (
+                          <span className="text-white">
+                            |
+                          </span>
+                        )}
+                        <Tooltip
+                          content={tooltip}
+                          wrapperClassName=""
+                        >
+                          <span
+                            className={`font-bold uppercase italic tracking-wider cursor-help ${isRadiance
                               ? "text-purple-400"
                               : isTarget
                                 ? "text-yellow-400"
                                 : "text-red-500"
-                            }`}
-                        >
-                          {mod}
-                          {isTarget && (
-                            <span className="text-[9px] text-purple-400 ml-0.5">
-                              ×2
-                            </span>
-                          )}
-                        </span>
-                      </Tooltip>
+                              }`}
+                          >
+                            {mod}
+                            {isTarget && (
+                              <span className="text-[9px] text-purple-400 ml-0.5">
+                                ×2
+                              </span>
+                            )}
+                          </span>
+                        </Tooltip>
+                      </Fragment>
                     );
                   })
                 ) : (
@@ -431,7 +608,9 @@ const CybergrindClassicPage = () => {
           <div className="w-full z-20">
             <EnemySearch
               onGuess={handleGuess}
-              disabled={isSubmitting || isRoundOver || isGameOver}
+              disabled={
+                isSubmitting || isRoundOver || isGameOver
+              }
             />
           </div>
 
@@ -444,7 +623,10 @@ const CybergrindClassicPage = () => {
                     "rgba(255, 255, 255, 0)",
                   ],
                 }
-                : { backgroundColor: "rgba(255, 255, 255, 0)" }
+                : {
+                  backgroundColor:
+                    "rgba(255, 255, 255, 0)",
+                }
             }
             transition={
               shouldFlash
@@ -455,11 +637,14 @@ const CybergrindClassicPage = () => {
           >
             <div className="w-full flex justify-left">
               <span className="text-white/50 text-sm text-left place-self-start w-full justify-left">
-                * All data mirrors that of the official wiki, which
-                can be subject to change
+                * All data mirrors that of the official wiki,
+                which can be subject to change
               </span>
             </div>
-            <GuessBoard guesses={guesses} modifiers={modifiers} />
+            <GuessBoard
+              guesses={guesses}
+              modifiers={modifiers}
+            />
           </motion.div>
 
           <div className="mt-2 text-white flex flex-col items-start gap-1 font-bold uppercase tracking-wider md:max-w-[1000px] w-full">
@@ -527,9 +712,11 @@ const CybergrindClassicPage = () => {
                   delay={0.7}
                 />
                 <Typewriter
-                  text={`GUESS ACCURACY: ${gameOverStats.hint_accuracy && gameOverStats.total_guesses
-                      ? ((gameOverStats.hint_accuracy / gameOverStats.total_guesses) / (5 / 100)).toFixed(2)
-                      : "0.00"
+                  text={`GUESS ACCURACY: ${gameOverStats.avg_accuracy
+                    ? (
+                      gameOverStats.avg_accuracy * 20
+                    ).toFixed(2)
+                    : "0.00"
                     }%`}
                   className="opacity-50"
                   speed={0.02}
@@ -550,22 +737,37 @@ const CybergrindClassicPage = () => {
                       text="TARGET DESIGNATION: "
                       className="opacity-50 text-xs"
                       speed={0.02}
-                      delay={gameOverStats.is_new_record ? 1.8 : 1.4}
+                      delay={
+                        gameOverStats.is_new_record
+                          ? 1.8
+                          : 1.4
+                      }
                     />
                     <div className="flex items-center gap-2">
                       <motion.div
-                        initial={{ opacity: 0, scale: 0.5 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        initial={{
+                          opacity: 0,
+                          scale: 0.5,
+                        }}
+                        animate={{
+                          opacity: 1,
+                          scale: 1,
+                        }}
                         transition={{
-                          delay: gameOverStats.is_new_record
-                            ? 2.8
-                            : 2.4,
+                          delay:
+                            gameOverStats.is_new_record
+                              ? 2.8
+                              : 2.4,
                           duration: 0.5,
                         }}
                       >
                         <EnemyIcon
                           icons={revealedEnemy.icon}
                           size={32}
+                          isSpawn={
+                            (revealedEnemy as any)
+                              .isSpawn
+                          }
                         />
                       </motion.div>
                       <Typewriter
@@ -573,7 +775,9 @@ const CybergrindClassicPage = () => {
                         className="animate-pulse font-bold"
                         speed={0.04}
                         delay={
-                          gameOverStats.is_new_record ? 2.4 : 2.0
+                          gameOverStats.is_new_record
+                            ? 2.4
+                            : 2.0
                         }
                       />
                     </div>
@@ -599,7 +803,7 @@ const CybergrindClassicPage = () => {
                     onClick={handleNewRun}
                     className="mt-2"
                   >
-                    NEW RUN
+                    OK
                   </Button>
                 </motion.div>
               </div>
