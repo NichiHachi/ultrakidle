@@ -48,6 +48,11 @@ export const MESSAGES: Message[] = [
         waves beyond 35, and radiance scaling has been adjusted
         across all waves.
       </p>
+      <p className="text-white/70 lg:text-base text-sm">
+        Since this fundamentally changes how difficulty scales in the cybergrind,
+        leaderboards will only show runs performed on the latest version from now on.
+        I Will add a way to view the "legacy top 10" in a small future update.
+      </p>
     </div>
   ),
 },
