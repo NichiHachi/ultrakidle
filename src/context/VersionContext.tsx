@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
-export const CURRENT_VERSION = '1.2.0-experimental';
+export const CURRENT_VERSION = '1.3.0';
 const POLL_INTERVAL = 5 * 60 * 1000; // 5 min
 
 interface VersionContextType {
