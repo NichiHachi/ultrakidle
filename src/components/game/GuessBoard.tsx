@@ -289,22 +289,22 @@ export const GuessBoard = ({
                           }
                         >
                           <div className="flex items-center gap-2 px-3 py-4 font-bold">
+                            {eclipsedType && (
+                              <ModifierBadge
+                                label="E"
+                                className="border-zinc-500/50 text-zinc-500"
+                              />
+                            )}
                             {!eclipsedType && (
                               <StatusIcon
-                                result={
-                                  guess.properties.enemy_type.result
-                                }
+                                result={guess.properties.enemy_type.result}
                                 enabled={
                                   showIcons &&
-                                  hasValue(
-                                    guess.properties.enemy_type.value,
-                                  )
+                                    hasValue(guess.properties.enemy_type.value)
                                 }
                               />
                             )}
-                            {hasValue(
-                              guess.properties.enemy_type.value,
-                            )
+                            {hasValue(guess.properties.enemy_type.value)
                               ? guess.properties.enemy_type.value
                               : "[ECLIPSED]"}
                           </div>
@@ -334,23 +334,22 @@ export const GuessBoard = ({
                           }
                         >
                           <div className="flex items-center gap-2 px-3 py-4 font-bold">
+                            {eclipsedWeight && (
+                              <ModifierBadge
+                                label="E"
+                                className="border-zinc-500/50 text-zinc-500"
+                              />
+                            )}
                             {!eclipsedWeight && (
                               <StatusIcon
-                                result={
-                                  guess.properties.weight_class.result
-                                }
+                                result={guess.properties.weight_class.result}
                                 enabled={
                                   showIcons &&
-                                  hasValue(
-                                    guess.properties.weight_class
-                                      .value,
-                                  )
+                                    hasValue(guess.properties.weight_class.value)
                                 }
                               />
                             )}
-                            {hasValue(
-                              guess.properties.weight_class.value,
-                            )
+                            {hasValue(guess.properties.weight_class.value)
                               ? guess.properties.weight_class.value
                               : "[ECLIPSED]"}
                           </div>
@@ -379,6 +378,12 @@ export const GuessBoard = ({
                           }
                         >
                           <div className="flex items-center gap-2 px-3 py-4 font-bold">
+                            {falsifierHealth && (
+                              <ModifierBadge
+                                label="F"
+                                className="border-orange-500/50 text-orange-400"
+                              />
+                            )}
                             <StatusIcon
                               result={guess.properties.health.result}
                               color={guess.properties.health.color}
@@ -426,6 +431,12 @@ export const GuessBoard = ({
                           }
                         >
                           <div className="flex items-center gap-2 px-3 py-4 font-bold">
+                            {falsifierLevels && (
+                              <ModifierBadge
+                                label="F"
+                                className="border-orange-500/50 text-orange-400"
+                              />
+                            )}
                             <StatusIcon
                               result={
                                 guess.properties.level_count.result
@@ -485,6 +496,12 @@ export const GuessBoard = ({
                           }
                         >
                           <div className="flex items-center gap-2 px-3 py-4 font-bold">
+                            {falsifierAppearance && (
+                              <ModifierBadge
+                                label="F"
+                                className="border-orange-500/50 text-orange-400"
+                              />
+                            )}
                             <StatusIcon
                               result={
                                 guess.properties.appearance.result

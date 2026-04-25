@@ -28,7 +28,7 @@ const RADIANCE_DESCRIPTIONS: Record<string, string> = {
     "RADIANCE: Flips 2 arrows instead of 1. Can flip the same arrow twice, canceling itself out",
   LETHE: "RADIANCE: Only your most recent guess is visible",
   ECLIPSE: "RADIANCE: Both Type and Weight columns are hidden",
-  IDOL: "RADIANCE: 4 enemies from the previous 2 rounds become BLESSED",
+  IDOL: "RADIANCE: 6 guessed enemies from the previous 4 rounds become BLESSED",
 };
 
 const MODIFIER_TOOLTIPS: Record<string, string> = {
@@ -39,7 +39,7 @@ const MODIFIER_TOOLTIPS: Record<string, string> = {
   LETHE: "You can only see your 2 most recent guesses",
   ECLIPSE:
     "Completely obscures a random column without arrows for the entire round",
-  IDOL: "2 enemies guessed from the last round become BLESSED. BLESSED enemies have all their hints obscured",
+  IDOL: "3 enemies guessed from the last 2 rounds become BLESSED. BLESSED enemies have all their hints obscured",
   RADIANCE:
     "Double the effects of 1 random modifier. Starting at wave 36, select 1 additional modifier every 15 waves",
 };
