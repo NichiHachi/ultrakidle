@@ -29,6 +29,8 @@ docker compose up -d
 
 The Supabase docker-compose is based on the [official documentation](https://github.com/supabase/supabase/tree/master/docker)
 
+(All docker-composes are on *restart unless-stopped* so don't forget to stop everything!)
+
 ### Import the database
 (Note: The import process is in WIP. In the future, manual imports will no longer be necessary)
 
