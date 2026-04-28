@@ -15,8 +15,8 @@ All environment variables are stored in `.env.example` for both the React and Su
 
 To build the app locally, simply copy the example environment files:
 ```sh
-mv .env.example .env
-mv ./supabase/.env.example ./supabase/.env 
+cp .env.example .env
+cp ./supabase/.env.example ./supabase/.env 
 ```
 
 ### Building the app
@@ -27,7 +27,7 @@ docker compose up -d
 - Ultrakidle : `localhost:5173`
 - Supabase dashboard : `localhost:8000`
 
-The Supabase docker-compose is based on the [official documentation](https://github.com/supabase/supabase/tree/master/docker)
+The Supabase docker-compose is based on the [official documentation](https://supabase.com/docs/guides/self-hosting/docker)
 
 (All docker-composes are on *restart unless-stopped* so don't forget to stop everything!)
 
