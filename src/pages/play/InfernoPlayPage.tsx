@@ -90,6 +90,9 @@ const InfernoPlayPage = () => {
   const [activeTimer, setActiveTimer] = useState(0);
   const [isListVisible, setIsListVisible] = useState(false);
 
+  const audioRef = useRef(null);
+  const [audioRankPlayed, setAudioRankPlayed] = useState(false)
+  
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
@@ -424,6 +427,14 @@ const InfernoPlayPage = () => {
     return () => window.removeEventListener("keydown", handler);
   }, [lightboxUrl]);
 
+  useEffect(() => {
+      if (audioRef.current && !audioRankPlayed) {
+          audioRef.current.volume = 0.4;
+          audioRef.current.play();
+          setAudioRankPlayed(true);
+      }
+  }, [])
+  
   const handlePointerDown = (e: React.PointerEvent) => {
     if (zoom <= 1) return;
     isDragging.current = true;
@@ -630,6 +641,10 @@ const InfernoPlayPage = () => {
                           }[Math.floor(safeGameData.total_score / 100)]
                         }
                       </motion.div>
+                      
+                      <audio ref={audioRef}>
+                          <source src="/public/audios/final_rank.mp3" type="audio/mp3"/>
+                      </audio>
                     </div>
                     <Typewriter
                       delay={0.6}
