@@ -433,7 +433,7 @@ const InfernoPlayPage = () => {
           audioRef.current.play();
           setAudioRankPlayed(true);
       }
-  }, [])
+  })
   
   const handlePointerDown = (e: React.PointerEvent) => {
     if (zoom <= 1) return;

@@ -67,7 +67,7 @@ const ClassicPlayPage = () => {
             audioRef.current.play();
             setAudioRankPlayed(true);
         }
-    }, [])
+    })
 
     useEffect(() => {
         if (!loading) {
