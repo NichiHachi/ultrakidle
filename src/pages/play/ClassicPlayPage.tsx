@@ -273,8 +273,24 @@ const ClassicPlayPage = () => {
                 </motion.div>
 
                 <div className="mt-2 text-white flex flex-col items-start gap-1 font-bold uppercase tracking-wider">
-                    <span className="opacity-50">
-                        GUESSES REMAINING: {Math.max(0, 5 - guesses.length)} / 5
+                    <span>
+                        <span className="opacity-50">
+                            GUESSES REMAINING: {Math.max(0, 5 - guesses.length)} / 5
+                        </span>
+                        {hasWon || hasReachedLimit && (
+                            <div className="ml-4 w-6 float-right items-center rounded-sm bg-white/5">
+                                {
+                                    {
+                                        '-1': <div className="text-blue-500">D</div>,
+                                        '0': <div className="text-green-500">C</div>,
+                                        '1': <div className="text-yellow-500">B</div>,
+                                        '2': <div className="text-orange-500">A</div>,
+                                        '3': <div className="text-red-500">S</div>,
+                                        '4': <div className="text-white rounded-sm" style={{ backgroundColor: '#FFAE00' }}>P</div>
+                                    }[Math.max(0, 5 - guesses.length)]
+                                }
+                            </div>
+                        )}
                     </span>
                     {hasWon && (
                         <div className="flex items-center gap-4">
@@ -457,8 +473,8 @@ const ClassicPlayPage = () => {
                     )}
                 </div>
                 <div ref={bottomRef} />
-            </motion.div>
-        </PlayLayout>
+            </motion.div >
+        </PlayLayout >
     );
 };
 
