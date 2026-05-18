@@ -643,7 +643,7 @@ const InfernoPlayPage = () => {
                       </motion.div>
                       
                       <audio ref={audioRef}>
-                          <source src="/public/audios/final_rank.mp3" type="audio/mp3"/>
+                          <source src="/audios/final_rank.mp3" type="audio/mp3"/>
                       </audio>
                     </div>
                     <Typewriter
