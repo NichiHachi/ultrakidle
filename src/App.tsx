@@ -24,6 +24,7 @@ import LevelsPage from "./pages/LevelsPage";
 import MessagesPage from "./pages/MessagesPage";
 import FaqPage from "./pages/FaqPage";
 import SettingsPage from "./pages/SettingsPage";
+import EnemyPage from "./pages/EnemyPage";
 import "./App.css";
 
 import { VersionProvider, useVersion } from "./context/VersionContext";
@@ -78,6 +79,7 @@ function AppContent() {
           <Route path="privacy" element={<PrivacyPage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="enemies" element={<EnemiesPage />} />
+          <Route path="enemy/:enemy" element={<EnemyPage />} />
           <Route path="levels" element={<LevelsPage />} />
           <Route path="messages" element={<MessagesPage />} />
           <Route path="faq" element={<FaqPage />} />
