@@ -947,10 +947,11 @@ begin
   from cybergrind_guesses
   where round_id = v_round.id;
 
-  select coalesce(json_agg(t order by t.created_at), '[]'::json)
+  select coalesce(json_agg(t order by t.created_at, t.id), '[]'::json)
   into v_guesses
   from (
     select
+      cg.id,
       cg.guess_enemy_id,
       cg.hint_data,
       cg.is_penance,
@@ -958,7 +959,7 @@ begin
       cg.created_at
     from cybergrind_guesses cg
     where cg.round_id = v_round.id
-    order by cg.created_at desc
+    order by cg.created_at desc, cg.id desc
     limit v_lethe_limit
   ) t;
 
@@ -3143,10 +3144,11 @@ begin
   end if;
 
   if is_correct or v_state_status = 'failed' then
-    select coalesce(json_agg(t order by t.created_at), '[]'::json)
+    select coalesce(json_agg(t order by t.created_at, t.id), '[]'::json)
     into v_completed_guesses
     from (
       select
+        cg.id,
         cg.guess_enemy_id,
         cg.hint_data,
         cg.is_penance,
@@ -3154,7 +3156,7 @@ begin
         cg.created_at
       from cybergrind_guesses cg
       where cg.round_id = v_round.id
-      order by cg.created_at
+      order by cg.created_at, cg.id
     ) t;
   end if;
 
@@ -3178,10 +3180,11 @@ begin
   from cybergrind_guesses
   where round_id = v_state_round_id;
 
-  select coalesce(json_agg(t order by t.created_at), '[]'::json)
+  select coalesce(json_agg(t order by t.created_at, t.id), '[]'::json)
   into v_state_guesses
   from (
     select
+      cg.id,
       cg.guess_enemy_id,
       cg.hint_data,
       cg.is_penance,
@@ -3189,7 +3192,7 @@ begin
       cg.created_at
     from cybergrind_guesses cg
     where cg.round_id = v_state_round_id
-    order by cg.created_at desc
+    order by cg.created_at desc, cg.id desc
     limit v_lethe_limit
   ) t;
 

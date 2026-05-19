@@ -90,6 +90,9 @@ const InfernoPlayPage = () => {
   const [activeTimer, setActiveTimer] = useState(0);
   const [isListVisible, setIsListVisible] = useState(false);
 
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [audioRankPlayed, setAudioRankPlayed] = useState(false)
+  
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
@@ -424,6 +427,14 @@ const InfernoPlayPage = () => {
     return () => window.removeEventListener("keydown", handler);
   }, [lightboxUrl]);
 
+  useEffect(() => {
+      if (audioRef.current && !audioRankPlayed) {
+          audioRef.current.volume = 0.4;
+          audioRef.current.play();
+          setAudioRankPlayed(true);
+      }
+  })
+  
   const handlePointerDown = (e: React.PointerEvent) => {
     if (zoom <= 1) return;
     isDragging.current = true;
@@ -608,11 +619,33 @@ const InfernoPlayPage = () => {
                     className="text-white opacity-50 font-bold uppercase tracking-widest"
                   />
                   <div className="flex flex-col gap-1">
-                    <Typewriter
-                      delay={0.4}
-                      className="text-green-500 opacity-50 font-bold tracking-wider uppercase"
-                      text={`TOTAL SCORE: ${safeGameData.total_score} / 500`}
-                    />
+                    <div className="flex gap-2">
+                      <Typewriter
+                        delay={0.4}
+                        className="text-green-500 opacity-50 font-bold tracking-wider uppercase"
+                        text={`TOTAL SCORE: ${safeGameData.total_score} / 500`}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1.1 }}
+                        className="ml-2 w-6 float-right items-center rounded-sm bg-white/5">
+                        {
+                          {
+                            '0': <div className="text-blue-500">D</div>,
+                            '1': <div className="text-green-500">C</div>,
+                            '2': <div className="text-yellow-500">B</div>,
+                            '3': <div className="text-orange-500">A</div>,
+                            '4': <div className="text-red-500">S</div>,
+                            '5': <div className="text-white rounded-sm" style={{ backgroundColor: '#FFAE00' }}>P</div>
+                          }[Math.floor(safeGameData.total_score / 100)]
+                        }
+                      </motion.div>
+                      
+                      <audio ref={audioRef}>
+                          <source src="/audios/final_rank.mp3" type="audio/mp3"/>
+                      </audio>
+                    </div>
                     <Typewriter
                       delay={0.6}
                       className="text-white opacity-50 font-bold tracking-wider uppercase"
