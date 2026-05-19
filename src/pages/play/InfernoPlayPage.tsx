@@ -90,7 +90,7 @@ const InfernoPlayPage = () => {
   const [activeTimer, setActiveTimer] = useState(0);
   const [isListVisible, setIsListVisible] = useState(false);
 
-  const audioRef = useRef(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [audioRankPlayed, setAudioRankPlayed] = useState(false)
   
   const [pan, setPan] = useState({ x: 0, y: 0 });

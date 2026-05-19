@@ -29,7 +29,7 @@ const ClassicPlayPage = () => {
     const [copySuccess, setCopySuccess] = useState(false);
     const bottomRef = useRef<HTMLDivElement>(null);
 
-    const audioRef = useRef(null);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
     const [audioRankPlayed, setAudioRankPlayed] = useState(false)
 
     const fetchInit = useCallback(async () => {
