@@ -13,6 +13,7 @@ import HomePage from "./pages/HomePage";
 import ClassicPlayPage from "./pages/play/ClassicPlayPage";
 import InfernoPlayPage from "./pages/play/InfernoPlayPage";
 import CybergrindClassicPage from "./pages/play/CybergrindClassicPage";
+import CybergrindInfernoGuessrPage from "./pages/play/CybergrindInfernoGuessrPage";
 import CreditsPage from "./pages/CreditsPage";
 import HistoryPage from "./pages/HistoryPage";
 import TermsPage from "./pages/TermsPage";
@@ -71,6 +72,10 @@ function AppContent() {
           <Route
             path="cybergrind/classic"
             element={<CybergrindClassicPage />}
+          />
+          <Route
+            path="cybergrind/infernoguessr"
+            element={<CybergrindInfernoGuessrPage />}
           />
           <Route path="credits" element={<CreditsPage />} />
           <Route path="history" element={<HistoryPage />} />

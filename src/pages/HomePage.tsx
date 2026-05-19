@@ -10,6 +10,7 @@ import { ExternalLink } from "../components/ui/ExternalLink";
 import { useMessages } from "../context/MessagesContext";
 import SEO from "../components/SEO";
 import PlayExpandable from "../components/ui/PlayExpandable";
+import CybergrindExpandable from "../components/ui/CybergrindExpandable";
 
 const LoadingDots = () => {
   const [dotCount, setDotCount] = useState(1);
@@ -126,6 +127,7 @@ const HomePage = () => {
   const [diagnosticsStarted, setDiagnosticsStarted] = useState(false);
   const [countdown, setCountdown] = useState(getCountdown());
   const [playExpanded, setPlayExpanded] = useState(false);
+  const [cybergrindExpanded, setCybergrindExpanded] = useState(false);
   const { hasUnread } = useMessages();
 
   useEffect(() => {
@@ -353,14 +355,13 @@ const HomePage = () => {
                   ) : null
                 }
               />
-              <Button
-                variant="outline"
-                size="xl"
-                onClick={() => navigate("/cybergrind/classic")}
-                className=""
-              >
-                CYBERGRIND
-              </Button>
+              <CybergrindExpandable
+                label="CYBERGRIND"
+                isExpanded={cybergrindExpanded}
+                onToggle={() => setCybergrindExpanded((p) => !p)}
+                onClassic={() => navigate("/cybergrind/classic")}
+                onInferno={() => navigate("/cybergrind/infernoguessr")}
+              />
               <Button
                 variant="outline"
                 size="xl"
