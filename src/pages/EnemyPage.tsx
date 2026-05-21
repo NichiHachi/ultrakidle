@@ -6,6 +6,7 @@ import { resolveExternalUrl } from '../lib/urls';
 import { toExternalUrl } from '../lib/urls';
 import { isRunningInDiscord, discordSdk } from '../lib/discord';
 import { Typewriter } from "../components/Typewriter";
+import { vh } from 'framer-motion';
 
 interface Enemy {
   id: number,
@@ -59,7 +60,7 @@ const EnemyPage = () => {
       const { data: enemyData, error: enemyError } = await supabase
         .from("ultrakill_enemies")
         .select("id, name, full_body_url, wiki_link, enemy_type, weight_class, health, first_appearance, is_boss")
-        .eq("name", enemy)
+        .eq("id", enemy)
         .single();
 
       if (enemyError && enemyError.message.includes("CLIENT_OUTDATED")) return;
@@ -148,15 +149,15 @@ const EnemyPage = () => {
                   </button>
                 </div>
               </div>
-              <div className="grid gap-4 overflow-y-auto max-h-[70vh] " style={{
+              <div className="grid gap-4 overflow-y-auto h-[60vh]" style={{
                 gridTemplateAreas: "image data",
                 gridTemplateColumns: "0fr 1fr",
                 backgroundColor: "rgba(38, 38, 38)",
                 overflowX: "visible", overflowY: "visible",
                 border: "2px solid rgba(0,0,0,0.4)", borderStyle: "outset", borderTop: "0"
               }}>
-                <div className='image min-w-60 pl-4 pb-4 pt-4'>
-                  <div className='w-full flex justify-center h-[54.5vh] relative'
+                <div className='image min-w-60 pl-4 pb-4 pt-4 flex flex-col h-full min-h-0'>
+                  <div className='w-full flex justify-center relative h-full min-h-0'
                     style={{
                       backgroundColor: "rgba(31, 31, 31)",
                       border: "2px solid rgba(0,0,0,0.4)", borderStyle: "outset",
@@ -166,7 +167,7 @@ const EnemyPage = () => {
                     }}>
                     {enemyData.full_body_url ? (
                       <img src={resolveExternalUrl(enemyData.full_body_url)}
-                        className='h-full w-auto max-w-80 p-2 object-contain fade-in'
+                        className='h-full w-auto max-w-90 p-2 object-contain inline fade-in'
                         alt={enemyData.name + " full body"} />
                     ) : (
                       <div className="w-full h-full bg-white/5 flex items-center justify-center text-[10px] opacity-20">
@@ -176,6 +177,7 @@ const EnemyPage = () => {
                   <a href={resolveExternalUrl(enemyData.wiki_link)}
                     target="_blank"
                     rel="noopener noreferrer"
+                    className='mt-auto'
                     onClick={(e) => handleLinkClick(e, resolveExternalUrl(enemyData.wiki_link))}
                   >
                     <div className="h-[5vh] w-full mt-2 pt-2 pb-2 content-center
@@ -189,7 +191,7 @@ const EnemyPage = () => {
 
                 </div>
                 <div
-                  className='data text p-2 pr-4 pl-0'
+                  className='data text p-2 pb-4 pr-4 pl-0 h-full flex flex-col min-h-0'
                   style={{ textAlign: 'left' }}>
                   <Typewriter
                     text={enemyData.name}
@@ -197,13 +199,13 @@ const EnemyPage = () => {
                     speed={0.04}
                   />
                   <div
-                    className='pl-4 pr-4'
+                    className='pl-4 pr-4 flex-1 min-h-0'
                     style={{
                       lineHeight: "3rem",
                       backgroundColor: "rgba(31, 31, 31)",
-                      height: "575px", maxHeight: "575px",
                       overflowY: "scroll",
-                      border: "2px solid rgba(0,0,0,0.4)", borderStyle: "outset",
+                      border: "2px solid rgba(0,0,0,0.4)",
+                      borderStyle: "outset",
                     }}>
                     <Typewriter
                       segments={[
