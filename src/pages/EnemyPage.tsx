@@ -113,6 +113,7 @@ const EnemyPage = () => {
             borderTopLeftRadius: "0.5rem",
           }}
         >
+          {/* Note: Maybe change this to not include the whole svg path inside of the code */}
           <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 -960 960 960" width="32px" fill="#570a07" transform="scale(-1, 1)"><path d="M782.87-98.52 526.91-354.48q-29.43 21.74-68.15 34.61Q420.04-307 375.48-307q-114.09 0-193.55-79.46-79.45-79.45-79.45-193.54 0-114.09 79.45-193.54Q261.39-853 375.48-853q114.09 0 193.54 79.46 79.46 79.45 79.46 193.54 0 45.13-12.87 83.28T601-429.7l256.52 257.09-74.65 74.09ZM375.48-413q69.91 0 118.45-48.54 48.55-48.55 48.55-118.46t-48.55-118.46Q445.39-747 375.48-747t-118.46 48.54Q208.48-649.91 208.48-580t48.54 118.46Q305.57-413 375.48-413Z" /></svg>
           <span className='ml-1'
             style={{ textShadow: "1px 1px 0px rgba(0, 0, 0, 1)", letterSpacing: "0.05rem" }}>
@@ -169,9 +170,11 @@ const EnemyPage = () => {
               <div
                 className='data text p-2 pr-4 pl-0'
                 style={{ textAlign: 'left' }}>
-                <h2 className='text-3xl uppercase mb-1.5'>
-                  {enemyData.name}
-                </h2>
+                <Typewriter
+                  text={enemyData.name}
+                  className='text-3xl uppercase mb-1.5'
+                  speed={0.04}
+                />
                 <div
                   className='pl-4 pr-4'
                   style={{
@@ -211,6 +214,7 @@ const EnemyPage = () => {
                     speed={0.05}
                   />
 
+                  {/* Note: The Typewriter speed are balanced so that the levels data (which are fetched and loaded after the enemy data) seem to appear at the same time as the enemy data */}
                   {levelDataList != null && (
                     <div>
                       <Typewriter
@@ -240,7 +244,18 @@ const EnemyPage = () => {
                               : ""
                             }
                         overflow - y - auto pr - 4 custom - scrollbar`}>
-                          {levelDataList.map((level) => {
+                          <style>{`
+                            @keyframes level-fade-in {
+                              from { opacity: 0; }
+                              to { opacity: 1; }
+                            }
+
+                            .level-fade-in {
+                              opacity: 0;
+                              animation: level-fade-in 0.5s ease forwards;
+                            }
+                          `}</style>
+                          {levelDataList.map((level, index) => {
                             return (
                               <a
                                 key={level.id}
@@ -248,8 +263,8 @@ const EnemyPage = () => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => handleLinkClick(e, resolveExternalUrl(level.wiki_url))}
-                                className="group flex flex-col gap-2 transition-all duration-200 uppercase "
-                                style={{ textAlign: 'center' }}
+                                className="group flex flex-col gap-2 transition-all duration-200 uppercase level-fade-in"
+                                style={{ textAlign: 'center', animationDelay: `${index * 0.1 + 0.5}s` }}
                               >
                                 <div className="flex flex-col gap-1">
                                   <span className="text-sm text-white group-hover:text-indigo-400 transition-colors truncate">
