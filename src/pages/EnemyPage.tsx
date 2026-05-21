@@ -1,22 +1,35 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import SEO from '../components/SEO';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { resolveExternalUrl } from '../lib/urls';
+import { toExternalUrl } from '../lib/urls';
 import { isRunningInDiscord, discordSdk } from '../lib/discord';
 
+interface Enemy {
+  id: number,
+  name: string,
+  full_body_url: string,
+  wiki_link: string,
+  enemy_type: string,
+  weight_class: string,
+  health: number,
+  first_appearance: string,
+  is_boss: boolean
+}
+
+interface Level {
+  id: number,
+  level_number: number;
+  level_name: string;
+  thumbnail_url: string;
+  wiki_url: string;
+}
 
 const EnemyPage = () => {
   const { enemy } = useParams();
-  const [enemyData, setEnemyData] = useState<JSON | null>(null);
-  const [enemyLevelIds, setEnemyLevelIds] = useState<Int32List | null>(null);
-  const [levelData, setLevelData] = useState<{
-    id: any,
-    level_number: any;
-    level_name: any;
-    thumbnail_url: any;
-    wiki_url: any;
-  }[] | null>(null);
+  const [enemyData, setEnemyData] = useState<Enemy | null>(null);
+  const [levelDataList, setLevelDataList] = useState<Level[] | null>(null);
 
 
   function capitalize(word: string) {
@@ -36,52 +49,51 @@ const EnemyPage = () => {
     }
   };
 
-  const fetchData = useCallback(async () => {
-    const { data: enemyData, error: enemyError } = await supabase
-      .from("ultrakill_enemies")
-      .select("*")
-      .eq("name", enemy)
-      .single();
-    if (enemyError) {
-      if (enemyError.message.includes("CLIENT_OUTDATED"))
-        return;
-    }
-
-    setEnemyData(enemyData);
-
-
-    const { data: levelIdsData, error: levelIdsError } = await supabase
-      .from("level_enemies")
-      .select("level_id")
-      .eq("enemy_id", enemyData.id);
-
-    if (levelIdsError) {
-      if (levelIdsError.message.includes("CLIENT_OUTDATED"))
-        return;
-    }
-
-    const levelIds = levelIdsData!.map(item => item.level_id);
-
-    setEnemyLevelIds(levelIds);
-
-
-    const { data: levelData, error: levelError } = await supabase
-      .from("levels")
-      .select("id, level_number, level_name, thumbnail_url, wiki_url")
-      .in("id", levelIds)
-      .order("order_index");
-
-    if (levelError) {
-      if (levelError.message.includes("CLIENT_OUTDATED"))
-        return;
-    }
-
-    setLevelData(levelData);
-  }, [setEnemyData, setEnemyLevelIds, setLevelData, enemy]);
-
   useEffect(() => {
+    let ignore = false;
+
+    const fetchData = async () => {
+
+      // Get the enemy data
+      const { data: enemyData, error: enemyError } = await supabase
+        .from("ultrakill_enemies")
+        .select("id, name, full_body_url, wiki_link, enemy_type, weight_class, health, first_appearance, is_boss")
+        .eq("name", enemy)
+        .single();
+
+      if (enemyError && enemyError.message.includes("CLIENT_OUTDATED")) return;
+      if (ignore) return;
+
+      setEnemyData(enemyData);
+
+      // Get the level where the enemy is apprearing
+      const { data: levelIdsData, error: levelIdsError } = await supabase
+        .from("level_enemies")
+        .select("level_id")
+        .eq("enemy_id", enemyData!.id);
+
+      if (levelIdsError && levelIdsError.message.includes("CLIENT_OUTDATED")) return;
+      if (ignore) return;
+
+      // Convert the hashmap containing only one value to a list
+      const levelIds = levelIdsData!.map(item => item.level_id);
+
+      // Get the level data
+      const { data: levelData, error: levelError } = await supabase
+        .from("levels")
+        .select("id, level_number, level_name, thumbnail_url, wiki_url")
+        .in("id", levelIds)
+        .order("order_index");
+
+      if (levelError && levelError.message.includes("CLIENT_OUTDATED")) return;
+      if (ignore) return;
+
+      setLevelDataList(levelData);
+    };
+
     fetchData();
-  }, [fetchData]);
+    return () => { ignore = true; };
+  }, [setEnemyData, setLevelDataList, enemy]);
 
   return (
     <div className="flex flex-col w-full pt-4 h-full justify-start items-start">
@@ -89,8 +101,8 @@ const EnemyPage = () => {
       <div className="flex flex-col w-full max-w-4xl bg-black/40 border-2 border-white/10 p-8 font-bold tracking-widest">
         <div className="flex justify-between flex-wrap items-center border-b border-white/10 pb-4 mb-6" >
           <h1 className="text-3xl text-white uppercase">ENEMY_DETAIL</h1>
-          <span className="text-sm opaimageimagecity-50 tracking-normal normal-case font-normal uppercase">
-            {(enemyData == null ? 0 : 6) + (levelData == null ? 0 : levelData?.length) + 1} ENTRIES FOUND
+          <span className="text-sm opaimageimagecity-50 tracking-normal  font-normal uppercase">
+            {(enemyData == null ? 0 : 6) + (levelDataList == null ? 0 : levelDataList?.length) + 1} ENTRIES FOUND
           </span>
         </div>
         <div className='h-8 flex items-center'
@@ -184,12 +196,12 @@ const EnemyPage = () => {
                   <span> {enemyData.health}</span>
                   <br />
                   {
-                    enemyLevelIds != null && (
+                    levelDataList != null && (
                       <div>
                         <span className='text-red-500 uppercase'>
                           TOTAL LEVELS:
                         </span>
-                        <span> {enemyLevelIds.length}</span>
+                        <span> {levelDataList.length}</span>
                         <br />
                         <span className='text-red-500 uppercase'>
                           REGISTERED AT:
@@ -203,18 +215,18 @@ const EnemyPage = () => {
                   </span>
                   <span> {enemyData.is_boss ? "Yes" : "No"}</span>
 
-                  {levelData != null && (
+                  {levelDataList != null && (
                     <div className='pb-4'>
                       <span className='text-red-500 uppercase'>
-                        APPEARANCE{levelData.length > 1 ? "S" : ""}:
+                        APPEARANCE{levelDataList.length > 1 ? "S" : ""}:
                       </span>
                       <div
                         className={`
-                          ${levelData.length > 1 ?
+                          ${levelDataList.length > 1 ?
                             "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4"
                             : ""}
                         overflow-y-auto pr-4 custom-scrollbar`}>
-                        {levelData.map((level) => {
+                        {levelDataList.map((level) => {
                           return (
                             <a
                               key={level.id}
@@ -229,7 +241,7 @@ const EnemyPage = () => {
                                 <span className="text-sm text-white group-hover:text-indigo-400 transition-colors truncate">
                                   {level.level_number}: {level.level_name}
                                 </span>
-                                <div className="h-[2px] w-full bg-white group-hover:bg-indigo-400 transition-colors" />
+                                <div className="h-0.5 w-full bg-white group-hover:bg-indigo-400 transition-colors" />
                               </div>
                               <div className="aspect-video w-full bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center relative">
                                 {level.thumbnail_url ? (
