@@ -30,9 +30,7 @@ const EnemiesPage = () => {
                         .map((enemy) => (
                             <a
                                 key={enemy.id}
-                                href={resolveExternalUrl(enemy.wikiLink)}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                                href={"/enemy/"+ enemy.id}
                                 onClick={(e) => handleLinkClick(e, resolveExternalUrl(enemy.wikiLink))}
                                 className="group flex items-center gap-4 bg-white/5 border border-white/5 p-3 hover:bg-white/10 hover:border-white/20 transition-all duration-200"
                             >
@@ -54,7 +52,7 @@ const EnemiesPage = () => {
                                         {enemy.name}
                                     </span>
                                     <span className="text-[10px] opacity-30 font-normal normal-case tracking-normal">
-                                        VIEW WIKI ENTRY
+                                        VIEW ENTRY
                                     </span>
                                 </div>
                                 <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
