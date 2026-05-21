@@ -173,9 +173,11 @@ const EnemyPage = () => {
                         NO_FULL_BODY_IMAGE
                       </div>)}
                   </div>
-                  <a href={enemyData.wiki_link}
+                  <a href={resolveExternalUrl(enemyData.wiki_link)}
                     target="_blank"
-                    rel="noopener noreferrer">
+                    rel="noopener noreferrer"
+                    onClick={(e) => handleLinkClick(e, resolveExternalUrl(enemyData.wiki_link))}
+                  >
                     <div className="h-[5vh] w-full mt-2 pt-2 pb-2 content-center
                     rounded-sm outline-3 outline-[rgba(0,0,0,0.6)]
                     bg-linear-to-b from-[#585858] to-[#1e1e1e]
