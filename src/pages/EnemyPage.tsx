@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 import { resolveExternalUrl } from '../lib/urls';
 import { toExternalUrl } from '../lib/urls';
 import { isRunningInDiscord, discordSdk } from '../lib/discord';
+import { Typewriter } from "../components/Typewriter";
 
 interface Enemy {
   id: number,
@@ -180,87 +181,101 @@ const EnemyPage = () => {
                     overflowY: "scroll",
                     border: "2px solid rgba(0,0,0,0.4)", borderStyle: "outset",
                   }}>
-                  <span className='text-red-500 uppercase'>
-                    TYPE:
-                  </span>
-                  <span> {capitalize(enemyData.enemy_type)}</span>
-                  <br />
-                  <span className='text-red-500 uppercase'>
-                    WEIGHT:
-                  </span>
-                  <span> {capitalize(enemyData.weight_class)}</span>
-                  <br />
-                  <span className='text-red-500 uppercase'>
-                    HEALTH:
-                  </span>
-                  <span> {enemyData.health}</span>
-                  <br />
-                  {
-                    levelDataList != null && (
-                      <div>
-                        <span className='text-red-500 uppercase'>
-                          TOTAL LEVELS:
-                        </span>
-                        <span> {levelDataList.length}</span>
-                        <br />
-                        <span className='text-red-500 uppercase'>
-                          REGISTERED AT:
-                        </span>
-                        <span> {enemyData.first_appearance}</span>
-                      </div>
-                    )}
+                  <Typewriter
+                    segments={[
+                      { text: "TYPE:", className: "text-red-500 uppercase" },
+                      { text: ` ${capitalize(enemyData.enemy_type)}` },
+                    ]}
+                    speed={0.05}
+                  />
+                  <Typewriter
+                    segments={[
+                      { text: "WEIGHT:", className: "text-red-500 uppercase" },
+                      { text: ` ${capitalize(enemyData.weight_class)}` },
+                    ]}
+                    speed={0.05}
+                  />
+                  <Typewriter
+                    segments={[
+                      { text: "HEALTH:", className: "text-red-500 uppercase" },
+                      { text: ` ${enemyData.health}` },
+                    ]}
+                    speed={0.05}
+                  />
 
-                  <span className='text-red-500 uppercase'>
-                    BOSS:
-                  </span>
-                  <span> {enemyData.is_boss ? "Yes" : "No"}</span>
+                  <Typewriter
+                    segments={[
+                      { text: "BOSS:", className: "text-red-500 uppercase" },
+                      { text: ` ${enemyData.is_boss ? "Yes" : "No"}` },
+                    ]}
+                    speed={0.05}
+                  />
 
                   {levelDataList != null && (
-                    <div className='pb-4'>
-                      <span className='text-red-500 uppercase'>
-                        APPEARANCE{levelDataList.length > 1 ? "S" : ""}:
-                      </span>
-                      <div
-                        className={`
+                    <div>
+                      <Typewriter
+                        segments={[
+                          { text: "TOTAL LEVELS:", className: "text-red-500 uppercase" },
+                          { text: ` ${levelDataList.length}` },
+                        ]}
+                        speed={0.03}
+                      />
+                      <Typewriter
+                        segments={[
+                          { text: "REGISTERED AT:", className: "text-red-500 uppercase" },
+                          { text: ` ${enemyData.first_appearance}` },
+                        ]}
+                        speed={0.02}
+                      />
+                      <div className='pb-4'>
+                        <Typewriter
+                          text={`APPEARANCE${levelDataList.length > 1 ? "S" : ''}:`}
+                          className='text-red-500 uppercase'
+                          speed={0.04}
+                        />
+                        <div
+                          className={`
                           ${levelDataList.length > 1 ?
-                            "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4"
-                            : ""}
-                        overflow-y-auto pr-4 custom-scrollbar`}>
-                        {levelDataList.map((level) => {
-                          return (
-                            <a
-                              key={level.id}
-                              href={resolveExternalUrl(level.wiki_url)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => handleLinkClick(e, resolveExternalUrl(level.wiki_url))}
-                              className="group flex flex-col gap-2 transition-all duration-200 uppercase "
-                              style={{ textAlign: 'center' }}
-                            >
-                              <div className="flex flex-col gap-1">
-                                <span className="text-sm text-white group-hover:text-indigo-400 transition-colors truncate">
-                                  {level.level_number}: {level.level_name}
-                                </span>
-                                <div className="h-0.5 w-full bg-white group-hover:bg-indigo-400 transition-colors" />
-                              </div>
-                              <div className="aspect-video w-full bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center relative">
-                                {level.thumbnail_url ? (
-                                  <img
-                                    src={resolveExternalUrl(level.thumbnail_url)}
-                                    alt={level.level_name}
-                                    className="w-full h-full object-cover filter brightness-75 group-hover:brightness-100 transition-all duration-200"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full bg-white/5 flex items-center justify-center text-[10px] opacity-20">
-                                    NO_THUMBNAIL
-                                  </div>
-                                )}
-                                <div className="absolute inset-0 bg-indigo-500/0 group-hover:bg-indigo-500/10 transition-colors" />
-                              </div>
-                            </a>
-                          )
-                        })
-                        }
+                              "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4"
+                              : ""
+                            }
+                        overflow - y - auto pr - 4 custom - scrollbar`}>
+                          {levelDataList.map((level) => {
+                            return (
+                              <a
+                                key={level.id}
+                                href={resolveExternalUrl(level.wiki_url)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => handleLinkClick(e, resolveExternalUrl(level.wiki_url))}
+                                className="group flex flex-col gap-2 transition-all duration-200 uppercase "
+                                style={{ textAlign: 'center' }}
+                              >
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-sm text-white group-hover:text-indigo-400 transition-colors truncate">
+                                    {level.level_number}: {level.level_name}
+                                  </span>
+                                  <div className="h-0.5 w-full bg-white group-hover:bg-indigo-400 transition-colors" />
+                                </div>
+                                <div className="aspect-video w-full bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center relative">
+                                  {level.thumbnail_url ? (
+                                    <img
+                                      src={resolveExternalUrl(level.thumbnail_url)}
+                                      alt={level.level_name}
+                                      className="w-full h-full object-cover filter brightness-75 group-hover:brightness-100 transition-all duration-200"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full bg-white/5 flex items-center justify-center text-[10px] opacity-20">
+                                      NO_THUMBNAIL
+                                    </div>
+                                  )}
+                                  <div className="absolute inset-0 bg-indigo-500/0 group-hover:bg-indigo-500/10 transition-colors" />
+                                </div>
+                              </a>
+                            )
+                          })
+                          }
+                        </div>
                       </div>
                     </div>
                   )}
