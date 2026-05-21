@@ -6,6 +6,7 @@ import { resolveExternalUrl } from '../lib/urls';
 import { toExternalUrl } from '../lib/urls';
 import { isRunningInDiscord, discordSdk } from '../lib/discord';
 import { Typewriter } from "../components/Typewriter";
+import { useFormState } from 'react-dom';
 
 interface Enemy {
   id: number,
@@ -153,17 +154,16 @@ const EnemyPage = () => {
                   <img src={enemyData.full_body_url}
                     className='h-full w-auto max-w-80 p-2 object-contain' />
                 </div>
-                <a href={enemyData.wiki_link}>
-                  <button
-                    className='h-[5vh] w-full mt-2 pt-2 pb-2 '
-                    style={{
-                      borderRadius: 4,
-                      background: "linear-gradient(#585858, #1e1e1e 80%)",
-                      outline: "solid rgba(0,0,0,0.6)"
-                    }}
+                <a href={enemyData.wiki_link}
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  <div className="h-[5vh] w-full mt-2 pt-2 pb-2 content-center
+                    rounded-sm outline-3 outline-[rgba(0,0,0,0.6)]
+                    bg-linear-to-b from-[#585858] to-[#1e1e1e]
+                    hover:bg-none hover:bg-[#1d1d1d]"
                   >
                     Go to WIKI
-                  </button>
+                  </div>
                 </a>
 
               </div>
