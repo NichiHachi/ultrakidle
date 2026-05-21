@@ -98,6 +98,19 @@ const EnemyPage = () => {
 
   return (
     <div className="flex flex-col w-full pt-4 h-full justify-start items-start">
+      <style>
+        {`
+          @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+
+          .fade-in {
+            opacity: 0;
+            animation: fade-in 1s ease forwards;
+          }
+        `}
+      </style>
       <SEO title="Enemy detail" description="A detail description of the selected enemy in ULTRAKILL with their stats." />
       <div className="flex flex-col w-full max-w-4xl bg-black/40 border-2 border-white/10 p-8 font-bold tracking-widest">
         <div className="flex justify-between flex-wrap items-center border-b border-white/10 pb-4 mb-6" >
@@ -151,8 +164,14 @@ const EnemyPage = () => {
                       clipPath: "inset(0 0 0 -9999px)",
                       zIndex: 10,
                     }}>
-                    <img src={enemyData.full_body_url}
-                      className='h-full w-auto max-w-80 p-2 object-contain' />
+                    {enemyData.full_body_url ? (
+                      <img src={resolveExternalUrl(enemyData.full_body_url)}
+                        className='h-full w-auto max-w-80 p-2 object-contain fade-in'
+                        alt={enemyData.name + " full body"} />
+                    ) : (
+                      <div className="w-full h-full bg-white/5 flex items-center justify-center text-[10px] opacity-20">
+                        NO_FULL_BODY_IMAGE
+                      </div>)}
                   </div>
                   <a href={enemyData.wiki_link}
                     target="_blank"
@@ -244,19 +263,6 @@ const EnemyPage = () => {
                                 : ""
                               }
                         overflow - y - auto pr - 4 custom - scrollbar`}>
-                            <style>
-                              {`
-                                @keyframes level-fade-in {
-                                  from { opacity: 0; }
-                                  to { opacity: 1; }
-                                }
-
-                                .level-fade-in {
-                                  opacity: 0;
-                                  animation: level-fade-in 0.5s ease forwards;
-                                }
-                              `}
-                            </style>
                             {levelDataList.map((level, index) => {
                               return (
                                 <a
@@ -265,7 +271,7 @@ const EnemyPage = () => {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => handleLinkClick(e, resolveExternalUrl(level.wiki_url))}
-                                  className="group flex flex-col gap-2 transition-all duration-200 uppercase level-fade-in"
+                                  className="group flex flex-col gap-2 transition-all duration-200 uppercase fade-in"
                                   style={{ textAlign: 'center', animationDelay: `${index * 0.1 + 0.5}s` }}
                                 >
                                   <div className="flex flex-col gap-1">
@@ -303,7 +309,7 @@ const EnemyPage = () => {
           )
         }
       </div >
-    </div>
+    </div >
   )
 }
 
