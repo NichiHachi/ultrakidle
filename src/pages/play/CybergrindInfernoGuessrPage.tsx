@@ -934,10 +934,29 @@ const CybergrindInfernoGuessrPage = () => {
                   <div className="flex flex-col gap-1 items-start mt-4">
                     <Typewriter text={`DISTANCE: ${lastRoundResult.distance}`} className="opacity-50" speed={0.02} delay={0.2} />
                     <Typewriter text={`TIME: ${lastRoundResult.time_spent_seconds.toFixed(3)}`} className="opacity-50" speed={0.02} delay={0.4} />
-                    {lastRoundResult.distance === 0 ? (
-                      <Typewriter text="HEALTH +20" className="text-green-500 font-bold" speed={0.02} delay={0.6} />
+                    {lastRoundResult.distance < 2 ? (
+                      lastRoundResult.distance === 0 ? (
+                        <Typewriter
+                          text="HEALTH +20"
+                          className="text-green-500 font-bold"
+                          speed={0.02}
+                          delay={0.6}
+                        />
+                      ) : (
+                        <Typewriter
+                          text="HEALTH +0"
+                          className="text-green-500/50 font-bold"
+                          speed={0.02}
+                          delay={0.6}
+                        />
+                      )
                     ) : (
-                      <Typewriter text={`HEALTH -${(100 - lastRoundResult.score) / 2}`} className="text-red-500 font-bold" speed={0.02} delay={0.6} />
+                      <Typewriter
+                        text={`HEALTH -${(100 - lastRoundResult.score) / 2}`}
+                        className="text-red-500 font-bold"
+                        speed={0.02}
+                        delay={0.6}
+                      />
                     )}
                     <div className="md:block hidden">
                       <Typewriter text={`(CLICK OR PRESS ENTER)`} className="lg:block hidden text-sm opacity-50" speed={0.02} delay={0.8} />

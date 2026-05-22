@@ -38,15 +38,17 @@ const HealthBar = ({ initialHealth, waveNumber, startTime, onHealthDepleted, isG
     }
 
     if (prevInitialHealth.current !== initialHealth) {
-      if (prevInitialHealth.current > 0 && !isGameOver) {
-        if (initialHealth > prevInitialHealth.current) {
-          setFlashColor("green");
-        } else if (initialHealth < prevInitialHealth.current) {
-          setFlashColor("red");
+        const healthDiff = Math.abs(initialHealth - prevInitialHealth.current);
+
+        if (prevInitialHealth.current > 0 && !isGameOver && healthDiff > 2) {
+          if (initialHealth > prevInitialHealth.current) {
+            setFlashColor("green");
+          } else if (initialHealth < prevInitialHealth.current) {
+            setFlashColor("red");
+          }
         }
+        prevInitialHealth.current = initialHealth;
       }
-      prevInitialHealth.current = initialHealth;
-    }
   }, [initialHealth, startTime, waveNumber, isGameOver]);
 
   useEffect(() => {
