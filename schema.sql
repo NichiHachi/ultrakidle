@@ -160,50 +160,66 @@ CREATE OR REPLACE FUNCTION "public"."abandon_ig_cybergrind_run"() RETURNS json
     AS $$
 declare
   v_caller_id uuid;
-  v_run_id bigint;
-  v_client_version text;
+  v_run record;
+  v_active_round record;
   v_final_wave int;
   v_total_time_seconds numeric(10,3);
   v_avg_score real;
   v_existing_record record;
   v_should_update_record boolean := false;
+  v_time_spent_seconds numeric;
+  v_effective_hp numeric;
+  v_final_status text := 'abandoned';
 begin
   v_caller_id := auth.uid();
   if v_caller_id is null then raise exception 'User must be authenticated.'; end if;
 
-  -- 1. Find and close the active run
-  select id, client_version into v_run_id, v_client_version
+  select * into v_run
   from ig_cybergrind_runs
   where user_id = v_caller_id and status = 'active'
   limit 1;
 
-  if v_run_id is null then
+  if v_run.id is null then
     return json_build_object('success', false, 'message', 'No active run found.');
   end if;
 
-  update ig_cybergrind_runs
-  set status = 'abandoned', ended_at = now()
-  where id = v_run_id;
+  select * into v_active_round
+  from ig_cybergrind_rounds
+  where run_id = v_run.id and round_number = v_run.current_wave and completed_at is null;
 
-  -- 2. Calculate stats from completed rounds
-  -- We define the reached wave as the highest round_number that was actually scored
-  -- We also aggregate total time spent across all rounds
+  if v_active_round.id is not null and v_active_round.started_at is not null then
+    v_time_spent_seconds := extract(epoch from (now() - v_active_round.started_at));
+    
+    v_effective_hp := v_run.health - public.calculate_ig_cybergrind_drain(
+      v_run.id, 
+      v_active_round.round_number, 
+      v_time_spent_seconds, 
+      true
+    );
+    
+    if v_effective_hp <= 0 then
+      v_final_status := 'failed';
+    end if;
+  end if;
+
+  update ig_cybergrind_runs
+  set status = v_final_status::public.cybergrind_run_status_enum, 
+      ended_at = now(),
+      health = case when v_final_status = 'failed' then 0 else health end
+  where id = v_run.id;
+
   select 
     coalesce(max(round_number), 0), 
     coalesce(avg(score), 0),
     coalesce(sum(time_spent_seconds), 0)
   into v_final_wave, v_avg_score, v_total_time_seconds
   from ig_cybergrind_rounds
-  where run_id = v_run_id and score is not null;
+  where run_id = v_run.id and score is not null;
 
   update ig_cybergrind_runs
-  set 
-    status = 'abandoned', 
-    ended_at = now(),
-    total_time_ms = round(v_total_time_seconds * 1000)::bigint
-  where id = v_run_id;
+  set total_time_ms = round(v_total_time_seconds * 1000)::bigint
+  where id = v_run.id;
 
-  -- 3. Check existing record
   select best_wave, avg_accuracy into v_existing_record
   from ig_cybergrind_records
   where user_id = v_caller_id;
@@ -216,23 +232,11 @@ begin
     v_should_update_record := true;
   end if;
 
-  -- 4. Upsert record if it's a new personal best
   if v_should_update_record then
     insert into ig_cybergrind_records (
-      user_id, 
-      best_wave, 
-      avg_accuracy, 
-      run_id, 
-      achieved_at, 
-      client_version
-    )
-    values (
-      v_caller_id, 
-      v_final_wave, 
-      v_avg_score, 
-      v_run_id, 
-      now(), 
-      v_client_version
+      user_id, best_wave, avg_accuracy, run_id, achieved_at, client_version
+    ) values (
+      v_caller_id, v_final_wave, v_avg_score, v_run.id, now(), v_run.client_version
     )
     on conflict (user_id) do update
     set 
@@ -245,69 +249,17 @@ begin
 
   return json_build_object(
     'success', true,
-    'run_id', v_run_id,
+    'run_id', v_run.id,
     'final_wave', v_final_wave,
     'avg_score', v_avg_score,
-    'new_record', v_should_update_record
+    'new_record', v_should_update_record,
+    'game_over', v_final_status = 'failed'
   );
 end;
 $$;
 
 
 ALTER FUNCTION "public"."abandon_ig_cybergrind_run"() OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."advance_ig_cybergrind_setup"("version" "text" DEFAULT NULL::"text") RETURNS json
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public', 'auth', 'extensions'
-    AS $$
-declare
-  v_caller_id uuid;
-  v_run_id bigint;
-  v_new_wave integer;
-  v_next_round_num integer;
-  v_next_round_id bigint;
-  v_sub_record record;
-begin
-  v_caller_id := auth.uid();
-  
-  -- Get active run
-  select id, current_wave into v_run_id, v_new_wave
-  from ig_cybergrind_runs
-  where user_id = v_caller_id and status = 'active';
-
-  if v_run_id is null then raise exception 'No active run found.'; end if;
-
-  -- Advance wave
-  v_new_wave := v_new_wave + 1;
-  update ig_cybergrind_runs set current_wave = v_new_wave where id = v_run_id;
-
-  -- Find the round number for the prefetch (current_wave + 1)
-  v_next_round_num := v_new_wave + 1;
-
-  -- Create the future round
-  select s.id as sub_id, s.level_id, s.submitter_id into v_sub_record
-  from image_submissions s
-  where s.status = 'approved'
-  order by random()
-  limit 1;
-
-  insert into ig_cybergrind_rounds 
-    (run_id, round_number, image_submission_id, correct_level_id, submitter_id)
-  values 
-    (v_run_id, v_next_round_num, v_sub_record.sub_id, v_sub_record.level_id, v_sub_record.submitter_id)
-  returning id into v_next_round_id;
-
-  return jsonb_build_object(
-    'run_id', v_run_id,
-    'current_wave', v_new_wave,
-    'prefetch_round_id', v_next_round_id
-  );
-end;
-$$;
-
-
-ALTER FUNCTION "public"."advance_ig_cybergrind_setup"("version" "text") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."advance_ig_cybergrind_setup"("version" "text", "caller_id" "uuid") RETURNS json
@@ -501,6 +453,36 @@ $$;
 
 
 ALTER FUNCTION "public"."assert_guild_member"("p_guild_id" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."calculate_ig_cybergrind_drain"("p_run_id" bigint, "p_round_number" integer, "p_time_spent_seconds" numeric, "p_apply_grace_period" boolean DEFAULT false) RETURNS numeric
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'auth', 'extensions'
+    AS $$
+declare
+  v_min_round integer;
+  v_drain_rate numeric;
+begin
+  select coalesce(min(round_number), 1) into v_min_round
+  from ig_cybergrind_rounds
+  where run_id = p_run_id;
+
+  if p_round_number = v_min_round then
+    v_drain_rate := 1.0;
+  else
+    v_drain_rate := sqrt(p_round_number);
+  end if;
+
+  if p_apply_grace_period then
+    return greatest(0::numeric, p_time_spent_seconds - 0.5) * v_drain_rate;
+  else
+    return p_time_spent_seconds * v_drain_rate;
+  end if;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."calculate_ig_cybergrind_drain"("p_run_id" bigint, "p_round_number" integer, "p_time_spent_seconds" numeric, "p_apply_grace_period" boolean) OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."compute_enemy_hint"("p_target_id" bigint, "p_guess_id" bigint) RETURNS "jsonb"
@@ -1492,6 +1474,7 @@ declare
   v_best record;
   v_min_client_version text;
   v_rounds jsonb;
+  v_is_first_wave boolean := false;
 begin
   v_caller_id := auth.uid();
   if v_caller_id is null then
@@ -1537,39 +1520,64 @@ begin
     );
   end if;
 
+  -- Default to true if somehow no rounds exist, otherwise check against min round
+  select (v_run.current_wave = coalesce(min(round_number), v_run.current_wave)) into v_is_first_wave
+  from ig_cybergrind_rounds
+  where run_id = v_run.id;
+
   -- Active run: Get exactly the current round and the next pre-fetched round
   select jsonb_agg(r_data) into v_rounds
-  from (
-    select 
-      r.id as round_id,
-      r.round_number,
-      r.public_image_url,
-      r.started_at,
-      p.discord_name as submitter_name,
-      p.discord_avatar_url as submitter_avatar
-    from ig_cybergrind_rounds r
-    left join submitter_profiles p on r.submitter_id = p.id
-    where r.run_id = v_run.id
-      and r.round_number >= v_run.current_wave 
-      and r.round_number <= v_run.current_wave + 1
-    order by r.round_number asc
-  ) r_data;
+    from (
+      select 
+        r.id as round_id,
+        r.round_number,
+        r.public_image_url,
+        r.started_at,
+        r.completed_at,
+        r.distance,
+        r.score,
+        r.time_spent_seconds,
+        p.discord_name as submitter_name,
+        p.discord_avatar_url as submitter_avatar,
+        case 
+          when r.round_number = v_run.current_wave then 
+            jsonb_build_object(
+              'id', l.id, 
+              'level_number', l.level_number, 
+              'level_name', l.level_name
+            ) 
+          else null 
+        end as correct_level
+      from ig_cybergrind_rounds r
+      left join submitter_profiles p on r.submitter_id = p.id
+      left join levels l on l.id = r.correct_level_id
+      where r.run_id = v_run.id
+        and r.round_number >= v_run.current_wave 
+        and r.round_number <= v_run.current_wave + 1
+      order by r.round_number asc
+    ) r_data;
 
-  return json_build_object(
-    'status', 'active',
-    'run_id', v_run.id,
-    'current_wave', v_run.current_wave,
-    'client_version', v_run.client_version,
-    'rounds', v_rounds,
-    'best', case when v_best is not null then
-      json_build_object(
-        'best_wave', v_best.best_wave,
-        'avg_accuracy', v_best.avg_accuracy,
-        'client_version', v_best.client_version
-      )
-    else null end
-  );
-end;
+    return json_build_object(
+      'status', 'active',
+      'run_id', v_run.id,
+      'current_wave', v_run.current_wave,
+      'is_first_wave', v_is_first_wave,
+      'health', v_run.health,
+      'round_status', case 
+        when (v_rounds->0->>'completed_at') is not null then 'ended' 
+        else 'active' 
+      end,
+      'client_version', v_run.client_version,
+      'rounds', v_rounds,
+      'best', case when v_best is not null then
+        json_build_object(
+          'best_wave', v_best.best_wave,
+          'avg_accuracy', v_best.avg_accuracy,
+          'client_version', v_best.client_version
+        )
+      else null end
+    );
+  end;
 $$;
 
 
@@ -2305,67 +2313,6 @@ $$;
 ALTER FUNCTION "public"."shares_guild_with"("p_user_id" "uuid") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."start_cybergrind_run"("version" "text" DEFAULT NULL::"text") RETURNS json
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public', 'auth', 'extensions'
-    AS $$
-declare
-  v_min_client_version text;
-  v_caller_id uuid;
-  v_run_id bigint;
-  v_round_record record;
-  v_rounds_created jsonb := '[]'::jsonb;
-begin
-  select decrypted_secret into v_min_client_version
-  from vault.decrypted_secrets
-  where name = 'min_client_version';
-
-  if version is null or version <> v_min_client_version then
-    raise exception 'CLIENT_OUTDATED'
-      using hint = 'Client version mismatch. Please refresh the page.';
-  end if;
-
-  v_caller_id := auth.uid();
-  if v_caller_id is null then
-    raise exception 'User must be authenticated.';
-  end if;
-
-  insert into ig_cybergrind_runs (user_id, current_wave, status)
-  values (v_caller_id, 1, 'active')
-  returning id into v_run_id;
-
-  for v_round_record in 
-    select s.id as sub_id, s.level_id, s.submitter_id
-    from image_submissions s
-    where s.status = 'approved'
-    order by random()
-    limit 2
-  loop
-    with inserted_round as (
-      insert into ig_cybergrind_rounds 
-        (run_id, round_number, image_submission_id, correct_level_id, submitter_id)
-      values 
-        (v_run_id, jsonb_array_length(v_rounds_created) + 1, v_round_record.sub_id, v_round_record.level_id, v_round_record.submitter_id)
-      returning id, round_number
-    )
-    select v_rounds_created || jsonb_build_object(
-      'round_id', ir.id,
-      'round_number', ir.round_number
-    ) into v_rounds_created
-    from inserted_round ir;
-  end loop;
-
-  return jsonb_build_object(
-    'run_id', v_run_id,
-    'rounds', v_rounds_created
-  );
-end;
-$$;
-
-
-ALTER FUNCTION "public"."start_cybergrind_run"("version" "text") OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."start_cybergrind_run"("start_wave" integer DEFAULT 1, "version" "text" DEFAULT NULL::"text") RETURNS json
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public', 'auth', 'extensions'
@@ -2556,135 +2503,6 @@ $$;
 ALTER FUNCTION "public"."start_cybergrind_run"("start_wave" integer, "version" "text") OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."start_ig_cybergrind_run"("version" "text" DEFAULT NULL::"text") RETURNS json
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public', 'auth', 'extensions'
-    AS $$
-declare
-  v_min_client_version text;
-  v_caller_id uuid;
-  v_run_id bigint;
-  v_round_record record;
-  v_rounds_created jsonb := '[]'::jsonb;
-begin
-  select decrypted_secret into v_min_client_version
-  from vault.decrypted_secrets
-  where name = 'min_client_version';
-
-  if version is null or version <> v_min_client_version then
-    raise exception 'CLIENT_OUTDATED'
-      using hint = 'Client version mismatch. Please refresh the page.';
-  end if;
-
-  v_caller_id := auth.uid();
-  if v_caller_id is null then
-    raise exception 'User must be authenticated.';
-  end if;
-
-  insert into ig_cybergrind_runs (user_id, current_wave, status)
-  values (v_caller_id, 1, 'active')
-  returning id into v_run_id;
-
-  for v_round_record in 
-    select s.id as sub_id, s.level_id, s.submitter_id
-    from image_submissions s
-    where s.status = 'approved'
-    order by random()
-    limit 2
-  loop
-    with inserted_round as (
-      insert into ig_cybergrind_rounds 
-        (run_id, round_number, image_submission_id, correct_level_id, submitter_id)
-      values 
-        (v_run_id, jsonb_array_length(v_rounds_created) + 1, v_round_record.sub_id, v_round_record.level_id, v_round_record.submitter_id)
-      returning id, round_number
-    )
-    select v_rounds_created || jsonb_build_object(
-      'round_id', ir.id,
-      'round_number', ir.round_number
-    ) into v_rounds_created
-    from inserted_round ir;
-  end loop;
-
-  return jsonb_build_object(
-    'run_id', v_run_id,
-    'rounds', v_rounds_created
-  );
-end;
-$$;
-
-
-ALTER FUNCTION "public"."start_ig_cybergrind_run"("version" "text") OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."start_ig_cybergrind_run"("version" "text" DEFAULT NULL::"text", "start_wave" integer DEFAULT 1) RETURNS json
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public', 'auth', 'extensions'
-    AS $$
-declare
-  v_min_client_version text;
-  v_caller_id uuid;
-  v_run_id bigint;
-  v_round_record record;
-  v_rounds_created jsonb := '[]'::jsonb;
-begin
-  select decrypted_secret into v_min_client_version
-  from vault.decrypted_secrets
-  where name = 'min_client_version';
-
-  if version is null or version <> v_min_client_version then
-    raise exception 'CLIENT_OUTDATED'
-      using hint = 'Client version mismatch. Please refresh the page.';
-  end if;
-
-  v_caller_id := auth.uid();
-  if v_caller_id is null then
-    raise exception 'User must be authenticated.';
-  end if;
-
-  insert into ig_cybergrind_runs (user_id, current_wave, status)
-  values (v_caller_id, start_wave, 'active')
-  returning id into v_run_id;
-
-  for v_round_record in 
-    select s.id as sub_id, s.level_id, s.submitter_id
-    from image_submissions s
-    where s.status = 'approved'
-    order by random()
-    limit 2
-  loop
-    with inserted_round as (
-      insert into ig_cybergrind_rounds 
-        (run_id, round_number, image_submission_id, correct_level_id, submitter_id, started_at)
-      values (
-        v_run_id, 
-        jsonb_array_length(v_rounds_created) + 1, 
-        v_round_record.sub_id, 
-        v_round_record.level_id, 
-        v_round_record.submitter_id,
-        case when jsonb_array_length(v_rounds_created) = 0 then now() else null end
-      )
-      returning id, round_number, started_at
-    )
-    select v_rounds_created || jsonb_build_object(
-      'round_id', ir.id,
-      'round_number', ir.round_number,
-      'started_at', ir.started_at
-    ) into v_rounds_created
-    from inserted_round ir;
-  end loop;
-
-  return jsonb_build_object(
-    'run_id', v_run_id,
-    'rounds', v_rounds_created
-  );
-end;
-$$;
-
-
-ALTER FUNCTION "public"."start_ig_cybergrind_run"("version" "text", "start_wave" integer) OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."start_ig_cybergrind_run"("version" "text", "start_wave" integer, "caller_id" "uuid") RETURNS json
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public', 'auth', 'extensions'
@@ -2703,11 +2521,10 @@ begin
     raise exception 'CLIENT_OUTDATED';
   end if;
 
-insert into ig_cybergrind_runs (user_id, current_wave, status, client_version)
-  values (caller_id, start_wave, 'active', version)
+insert into ig_cybergrind_runs (user_id, current_wave, status, client_version, health)
+  values (caller_id, start_wave, 'active', version, 100)
   returning id into v_run_id;
 
-  -- Create 3 initial rounds (Current, Next, Future)
   for v_round_record in 
     select s.id as sub_id, s.level_id, s.submitter_id
     from image_submissions s
@@ -2738,6 +2555,9 @@ insert into ig_cybergrind_runs (user_id, current_wave, status, client_version)
 
   return jsonb_build_object(
     'run_id', v_run_id,
+    'health', 100,
+    'is_first_wave', true,
+    'started_at', now(),
     'rounds', v_rounds_created
   );
 end;
@@ -3561,11 +3381,16 @@ declare
   v_min_client_version text;
   v_caller_id uuid;
   v_round_row record;
+  v_run_row record;
   v_computed_dist int;
   v_computed_score int;
   v_computed_time_seconds numeric(10,3);
   v_guessed_level_info record;
   v_correct_level_info record;
+  
+  v_effective_hp numeric;
+  v_new_health numeric;
+  v_is_dead boolean := false;
 begin
   select decrypted_secret into v_min_client_version
   from vault.decrypted_secrets
@@ -3578,9 +3403,7 @@ begin
   v_caller_id := auth.uid();
   if v_caller_id is null then raise exception 'User must be authenticated.'; end if;
 
-  -- Ensure the round belongs to an active run for this user
-  select r.id, r.round_number, r.correct_level_id, r.started_at 
-  into v_round_row
+  select r.* into v_round_row
   from ig_cybergrind_rounds r
   join ig_cybergrind_runs run on run.id = r.run_id
   where r.id = p_round_id 
@@ -3588,24 +3411,74 @@ begin
     and run.status = 'active';
 
   if v_round_row.id is null then raise exception 'Active round not found.'; end if;
+  if v_round_row.completed_at is not null then raise exception 'Round already completed.'; end if;
 
-  -- Calculate time and scores
+  select * into v_run_row from ig_cybergrind_runs where id = v_round_row.run_id;
+
   v_computed_time_seconds := extract(epoch from (now() - coalesce(v_round_row.started_at, now())));
+  
+  v_effective_hp := v_run_row.health - public.calculate_ig_cybergrind_drain(
+    v_run_row.id, 
+    v_round_row.round_number, 
+    v_computed_time_seconds, 
+    true
+  );
+  
+  if v_effective_hp <= 0 then
+    v_is_dead := true;
+    v_new_health := 0;
+  else
+    v_new_health := v_run_row.health - public.calculate_ig_cybergrind_drain(
+      v_run_row.id, 
+      v_round_row.round_number, 
+      v_computed_time_seconds, 
+      false
+    );
+    
+    select order_index, level_number, level_name into v_correct_level_info from levels where id = v_round_row.correct_level_id;
+    select order_index, level_number, level_name into v_guessed_level_info from levels where id = p_guessed_level_id;
 
-  select order_index, level_number, level_name into v_correct_level_info from levels where id = v_round_row.correct_level_id;
-  select order_index, level_number, level_name into v_guessed_level_info from levels where id = p_guessed_level_id;
+    v_computed_dist := abs(coalesce(v_correct_level_info.order_index, 0) - coalesce(v_guessed_level_info.order_index, 0));
+    v_computed_score := round(100.0 * power(0.85, v_computed_dist))::integer;
 
-  v_computed_dist := abs(coalesce(v_correct_level_info.order_index, 0) - coalesce(v_guessed_level_info.order_index, 0));
-  v_computed_score := round(100.0 * power(0.85, v_computed_dist))::integer;
+    if v_computed_score = 100 then
+      v_new_health := least(100::numeric, v_new_health + 20);
+    else
+      v_new_health := v_new_health - (100 - v_computed_score) / 2.0 ;
+    end if;
 
-  -- Update round
+    if v_new_health <= 0 then
+      v_is_dead := true;
+      v_new_health := 0;
+    end if;
+  end if;
+
+  if v_is_dead then
+    update ig_cybergrind_rounds
+    set distance = v_computed_dist, score = v_computed_score, time_spent_seconds = v_computed_time_seconds, completed_at = now()
+    where id = p_round_id;
+    
+    perform public.terminate_ig_cybergrind_run();
+    
+    return jsonb_build_object(
+      'game_over', true,
+      'health', 0,
+      'final_health', 0,
+      'guessed_level', case when v_computed_dist is not null then jsonb_build_object('id', p_guessed_level_id, 'level_number', v_guessed_level_info.level_number, 'level_name', v_guessed_level_info.level_name) else null end,
+      'correct_level', case when v_computed_dist is not null then jsonb_build_object('id', v_round_row.correct_level_id, 'level_number', v_correct_level_info.level_number, 'level_name', v_correct_level_info.level_name) else null end,
+      'distance', v_computed_dist,
+      'score', v_computed_score,
+      'time_spent_seconds', v_computed_time_seconds
+    );
+  end if;
+
   update ig_cybergrind_rounds
-  set 
-    distance = v_computed_dist,
-    score = v_computed_score,
-    time_spent_seconds = v_computed_time_seconds,
-    completed_at = now()
+  set distance = v_computed_dist, score = v_computed_score, time_spent_seconds = v_computed_time_seconds, completed_at = now()
   where id = p_round_id;
+
+  update ig_cybergrind_runs
+  set health = v_new_health
+  where id = v_run_row.id;
 
   return jsonb_build_object(
     'round_number', v_round_row.round_number,
@@ -3614,7 +3487,9 @@ begin
     'distance', v_computed_dist,
     'score', v_computed_score,
     'time_spent_seconds', v_computed_time_seconds,
-    'game_over', false -- Placeholder
+    'health', round(v_new_health::numeric, 2),
+    'final_health', round(v_new_health::numeric, 2),
+    'game_over', false
   );
 end;
 $$;
@@ -3717,6 +3592,90 @@ $$;
 
 
 ALTER FUNCTION "public"."submit_inferno_guess"("p_round_id" bigint, "p_guessed_level_id" bigint, "version" "text") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."terminate_ig_cybergrind_run"() RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'auth', 'extensions'
+    AS $$
+declare
+  v_caller_id uuid;
+  v_run_id bigint;
+  v_client_version text;
+  v_final_wave int;
+  v_total_time_seconds numeric(10,3);
+  v_avg_score real;
+  v_existing_record record;
+  v_should_update_record boolean := false;
+begin
+  v_caller_id := auth.uid();
+  if v_caller_id is null then raise exception 'User must be authenticated.'; end if;
+
+  select id, client_version into v_run_id, v_client_version
+  from ig_cybergrind_runs
+  where user_id = v_caller_id and status = 'active'
+  limit 1;
+
+  if v_run_id is null then
+    return json_build_object('success', false, 'message', 'No active run found.');
+  end if;
+
+  update ig_cybergrind_runs
+  set status = 'failed', ended_at = now(), health = 0
+  where id = v_run_id;
+
+  select 
+    coalesce(max(round_number), 0), 
+    coalesce(avg(score), 0),
+    coalesce(sum(time_spent_seconds), 0)
+  into v_final_wave, v_avg_score, v_total_time_seconds
+  from ig_cybergrind_rounds
+  where run_id = v_run_id and score is not null;
+
+  update ig_cybergrind_runs
+  set total_time_ms = round(v_total_time_seconds * 1000)::bigint
+  where id = v_run_id;
+
+  select best_wave, avg_accuracy into v_existing_record
+  from ig_cybergrind_records
+  where user_id = v_caller_id;
+
+  if v_existing_record is null then
+    v_should_update_record := true;
+  elsif v_final_wave > v_existing_record.best_wave then
+    v_should_update_record := true;
+  elsif v_final_wave = v_existing_record.best_wave and v_avg_score > v_existing_record.avg_accuracy then
+    v_should_update_record := true;
+  end if;
+
+  if v_should_update_record then
+    insert into ig_cybergrind_records (
+      user_id, best_wave, avg_accuracy, run_id, achieved_at, client_version
+    ) values (
+      v_caller_id, v_final_wave, v_avg_score, v_run_id, now(), v_client_version
+    )
+    on conflict (user_id) do update
+    set 
+      best_wave = excluded.best_wave,
+      avg_accuracy = excluded.avg_accuracy,
+      run_id = excluded.run_id,
+      achieved_at = excluded.achieved_at,
+      client_version = excluded.client_version;
+  end if;
+
+  return json_build_object(
+    'success', true,
+    'run_id', v_run_id,
+    'final_wave', v_final_wave,
+    'avg_score', v_avg_score,
+    'new_record', v_should_update_record,
+    'game_over', true
+  );
+end;
+$$;
+
+
+ALTER FUNCTION "public"."terminate_ig_cybergrind_run"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."trigger_dispatch_submissions"() RETURNS "void"
@@ -5670,12 +5629,6 @@ GRANT ALL ON FUNCTION "public"."abandon_ig_cybergrind_run"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."advance_ig_cybergrind_setup"("version" "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."advance_ig_cybergrind_setup"("version" "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."advance_ig_cybergrind_setup"("version" "text") TO "service_role";
-
-
-
 REVOKE ALL ON FUNCTION "public"."advance_ig_cybergrind_setup"("version" "text", "caller_id" "uuid") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."advance_ig_cybergrind_setup"("version" "text", "caller_id" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "public"."advance_ig_cybergrind_setup"("version" "text", "caller_id" "uuid") TO "authenticated";
@@ -5692,6 +5645,12 @@ GRANT ALL ON FUNCTION "public"."apply_hint_modifiers"("p_hint" "jsonb", "p_modif
 GRANT ALL ON FUNCTION "public"."assert_guild_member"("p_guild_id" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."assert_guild_member"("p_guild_id" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."assert_guild_member"("p_guild_id" "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."calculate_ig_cybergrind_drain"("p_run_id" bigint, "p_round_number" integer, "p_time_spent_seconds" numeric, "p_apply_grace_period" boolean) TO "anon";
+GRANT ALL ON FUNCTION "public"."calculate_ig_cybergrind_drain"("p_run_id" bigint, "p_round_number" integer, "p_time_spent_seconds" numeric, "p_apply_grace_period" boolean) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."calculate_ig_cybergrind_drain"("p_run_id" bigint, "p_round_number" integer, "p_time_spent_seconds" numeric, "p_apply_grace_period" boolean) TO "service_role";
 
 
 
@@ -5852,27 +5811,9 @@ GRANT ALL ON FUNCTION "public"."shares_guild_with"("p_user_id" "uuid") TO "servi
 
 
 
-GRANT ALL ON FUNCTION "public"."start_cybergrind_run"("version" "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."start_cybergrind_run"("version" "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."start_cybergrind_run"("version" "text") TO "service_role";
-
-
-
 GRANT ALL ON FUNCTION "public"."start_cybergrind_run"("start_wave" integer, "version" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."start_cybergrind_run"("start_wave" integer, "version" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."start_cybergrind_run"("start_wave" integer, "version" "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."start_ig_cybergrind_run"("version" "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."start_ig_cybergrind_run"("version" "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."start_ig_cybergrind_run"("version" "text") TO "service_role";
-
-
-
-GRANT ALL ON FUNCTION "public"."start_ig_cybergrind_run"("version" "text", "start_wave" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."start_ig_cybergrind_run"("version" "text", "start_wave" integer) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."start_ig_cybergrind_run"("version" "text", "start_wave" integer) TO "service_role";
 
 
 
@@ -5904,6 +5845,12 @@ GRANT ALL ON FUNCTION "public"."submit_ig_cybergrind_guess"("p_round_id" bigint,
 GRANT ALL ON FUNCTION "public"."submit_inferno_guess"("p_round_id" bigint, "p_guessed_level_id" bigint, "version" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."submit_inferno_guess"("p_round_id" bigint, "p_guessed_level_id" bigint, "version" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."submit_inferno_guess"("p_round_id" bigint, "p_guessed_level_id" bigint, "version" "text") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."terminate_ig_cybergrind_run"() TO "anon";
+GRANT ALL ON FUNCTION "public"."terminate_ig_cybergrind_run"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."terminate_ig_cybergrind_run"() TO "service_role";
 
 
 
