@@ -93,6 +93,21 @@ const CybergrindInfernoGuessrPage = () => {
   const [lastRoundResult, setLastRoundResult] = useState<GuessResult | null>(null);
   const [isFirstRound, setIsFirstRound] = useState(false);
 
+  const [clockOffset, setClockOffset] = useState(0);
+
+  const syncFromHeaders = (headers: Headers, requestStartTime: number) => {
+    const serverDate = headers.get("date");
+    if (!serverDate) return;
+
+    const serverTime = new Date(serverDate).getTime();
+    const clientEndTime = Date.now();
+    const rtt = clientEndTime - requestStartTime;
+    
+    // Server time when client received response is serverTime + half latency
+    const adjustedServerTime = serverTime + rtt / 2;
+    setClockOffset(adjustedServerTime - clientEndTime);
+  };
+
   // UI interaction states
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetchingNextWave, setIsFetchingNextWave] = useState(false);
@@ -238,10 +253,16 @@ const CybergrindInfernoGuessrPage = () => {
 
   const handleStartRun = async (wave: number = 1) => {
     setIsSubmitting(true);
+    const requestStartTime = Date.now();
     try {
-      const { data, error } = await supabase.functions.invoke("start-ig-cybergrind-run", {
-        body: { version: CURRENT_VERSION, start_wave: wave },
-      });
+      const { data, error, response } = await supabase.functions.invoke(
+        "start-ig-cybergrind-run",
+        {
+          body: { version: CURRENT_VERSION, start_wave: wave },
+        }
+      );
+
+      if (response) syncFromHeaders(response.headers, requestStartTime);
       if (error) {
         handleVersionError(error);
         throw error;
@@ -424,7 +445,7 @@ const CybergrindInfernoGuessrPage = () => {
         const currentRound = rounds[0];
         if (currentRound && currentRound.started_at) {
           const startMs = new Date(currentRound.started_at).getTime();
-          const nowMs = Date.now();
+          const nowMs = Date.now() + clockOffset;
           const elapsed = Math.max(0, (nowMs - startMs) / 1000);
           setActiveTimer(elapsed);
         }
@@ -840,6 +861,7 @@ const CybergrindInfernoGuessrPage = () => {
                   isGameOver={isGameOver}
                   isDecaying={!lastRoundResult}
                   isFirstRound={isFirstRound}
+                  clockOffset={clockOffset}
                 />
               </div>
 

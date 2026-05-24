@@ -8,9 +8,19 @@ interface HealthBarProps {
   isGameOver: boolean;
   isDecaying: boolean;
   isFirstRound?: boolean;
+  clockOffset: number;
 }
 
-const HealthBar = ({ initialHealth, waveNumber, startTime, onHealthDepleted, isGameOver, isDecaying, isFirstRound }: HealthBarProps) => {
+const HealthBar = ({
+  initialHealth,
+  waveNumber,
+  startTime,
+  onHealthDepleted,
+  isGameOver,
+  isDecaying,
+  isFirstRound,
+  clockOffset,
+}: HealthBarProps) => {
   const [displayHealth, setDisplayHealth] = useState(initialHealth);
   const hasDepleted = useRef(false);
   const zeroHealthTime = useRef<number | null>(null);
@@ -67,18 +77,20 @@ const HealthBar = ({ initialHealth, waveNumber, startTime, onHealthDepleted, isG
     }
 
     let animationFrame: number;
-    let lastTime = Date.now();
-    let lastLogTime = Date.now();
+    // Use synced time for initialization
+    let lastTime = Date.now() + clockOffset;
+    let lastLogTime = Date.now() + clockOffset;
 
     const update = () => {
-      const nowMs = Date.now();
-      const dt = Math.min((nowMs - lastTime) / 1000, 0.1); // max 100ms delta
+      const nowMs = Date.now() + clockOffset;
+      const dt = Math.min((nowMs - lastTime) / 1000, 0.1);
       lastTime = nowMs;
 
       let targetHealth = initialHealth;
 
       if (isDecaying && startTime && !hasDepleted.current) {
         const startMs = new Date(startTime).getTime() + 200;
+        // nowMs is now synced with server-side startTime
         const elapsedSeconds = Math.max(0, (nowMs - startMs) / 1000);
         const decayRate = isFirstRound ? 1.0 : Math.sqrt(waveNumber);
         targetHealth = Math.max(0, initialHealth - (elapsedSeconds * decayRate));
@@ -117,7 +129,16 @@ const HealthBar = ({ initialHealth, waveNumber, startTime, onHealthDepleted, isG
 
     animationFrame = requestAnimationFrame(update);
     return () => cancelAnimationFrame(animationFrame);
-  }, [startTime, initialHealth, waveNumber, onHealthDepleted, isGameOver, isDecaying, isFirstRound]);
+  }, [
+    startTime,
+    initialHealth,
+    waveNumber,
+    onHealthDepleted,
+    isGameOver,
+    isDecaying,
+    isFirstRound,
+    clockOffset,
+  ]);
 
   const displayHealthInt = hasDepleted.current ? 0 : Math.floor(displayHealth);
   const percentage = hasDepleted.current ? 0 : Math.min(100, Math.max(0, displayHealth));
