@@ -24,6 +24,9 @@ export function resolveExternalUrl(url: string): string {
         if (url.startsWith('https://bucket.ultrakidle.online')) {
             return url.replace('https://bucket.ultrakidle.online', '/external/infernoguessr-images');
         }
+        if (url.startsWith('https://cgimages.ultrakidle.online')) {
+            return url.replace('https://cgimages.ultrakidle.online', '/external/ig-cg-images');
+        }
 
         return url;
     }

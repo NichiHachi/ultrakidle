@@ -130,7 +130,7 @@ const CybergrindInfernoGuessrPage = () => {
     roundsToPrefetch.forEach((r) => {
       if (r.public_image_url) {
         const img = new Image();
-        img.src = r.public_image_url;
+        img.src = resolveExternalUrl(r.public_image_url);
       }
       if (r.submitter_avatar) {
         const img = new Image();
@@ -761,7 +761,14 @@ const CybergrindInfernoGuessrPage = () => {
                     </div>
                   )}
                   <img
-                    src={currentRound.public_image_url + (imgRetry > 0 ? (currentRound.public_image_url.includes("?") ? "&" : "?") + `_r=${imgRetry}` : "")}
+                    src={
+                      resolveExternalUrl(currentRound.public_image_url) +
+                      (imgRetry > 0
+                        ? (currentRound.public_image_url.includes("?")
+                            ? "&"
+                            : "?") + `_r=${imgRetry}`
+                        : "")
+                    }
                     alt="Target"
                     className="w-full h-full object-contain pointer-events-none"
                     draggable={false}
