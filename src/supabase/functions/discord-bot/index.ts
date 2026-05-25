@@ -380,41 +380,62 @@ serve(async (req) => {
       });
     }
 
-    if (payload.data.name === "cg-top") {
-      const { data, error } = await supabase
-        .from("cybergrind_leaderboard")
-        .select("rank, discord_name, best_wave, avg_accuracy")
-        .eq("client_version", "1.3.0")
-        .order("rank", { ascending: true })
-        .limit(10);
+if (payload.data.name === "cg-top") {
+      const [classic, inferno] = await Promise.all([
+        supabase
+          .from("cybergrind_leaderboard")
+          .select("rank, discord_name, best_wave, avg_accuracy")
+          .eq("client_version", "1.3.0")
+          .order("rank", { ascending: true })
+          .limit(10),
+        supabase
+          .from("ig_cybergrind_leaderboard")
+          .select("rank, discord_name, best_wave, avg_accuracy")
+          .eq("client_version", "1.3.0")
+          .order("rank", { ascending: true })
+          .limit(10),
+      ]);
 
-      if (error || !data) {
-        return Response.json({
-          type: 4,
-          data: { content: "Failed to fetch leaderboard.", flags: 64 },
-        });
-      }
-
-      const rows = data
-        .map(
-          (r) =>
-            `${r.rank.toString().padEnd(3)} ${r.discord_name.slice(0, 16).padEnd(17)} Wave ${r.best_wave.toString().padEnd(3)} (${Math.round(r.avg_accuracy * 20)}%)`,
-        )
-        .join("\n");
+      const formatTable = (data: any[] | null, multiplier: number) => {
+        const header = "Rank Name              Wave     Acc";
+        if (!data || data.length === 0) return `${header}\nNo entries found.`;
+        return [
+          header,
+          ...data.map(
+            (r) =>
+              `${r.rank.toString().padEnd(3)} ${r.discord_name
+                .slice(0, 16)
+                .padEnd(17)} Wave ${r.best_wave
+                .toString()
+                .padEnd(3)} (${Math.round(r.avg_accuracy * multiplier)}%)`,
+          ),
+        ].join("\n");
+      };
 
       return Response.json({
         type: 4,
         data: {
-          content: `### 🏆 Cybergrind Top 10\n\`\`\`\nRank Name              Wave     Acc\n${rows}\n\`\`\``,
+          content: [
+            "## CYBERGRIND LEADERBOARDS",
+            "",
+            "### Classic",
+            "```",
+            formatTable(classic.data, 20),
+            "```",
+            "### Infernoguessr",
+            "```",
+            formatTable(inferno.data, 1),
+            "```",
+          ].join("\n"),
         },
       });
     }
 
-    if (payload.data.name === "cg-rank") {
-      const discordId = payload.member?.user?.id ?? payload.user?.id;;
+if (payload.data.name === "cg-rank") {
+      const discordId = payload.member?.user?.id ?? payload.user?.id;
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id")
+        .select("id, discord_name")
         .eq("discord_id", discordId)
         .maybeSingle();
 
@@ -425,21 +446,66 @@ serve(async (req) => {
         });
       }
 
-      const { data, error } = await supabase
-        .from("cybergrind_leaderboard")
-        .select("*")
-        .eq("user_id", profile.id)
-        .eq("client_version", "1.3.0")
-        .maybeSingle();
+      const [classic, inferno] = await Promise.all([
+        supabase
+          .from("cybergrind_leaderboard")
+          .select("*")
+          .eq("user_id", profile.id)
+          .eq("client_version", "1.3.0")
+          .maybeSingle(),
+        supabase
+          .from("ig_cybergrind_leaderboard")
+          .select("*")
+          .eq("user_id", profile.id)
+          .eq("client_version", "1.3.0")
+          .maybeSingle(),
+      ]);
 
-      if (error || !data) {
+      if (!classic.data && !inferno.data) {
         return Response.json({
           type: 4,
           data: {
-            content: "You don't have a Cybergrind record yet!",
+            content: "You don't have any Cybergrind records yet!",
             flags: 64,
           },
         });
+      }
+
+const fields = [];
+      let description = "";
+
+      if (classic.data) {
+        fields.push(
+          { name: "\u200b", value: "--- CLASSIC ---", inline: false },
+          { name: "Rank", value: `#${classic.data.rank}`, inline: true },
+          {
+            name: "Best Wave",
+            value: `${classic.data.best_wave}`,
+            inline: true,
+          },
+          {
+            name: "Accuracy",
+            value: `${Math.round(classic.data.avg_accuracy * 20)}%`,
+            inline: true,
+          },
+        );
+      }
+
+      if (inferno.data) {
+        fields.push(
+          { name: "\u200b", value: "--- INFERNOGUESSR ---", inline: false },
+          { name: "Rank", value: `#${inferno.data.rank}`, inline: true },
+          {
+            name: "Best Wave",
+            value: `${inferno.data.best_wave}`,
+            inline: true,
+          },
+          {
+            name: "Accuracy",
+            value: `${Math.round(inferno.data.avg_accuracy * 100)}%`,
+            inline: true,
+          },
+        );
       }
 
       return Response.json({
@@ -447,22 +513,23 @@ serve(async (req) => {
         data: {
           embeds: [
             {
-              title: `Cybergrind Stats: ${data.discord_name}`,
+              title: `Cybergrind Stats: ${profile.discord_name}`,
               color: 0xff0000,
-              fields: [
-                { name: "Rank", value: `#${data.rank}`, inline: true },
-                { name: "Best Wave", value: `${data.best_wave}`, inline: true },
-                {
-                  name: "Accuracy",
-                  value: `${Math.round(data.avg_accuracy * 20)}%`,
-                  inline: true,
-                },
-                {
-                  name: "Total Guesses",
-                  value: `${data.total_guesses}`,
-                  inline: true,
-                },
-              ],
+              description,
+              fields,
+            },
+          ],
+        },
+      });
+
+      return Response.json({
+        type: 4,
+        data: {
+          embeds: [
+            {
+              title: `Cybergrind Stats: ${profile.discord_name}`,
+              color: 0xff0000,
+              fields,
             },
           ],
         },
