@@ -1,10 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { crypto } from "https://deno.land/std@0.208.0/crypto/mod.ts";
 import { extname } from "https://deno.land/std@0.208.0/path/mod.ts";
-import {
-  S3Client,
-  PutObjectCommand,
-} from "https://esm.sh/@aws-sdk/client-s3@3.484.0";
 
 const DEST_BUCKET = "inferno-cybergrind";
 const PUBLIC_DOMAIN = "https://cgimages.ultrakidle.online";

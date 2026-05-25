@@ -273,3 +273,14 @@ entrypoint = "./functions/start-ig-cybergrind-run/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/start-ig-cybergrind-run/*.html" ]
+
+[functions.ig-cybergrind-runs-cleanup]
+enabled = true
+verify_jwt = true
+import_map = "./functions/ig-cybergrind-runs-cleanup/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/ig-cybergrind-runs-cleanup/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/ig-cybergrind-runs-cleanup/*.html" ]

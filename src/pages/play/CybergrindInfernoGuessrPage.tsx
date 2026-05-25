@@ -13,6 +13,7 @@ import { Typewriter } from "../../components/Typewriter";
 import { levels } from "../../lib/levels_list";
 import { resolveExternalUrl } from "../../lib/urls";
 import { useSettings } from "../../context/SettingsContext";
+import { useTime } from "../../context/TimeContext";
 import HealthBar from "../../components/game/HealthBar";
 
 
@@ -62,6 +63,7 @@ const CybergrindInfernoGuessrPage = () => {
   const { setUpdateAvailable } = useVersion();
   const navigate = useNavigate();
   const { settings } = useSettings();
+  const { getSyncedTime } = useTime();
 
   const listRef = useRef<HTMLDivElement>(null);
   const targetRef = useRef<HTMLButtonElement>(null);
@@ -424,7 +426,7 @@ const CybergrindInfernoGuessrPage = () => {
         const currentRound = rounds[0];
         if (currentRound && currentRound.started_at) {
           const startMs = new Date(currentRound.started_at).getTime();
-          const nowMs = Date.now();
+          const nowMs = getSyncedTime();
           const elapsed = Math.max(0, (nowMs - startMs) / 1000);
           setActiveTimer(elapsed);
         }
