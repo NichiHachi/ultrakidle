@@ -76,11 +76,15 @@ const RunSummaryModal = ({ isOpen, onClose, runId }: RunSummaryModalProps) => {
         maxWidth="max-w-4xl"
       >
         <div className="flex flex-col gap-4 my-4">
-          {loading ? (
+        {loading ? (
             <div className="py-12 flex flex-col items-center justify-center border border-white/5 bg-white/[0.02]">
               <p className="text-white/50 uppercase text-sm animate-pulse tracking-widest">
                 Retrieving run data...
               </p>
+            </div>
+          ) : rounds.length === 0 ? (
+            <div className="text-white/30 uppercase italic text-sm py-4 text-center tracking-widest">
+              NO COMPLETED ROUNDS FOUND.
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -90,7 +94,7 @@ const RunSummaryModal = ({ isOpen, onClose, runId }: RunSummaryModalProps) => {
                   className="border border-white/10 p-3 flex flex-col gap-3 bg-white/[0.02]"
                 >
                   <div className="flex justify-between items-center text-sm text-white/30 uppercase tracking-widest">
-                    <span>Round {round.round_number}</span>
+                    <span>Wave {round.round_number}</span>
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -128,7 +132,7 @@ const RunSummaryModal = ({ isOpen, onClose, runId }: RunSummaryModalProps) => {
                       <span className="font-bold text-white/70 uppercase">
                         {round.time_spent_seconds
                           ? Number(round.time_spent_seconds).toFixed(3)
-                          : "0.000"}s
+                          : "0.000"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -146,7 +150,7 @@ const RunSummaryModal = ({ isOpen, onClose, runId }: RunSummaryModalProps) => {
                             : "text-red-500"
                         }`}
                       >
-                        {round.guessed_level.level_number}
+                        {round.guessed_level?.level_number || "N/A"}
                       </span>
                     </div>
                   </div>
