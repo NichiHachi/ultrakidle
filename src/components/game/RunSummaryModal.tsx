@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Modal from "../ui/Modal";
 import { supabase } from "../../lib/supabaseClient";
+import { resolveExternalUrl } from "../../lib/urls";
 
 interface Round {
   round_number: number;
@@ -117,10 +118,9 @@ const RunSummaryModal = ({ isOpen, onClose, runId }: RunSummaryModalProps) => {
 
                   <div
                     className="aspect-video border border-white/10 overflow-hidden cursor-pointer hover:border-white/30 transition-colors"
-                    onClick={() => setLightboxUrl(round.public_image_url)}
                   >
                     <img
-                      src={round.public_image_url}
+                      src={resolveExternalUrl(round.public_image_url)}
                       alt={`Round ${round.round_number} snapshot`}
                       className="w-full h-full object-cover"
                     />
