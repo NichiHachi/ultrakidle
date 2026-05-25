@@ -15,6 +15,8 @@ import { resolveExternalUrl } from "../../lib/urls";
 import { useSettings } from "../../context/SettingsContext";
 import { useTime } from "../../context/TimeContext";
 import HealthBar from "../../components/game/HealthBar";
+import RunSummaryModal from "../../components/game/RunSummaryModal";
+
 
 
 interface Level {
@@ -88,6 +90,7 @@ const CybergrindInfernoGuessrPage = () => {
   const [bestRecord, setBestRecord] = useState<BestRecord | null>(null);
 
   // Active run states
+  const [runId, setRunId] = useState<number | null>(null);
   const [currentWave, setCurrentWave] = useState(1);
   const [health, setHealth] = useState(100);
   const [rounds, setRounds] = useState<RoundState[]>([]);
@@ -96,6 +99,7 @@ const CybergrindInfernoGuessrPage = () => {
   const [isFirstRound, setIsFirstRound] = useState(false);
 
   // UI interaction states
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetchingNextWave, setIsFetchingNextWave] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -172,6 +176,7 @@ const CybergrindInfernoGuessrPage = () => {
         setStatus("no_run");
       } else if (data.status === "active") {
         setStatus("active");
+        setRunId(data.run_id);
         setBestRecord(data.best || null);
         setCurrentWave(data.current_wave);
         setHealth(data.health ?? 100);
@@ -249,6 +254,7 @@ const CybergrindInfernoGuessrPage = () => {
         throw error;
       }
       setStatus("active");
+      setRunId(data.run_id);
       // edge function returns the starting state including rounds, run_id
       // it doesn't return current_wave directly but rounds[0].round_number = current_wave
       if (data.rounds && data.rounds.length > 0) {
@@ -479,6 +485,17 @@ const CybergrindInfernoGuessrPage = () => {
       }, 100);
     }
   }, [lastRoundResult, status]);
+
+  useEffect(() => {
+    if (status === "game_over") {
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 500);
+    }
+  }, [status]);
 
   useEffect(() => {
     if (lastRoundResult) return;
@@ -1048,8 +1065,11 @@ const CybergrindInfernoGuessrPage = () => {
                         initial={{ opacity: 0 }} 
                         animate={{ opacity: 1 }} 
                         transition={{ delay: delayOffset + 0.8 }} 
-                        className="mt-6"
+                        className="mt-6 flex flex-row gap-2"
                       >
+                         <Button variant="outline" size="lg" onClick={() => setIsSummaryModalOpen(true)}>
+                          VIEW SUMMARY
+                        </Button>
                         <Button variant="outline" size="lg" onClick={() => {
                           setStatus("loading");
                           fetchState();
@@ -1066,6 +1086,12 @@ const CybergrindInfernoGuessrPage = () => {
             </div>
           )}
         </motion.div>
+
+        <RunSummaryModal 
+          isOpen={isSummaryModalOpen} 
+          onClose={() => setIsSummaryModalOpen(false)} 
+          runId={runId} 
+        />
         
         <AnimatePresence>
           {lightboxUrl && (
