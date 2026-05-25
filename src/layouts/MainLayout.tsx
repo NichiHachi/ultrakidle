@@ -60,8 +60,12 @@ const MainLayout = () => {
   const [hasSeenCGGuide, setHasSeenCGGuide] = useState(() => {
     return localStorage.getItem('ultrakilldle_seen_cg_guide') === 'true';
   });
+  const [hasSeenCGInfernoGuide, setHasSeenCGInfernoGuide] = useState(() => {
+    return localStorage.getItem('ultrakilldle_seen_cg_inferno_guide') === 'true';
+  });
+  const [hasNeverPlayedCGInferno, setHasNeverPlayedCGInferno] = useState(false);
 
-  const { session } = useSession();
+  const { session } = useSession()
 
   useEffect(() => {
     const container = document.getElementById('main-scroll-container');
@@ -80,6 +84,7 @@ const MainLayout = () => {
       const classicKey = `ultrakilldle_has_played_classic_${uid}`;
       const infernoKey = `ultrakilldle_has_played_inferno_${uid}`;
       const cgKey = `ultrakilldle_has_played_cg_${uid}`;
+      const cgInfernoKey = `ultrakilldle_has_played_cg_inferno_${uid}`;
 
       if (location.pathname === '/play/classic' && !hasSeenClassicGuide) {
         const cached = localStorage.getItem(classicKey);
@@ -121,13 +126,36 @@ const MainLayout = () => {
           setHasNeverPlayedCG(false);
         } else {
           const { count, error } = await supabase
-            .from("cybergrind_runs")
-            .select("*", { count: "exact", head: true });
+            .from('cybergrind_runs')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', uid);
 
           if (!error) {
             const neverPlayed = count === 0;
             setHasNeverPlayedCG(neverPlayed);
             if (!neverPlayed) localStorage.setItem(cgKey, 'true');
+          }
+        }
+      }
+
+      if (location.pathname === '/cybergrind/infernoguessr' && !hasSeenCGInfernoGuide) {
+        const cached = localStorage.getItem(cgInfernoKey);
+
+        if (cached === 'true') {
+          setHasNeverPlayedCGInferno(false);
+          console.log("cache says this user has played")
+        } else {
+          console.log("cache says this user has NOT played")
+          const { count, error } = await supabase
+            .from('ig_cybergrind_runs')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', uid);
+
+          if (!error) {
+            const neverPlayed = count === 0;
+            console.log("from db: ", neverPlayed);
+            setHasNeverPlayedCGInferno(neverPlayed);
+            if (!neverPlayed) localStorage.setItem(cgInfernoKey, 'true');
           }
         }
       }
@@ -220,12 +248,27 @@ const MainLayout = () => {
                           } else if (location.pathname === '/cybergrind/classic' && !hasSeenCGGuide) {
                             setHasSeenCGGuide(true);
                             localStorage.setItem('ultrakilldle_seen_cg_guide', 'true');
+                          } else if (location.pathname === '/cybergrind/infernoguessr' && !hasSeenCGInfernoGuide) {
+                            setHasSeenCGInfernoGuide(true);
+                            localStorage.setItem('ultrakilldle_seen_cg_inferno_guide', 'true');
                           }
                         }}
                         className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100"
                       >
                         ? HOW TO PLAY
                       </Button>
+                        {((location.pathname === '/play/classic' && hasNeverPlayedClassic && !hasSeenClassicGuide) ||
+                        (location.pathname === '/play/infernoguessr' && hasNeverPlayedInferno && !hasSeenInfernoGuide) ||
+                        (location.pathname === '/cybergrind/classic' && hasNeverPlayedCG && !hasSeenCGGuide) ||
+                        (location.pathname === '/cybergrind/infernoguessr' && hasNeverPlayedCGInferno && !hasSeenCGInfernoGuide)) && (
+                          <div className="absolute top-0 right-0 z-30 pointer-events-none">
+                            <div className="relative w-3 h-3 translate-x-1/4 -translate-y-1/4">
+                              <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                              <div className="absolute inset-0 w-3 h-3 scale-[1.5] animate-ping bg-green-500 rounded-full" />
+                            </div>
+                          </div>
+                        )}
+                    </div>
                         {location.pathname.startsWith('/cybergrind') && (
                         <Button
                           variant="ghost"
@@ -255,17 +298,6 @@ const MainLayout = () => {
                           LEADERBOARDS
                         </Button>
                       )}
-                      {((location.pathname === '/play/classic' && hasNeverPlayedClassic && !hasSeenClassicGuide) ||
-                        (location.pathname === '/play/infernoguessr' && hasNeverPlayedInferno && !hasSeenInfernoGuide) ||
-                        (location.pathname === '/cybergrind/classic' && hasNeverPlayedCG && !hasSeenCGGuide)) && (
-                          <div className="absolute top-0 right-0 z-30 pointer-events-none">
-                            <div className="relative w-3 h-3 translate-x-1/4 -translate-y-1/4">
-                              <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
-                              <div className="absolute inset-0 w-3 h-3 scale-[1.5] animate-ping bg-green-500 rounded-full" />
-                            </div>
-                          </div>
-                        )}
-                    </div>
                   </>
                 )}
               </div>
@@ -362,6 +394,29 @@ const MainLayout = () => {
                         <li>Your best run is determined by waves cleared, then fewest total guesses, then highest guess accuracy as a tiebreaker.</li>
                         <li>Guess accuracy is a score based on how close each of your guesses was to the target across the entire run.</li>
                         <li>Abandoning a run still counts toward your record.</li>
+                      </ul>
+                    </div>
+                  </div>
+                ) : location.pathname === '/cybergrind/infernoguessr' ? (
+                  <div className="space-y-4 text-sm uppercase">
+                    <p>AN ENDLESS GAUNTLET. IDENTIFY THE TARGET LEVEL BEFORE YOUR HP RUNS OUT.</p>
+
+                    <div className="space-y-1">
+                      <p className="opacity-50 underline">MECHANICS:</p>
+                      <ul className="list-disc [&>*]:text-left pl-4 list-outside space-y-1 opacity-80">
+                        <li>Each wave presents a screenshot from a random level. You have <span className="text-white font-bold">one attempt</span> at identifying it:</li>
+                        <li>A CORRECT GUESS HEALS YOU <span className="text-green-500 font-bold">+20 HP</span></li>
+                        <li>A GUESS THAT'S OFF BY ONE NEITHER HEALS NOR HURTS YOU</li>
+                        <li>A WRONG GUESS DEPLETES YOUR HEALTH UP TO <span className="text-red-500 font-bold">-50 HP</span>. THE AMOUNT OF HEALTH DEPLETED INCREASES EXPONENTIALLY THE FURTHER AWAY YOUR GUESS IS FROM THE TARGET LEVEL</li>
+                        <li>YOUR HEALTH DEPLETES OVER TIME, THE DEPLETION RATE GROWS AS YOU PROGRESS THROUGH WAVES</li>
+                      </ul>
+                    </div>
+
+                    <div className="space-y-1">
+                      <p className="opacity-50 underline">RECORDS</p>
+                      <ul className="list-disc [&>*]:text-left pl-4 list-outside space-y-1 opacity-80">
+                        <li>YOUR BEST RUN IS DETERMINED BY WAVES CLEARED, THEN BY ACCURACY ON YOUR GUESSES AS A TIEBREAKER.</li>
+                        <li>ACCURACY IS A SCORE BASED ON HOW CLOSE YOUR GUESSES ARE TO THE TARGET LEVEL IN EACH WAVE.</li>
                       </ul>
                     </div>
                   </div>
