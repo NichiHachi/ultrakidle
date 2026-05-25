@@ -13,7 +13,7 @@ export interface IGCGLeaderboardEntry {
 }
 
 export const useIGCybergrindLeaderboard = () => {
-  const [entries, setEntries] = useState<CGLeaderboardEntry[]>([]);
+  const [entries, setEntries] = useState<IGCGLeaderboardEntry[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +34,7 @@ export const useIGCybergrindLeaderboard = () => {
           .order("rank", { ascending: true });
 
         if (top10Error) throw top10Error;
-        const top10 = (top10Data || []) as CGLeaderboardEntry[];
+        const top10 = (top10Data || []) as IGCGLeaderboardEntry[];
 
         if (!userId) {
           setEntries(top10);
@@ -66,7 +66,7 @@ export const useIGCybergrindLeaderboard = () => {
 
         if (neighborError) throw neighborError;
 
-        setEntries([...top10, ...(neighbors as CGLeaderboardEntry[])]);
+        setEntries([...top10, ...(neighbors as IGCGLeaderboardEntry[])]);
       } catch (err) {
         console.error("Error fetching ig cybergrind leaderboard:", err);
       } finally {
