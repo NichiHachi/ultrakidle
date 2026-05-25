@@ -325,7 +325,24 @@ const SettingsPage = () => {
                     }
                     className="w-4 h-4 accent-green-500"
                   />
-                  <span>Cybergrind Mode</span>
+                  <span>Cybergrind (classic) Mode</span>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer opacity-80 hover:opacity-100 p-2 bg-white/5 w-fit rounded uppercase text-sm tracking-widest font-bold">
+                  <input
+                    type="checkbox"
+                    checked={settings.confirmDialogs.igCybergrind}
+                    onChange={(e) =>
+                      updateSettings({
+                        confirmDialogs: {
+                          ...settings.confirmDialogs,
+                          igCybergrind: e.target.checked,
+                        },
+                      })
+                    }
+                    className="w-4 h-4 accent-green-500"
+                  />
+                  <span>Cybergrind (infernoguessr) Mode</span>
                 </label>
               </div>
             </div>

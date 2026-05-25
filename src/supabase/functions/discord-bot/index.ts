@@ -502,7 +502,7 @@ const fields = [];
           },
           {
             name: "Accuracy",
-            value: `${Math.round(inferno.data.avg_accuracy * 100)}%`,
+            value: `${Math.round(inferno.data.avg_accuracy)}%`,
             inline: true,
           },
         );

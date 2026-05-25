@@ -337,7 +337,7 @@ const CybergrindInfernoGuessrPage = () => {
 
   const handleGuess = () => {
     if (!selectedLevelId || isSubmitting || status !== "active") return;
-    if (settings.confirmDialogs?.infernoguessr) {
+    if (settings.confirmDialogs?.igCybergrind) {
       setShowConfirm(true);
     } else {
       executeGuess();
