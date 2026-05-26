@@ -404,7 +404,7 @@ const MainLayout = () => {
                     <div className="space-y-1">
                       <p className="opacity-50 underline">MECHANICS:</p>
                       <ul className="list-disc [&>*]:text-left pl-4 list-outside space-y-1 opacity-80">
-                        <li>Each wave presents a screenshot from a random level. You have <span className="text-white font-bold">one attempt</span> at identifying it:</li>
+                        <li>Each wave presents a screenshot from a random level. You have <span className="text-white font-bold">one attempt</span> at identifying it</li>
                         <li>A CORRECT GUESS HEALS YOU <span className="text-green-500 font-bold">+20 HP</span></li>
                         <li>A GUESS THAT'S OFF BY ONE NEITHER HEALS NOR HURTS YOU</li>
                         <li>A WRONG GUESS DEPLETES YOUR HEALTH UP TO <span className="text-red-500 font-bold">-50 HP</span>. THE AMOUNT OF HEALTH DEPLETED INCREASES EXPONENTIALLY THE FURTHER AWAY YOUR GUESS IS FROM THE TARGET LEVEL</li>
