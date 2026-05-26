@@ -137,7 +137,14 @@ export function useGameInit() {
         const {
           data: { session },
         } = await supabase.auth.getSession();
-        if (!session) await supabase.auth.signInAnonymously();
+
+        let userId = session?.user?.id;
+        if (!session) {
+          const { data, error } = await supabase.auth.signInAnonymously();
+          if (error) throw error;
+          userId = data.user?.id;
+        }
+        console.log("User ID:", userId);
 
         const { data, error } = await supabase.rpc("init_game");
         if (error) throw error;

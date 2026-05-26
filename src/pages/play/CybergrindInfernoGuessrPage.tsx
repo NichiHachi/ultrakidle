@@ -246,22 +246,25 @@ const CybergrindInfernoGuessrPage = () => {
   const handleStartRun = async (wave: number = 1) => {
     setIsSubmitting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("start-ig-cybergrind-run", {
-        body: { version: CURRENT_VERSION, start_wave: wave },
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase.rpc("start_ig_cybergrind_run_bucketless", {
+        version: CURRENT_VERSION,
+        start_wave: wave,
+        caller_id: userData.user.id,
       });
+
       if (error) {
         handleVersionError(error);
         throw error;
       }
+
       setStatus("active");
       setRunId(data.run_id);
-      // edge function returns the starting state including rounds, run_id
-      // it doesn't return current_wave directly but rounds[0].round_number = current_wave
       if (data.rounds && data.rounds.length > 0) {
         setCurrentWave(data.rounds[0].round_number);
-        if (data.started_at) {
-          data.rounds[0].started_at = data.started_at;
-        }
+        if (data.started_at) data.rounds[0].started_at = data.started_at;
       } else {
         setCurrentWave(wave);
       }
@@ -347,11 +350,16 @@ const CybergrindInfernoGuessrPage = () => {
   const handleNextWave = async () => {
     setIsFetchingNextWave(true);
     try {
-      const { data, error } = await supabase.functions.invoke("advance-ig-cybergrind-wave", {
-        body: { version: CURRENT_VERSION },
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase.rpc("advance_ig_cybergrind_setup_bucketless", {
+        version: CURRENT_VERSION,
+        caller_id: userData.user.id,
       });
+
       if (error) throw error;
-      
+
       setCurrentWave(data.current_wave);
       setIsFirstRound(data.is_first_round === true);
       setRounds(data.rounds || []);
@@ -363,7 +371,7 @@ const CybergrindInfernoGuessrPage = () => {
       setZoom(1);
       setGamma(1);
       setPan({ x: 0, y: 0 });
-      
+
       setTimeout(() => {
         imageRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 10);
@@ -779,12 +787,13 @@ const CybergrindInfernoGuessrPage = () => {
                   )}
                   <img
                     src={
-                      resolveExternalUrl(currentRound.public_image_url) +
-                      (imgRetry > 0
-                        ? (currentRound.public_image_url.includes("?")
-                            ? "&"
-                            : "?") + `_r=${imgRetry}`
-                        : "")
+                      currentRound.public_image_url
+                        ? resolveExternalUrl(currentRound.public_image_url) +
+                          (imgRetry > 0
+                            ? (currentRound.public_image_url.includes("?") ? "&" : "?") +
+                              `_r=${imgRetry}`
+                            : "")
+                        : ""
                     }
                     alt="Target"
                     className="w-full h-full object-contain pointer-events-none"

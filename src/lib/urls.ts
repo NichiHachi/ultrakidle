@@ -27,6 +27,9 @@ export function resolveExternalUrl(url: string): string {
         if (url.startsWith('https://cgimages.ultrakidle.online')) {
             return url.replace('https://cgimages.ultrakidle.online', '/external/ig-cg-images');
         }
+        if (url.startsWith('https://proxy.ultrakidle.online')) {
+            return url.replace('https://proxy.ultrakidle.online', '/external/proxy');
+        }
 
         return url;
     }

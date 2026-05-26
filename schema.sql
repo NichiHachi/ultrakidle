@@ -201,60 +201,9 @@ begin
       v_final_status := 'failed';
     end if;
   end if;
-
-  update ig_cybergrind_runs
-  set status = v_final_status::public.cybergrind_run_status_enum, 
-      ended_at = now(),
-      health = case when v_final_status = 'failed' then 0 else health end
-  where id = v_run.id;
-
-v_highest_wave := greatest(0, v_run.current_wave - 1);
-
-  select 
-    least(100.0, coalesce(avg(score), 0)),
-    coalesce(sum(time_spent_seconds), 0)
-  into v_avg_score, v_total_time_seconds
-  from ig_cybergrind_rounds
-  where run_id = v_run.id and score is not null;
-
-  update ig_cybergrind_runs
-  set total_time_ms = round(v_total_time_seconds * 1000)::bigint
-  where id = v_run.id;
-
-  select best_wave, avg_accuracy into v_existing_record
-  from ig_cybergrind_records
-  where user_id = v_caller_id;
-
-  if v_existing_record is null then
-    v_should_update_record := true;
-  elsif v_highest_wave > v_existing_record.best_wave then
-    v_should_update_record := true;
-  elsif v_highest_wave = v_existing_record.best_wave and v_avg_score > v_existing_record.avg_accuracy then
-    v_should_update_record := true;
-  end if;
-
-  if v_should_update_record then
-    insert into ig_cybergrind_records (
-      user_id, best_wave, avg_accuracy, run_id, achieved_at, client_version
-    ) values (
-      v_caller_id, v_highest_wave, v_avg_score, v_run.id, now(), v_run.client_version
-    )
-    on conflict (user_id) do update
-    set 
-      best_wave = excluded.best_wave,
-      avg_accuracy = excluded.avg_accuracy,
-      run_id = excluded.run_id,
-      achieved_at = excluded.achieved_at,
-      client_version = excluded.client_version;
-  end if;
-
-  return json_build_object(
-    'success', true,
-    'run_id', v_run.id,
-    'highest_wave_reached', v_highest_wave,
-    'avg_score', v_avg_score,
-    'new_record', v_should_update_record,
-    'game_over', (v_final_status = 'failed')
+  return public.end_ig_cybergrind_run(
+    v_run.id, 
+    v_final_status::public.cybergrind_run_status_enum
   );
 end;
 $$;
@@ -727,6 +676,129 @@ $$;
 
 
 ALTER FUNCTION "public"."end_cybergrind_run"("p_status" "public"."cybergrind_run_status_enum") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."end_ig_cybergrind_run"("p_run_id" bigint, "p_status" "public"."cybergrind_run_status_enum") RETURNS json
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'auth', 'extensions'
+    AS $$
+declare
+  v_run record;
+  v_caller_id uuid;
+  v_highest_wave int;
+  v_avg_score real;
+  v_total_time_seconds numeric(10,3);
+  v_existing_record record;
+  v_should_update_record boolean := false;
+  v_profile record;
+  v_rank int;
+  v_service_key text;
+  v_msg text;
+  v_user_mention text;
+begin
+  select * into v_run from ig_cybergrind_runs where id = p_run_id for update;
+  v_caller_id := v_run.user_id;
+
+  update ig_cybergrind_runs
+  set 
+    status = p_status, 
+    ended_at = now(),
+    health = case when p_status = 'failed' then 0 else health end
+  where id = p_run_id;
+
+  v_highest_wave := greatest(0, v_run.current_wave - 1);
+
+  select 
+    least(100.0, coalesce(avg(score), 0)),
+    coalesce(sum(time_spent_seconds), 0)
+  into v_avg_score, v_total_time_seconds
+  from ig_cybergrind_rounds
+  where run_id = p_run_id and score is not null;
+
+  update ig_cybergrind_runs
+  set total_time_ms = round(v_total_time_seconds * 1000)::bigint
+  where id = p_run_id;
+
+  -- Use the leaderboard view to check existing record stats
+  select best_wave, avg_accuracy into v_existing_record
+  from ig_cybergrind_leaderboard where user_id = v_caller_id;
+
+  if v_existing_record is null 
+     or v_highest_wave > v_existing_record.best_wave 
+     or (v_highest_wave = v_existing_record.best_wave and v_avg_score > v_existing_record.avg_accuracy) 
+  then
+    v_should_update_record := true;
+    
+    insert into ig_cybergrind_records (
+      user_id, best_wave, avg_accuracy, run_id, achieved_at, client_version
+    ) values (
+      v_caller_id, v_highest_wave, v_avg_score, p_run_id, now(), v_run.client_version
+    )
+    on conflict (user_id) do update set 
+      best_wave = excluded.best_wave,
+      avg_accuracy = excluded.avg_accuracy,
+      run_id = excluded.run_id,
+      achieved_at = excluded.achieved_at,
+      client_version = excluded.client_version;
+
+    if v_highest_wave > 0 then
+      select discord_id, discord_name, pings_opted_in, channel_id, avatar_url
+      into v_profile from profiles where id = v_caller_id;
+
+      if v_profile.channel_id is not null then
+        -- Retrieve the rank directly from the leaderboard view
+        select rank into v_rank 
+        from ig_cybergrind_leaderboard 
+        where user_id = v_caller_id;
+
+        v_user_mention := case 
+          when v_profile.pings_opted_in and v_profile.discord_id is not null 
+          then '<@' || v_profile.discord_id || '>'
+          else '**' || coalesce(v_profile.discord_name, 'Unknown') || '**'
+        end;
+
+        v_msg := 'New Cybergrind (infernoguessr) record for ' || v_user_mention || '!'
+              || chr(10) || 'Their new global rank is **#' || v_rank || '**';
+
+        select decrypted_secret into v_service_key
+        from vault.decrypted_secrets where name = 'service_role_key';
+
+        perform net.http_post(
+          url := 'https://sbvjehmbkmdlflocjjtu.supabase.co/functions/v1/send-message',
+          headers := jsonb_build_object(
+            'Authorization', 'Bearer ' || v_service_key,
+            'Content-Type', 'application/json'
+          ),
+          body := jsonb_build_object(
+            'channel_id', v_profile.channel_id,
+            'message', v_msg,
+            'embeds', jsonb_build_array(jsonb_build_object(
+              'color', 16711680,
+              'thumbnail', case when v_profile.avatar_url is not null then jsonb_build_object('url', v_profile.avatar_url) else null end,
+              'description', '```' || chr(10)
+                || 'Waves           ' || v_highest_wave || chr(10)
+                || 'Accuracy        ' || round(v_avg_score::numeric, 2) || '%' || chr(10)
+                || '```'
+            ))
+          )
+        );
+      end if;
+    end if;
+  end if;
+
+  return json_build_object(
+    'success', true,
+    'run_id', p_run_id,
+    'highest_wave_reached', v_highest_wave,
+    'avg_score', v_avg_score,
+    'new_record', v_should_update_record,
+    'game_over', (p_status = 'failed')
+  );
+end;
+$$;
+
+
+ALTER FUNCTION "public"."end_ig_cybergrind_run"("p_run_id" bigint, "p_status" "public"."cybergrind_run_status_enum") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."get_classic_init"("version" "text" DEFAULT NULL::"text") RETURNS json
@@ -1443,8 +1515,8 @@ begin
   select coalesce(max(best_wave), 0) into v_best_wave
   from ig_cybergrind_records where user_id = auth.uid();
 
-  -- Formula: Max start wave is half of best wave (rounded down to nearest 5), capped at 80
-  v_max := (floor(least(v_best_wave, 80)::numeric / 10) * 5)::int;
+  -- Formula: Max start wave is half of best wave (rounded down to nearest 5)
+  v_max := (floor(coalesce(v_best_wave,0)::numeric / 10) * 5)::int;
 
   if v_max >= 5 then
     for i in 1..(v_max / 5) loop
@@ -3464,30 +3536,76 @@ begin
   end if;
 
   if v_is_dead then
-    update ig_cybergrind_rounds
-    set distance = v_computed_dist, score = v_computed_score, time_spent_seconds = v_computed_time_seconds, completed_at = now()
+  update ig_cybergrind_rounds
+    set
+      distance = v_computed_dist,
+      score = v_computed_score,
+      time_spent_seconds = v_computed_time_seconds,
+      guessed_level_id = p_guessed_level_id,
+      completed_at = now()
     where id = p_round_id;
-    
+
     v_termination_result := public.terminate_ig_cybergrind_run();
-    
+
     return jsonb_build_object(
-      'success', true,
-      'run_id', v_run_row.id,
-      'highest_wave_reached', (v_termination_result->>'highest_wave_reached')::int,
-      'avg_score', (v_termination_result->>'avg_score')::real,
-      'new_record', (v_termination_result->>'new_record')::boolean,
-      'game_over', true,
-      'health', 0,
-      'guessed_level', case when v_computed_dist is not null then jsonb_build_object('id', p_guessed_level_id, 'level_number', v_guessed_level_info.level_number, 'level_name', v_guessed_level_info.level_name) else null end,
-      'correct_level', case when v_computed_dist is not null then jsonb_build_object('id', v_round_row.correct_level_id, 'level_number', v_correct_level_info.level_number, 'level_name', v_correct_level_info.level_name) else null end,
-      'distance', v_computed_dist,
-      'score', v_computed_score,
-      'time_spent_seconds', v_computed_time_seconds
+      'success',
+      true,
+      'run_id',
+      v_run_row.id,
+      'highest_wave_reached',
+      (v_termination_result ->> 'highest_wave_reached')::int,
+      'avg_score',
+      (v_termination_result ->> 'avg_score')::real,
+      'new_record',
+      (v_termination_result ->> 'new_record')::boolean,
+      'game_over',
+      true,
+      'health',
+      0,
+      'guessed_level',
+      case
+        when v_computed_dist is not null
+        then
+          jsonb_build_object(
+            'id',
+            p_guessed_level_id,
+            'level_number',
+            v_guessed_level_info.level_number,
+            'level_name',
+            v_guessed_level_info.level_name
+          )
+        else null
+      end,
+      'correct_level',
+      case
+        when v_computed_dist is not null
+        then
+          jsonb_build_object(
+            'id',
+            v_round_row.correct_level_id,
+            'level_number',
+            v_correct_level_info.level_number,
+            'level_name',
+            v_correct_level_info.level_name
+          )
+        else null
+      end,
+      'distance',
+      v_computed_dist,
+      'score',
+      v_computed_score,
+      'time_spent_seconds',
+      v_computed_time_seconds
     );
   end if;
 
   update ig_cybergrind_rounds
-  set distance = v_computed_dist, score = v_computed_score, time_spent_seconds = v_computed_time_seconds, completed_at = now()
+  set
+    distance = v_computed_dist,
+    score = v_computed_score,
+    time_spent_seconds = v_computed_time_seconds,
+    guessed_level_id = p_guessed_level_id,
+    completed_at = now()
   where id = p_round_id;
 
   update ig_cybergrind_runs
@@ -3614,17 +3732,11 @@ CREATE OR REPLACE FUNCTION "public"."terminate_ig_cybergrind_run"() RETURNS json
 declare
   v_caller_id uuid;
   v_run_id bigint;
-  v_client_version text;
-  v_highest_wave int;
-  v_total_time_seconds numeric(10,3);
-  v_avg_score real;
-  v_existing_record record;
-  v_should_update_record boolean := false;
 begin
   v_caller_id := auth.uid();
   if v_caller_id is null then raise exception 'User must be authenticated.'; end if;
 
-  select id, client_version into v_run_id, v_client_version
+  select id into v_run_id
   from ig_cybergrind_runs
   where user_id = v_caller_id and status = 'active'
   for update;
@@ -3633,61 +3745,7 @@ begin
     return json_build_object('success', false, 'message', 'No active run found.');
   end if;
 
-  update ig_cybergrind_runs
-  set status = 'failed', ended_at = now(), health = 0
-  where id = v_run_id;
-
-select current_wave into v_highest_wave 
-  from ig_cybergrind_runs where id = v_run_id;
-  
-  v_highest_wave := greatest(0, v_highest_wave - 1);
-
-  select 
-    least(100.0, coalesce(avg(score), 0)),
-    coalesce(sum(time_spent_seconds), 0)
-  into v_avg_score, v_total_time_seconds
-  from ig_cybergrind_rounds
-  where run_id = v_run_id and score is not null;
-
-  update ig_cybergrind_runs
-  set total_time_ms = round(v_total_time_seconds * 1000)::bigint
-  where id = v_run_id;
-
-  select best_wave, avg_accuracy into v_existing_record
-  from ig_cybergrind_records
-  where user_id = v_caller_id;
-
-  if v_existing_record is null then
-    v_should_update_record := true;
-  elsif v_highest_wave > v_existing_record.best_wave then
-    v_should_update_record := true;
-  elsif v_highest_wave = v_existing_record.best_wave and v_avg_score > v_existing_record.avg_accuracy then
-    v_should_update_record := true;
-  end if;
-
-  if v_should_update_record then
-    insert into ig_cybergrind_records (
-      user_id, best_wave, avg_accuracy, run_id, achieved_at, client_version
-    ) values (
-      v_caller_id, v_highest_wave, v_avg_score, v_run_id, now(), v_client_version
-    )
-    on conflict (user_id) do update
-    set 
-      best_wave = excluded.best_wave,
-      avg_accuracy = excluded.avg_accuracy,
-      run_id = excluded.run_id,
-      achieved_at = excluded.achieved_at,
-      client_version = excluded.client_version;
-  end if;
-
-  return json_build_object(
-    'success', true,
-    'run_id', v_run_id,
-    'highest_wave_reached', v_highest_wave,
-    'avg_score', v_avg_score,
-    'new_record', v_should_update_record,
-    'game_over', true
-  );
+  return public.end_ig_cybergrind_run(v_run_id, 'failed');
 end;
 $$;
 
@@ -3734,6 +3792,44 @@ $$;
 
 
 ALTER FUNCTION "public"."trigger_dispatch_submissions"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."trigger_ig_cleanup"() RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'extensions'
+    AS $$
+declare
+  service_key text;
+  request_id bigint;
+begin
+  select decrypted_secret into service_key
+  from vault.decrypted_secrets
+  where name = 'service_role_key';
+
+  if service_key is null then
+    raise exception 'service_role_key not found in vault';
+  end if;
+
+  select net.http_post(
+    url := 'https://sbvjehmbkmdlflocjjtu.supabase.co/functions/v1/ig-cybergrind-runs-cleanup',
+    headers := jsonb_build_object(
+      'Authorization', 'Bearer ' || service_key,
+      'Content-Type', 'application/json'
+    ),
+    body := '{}'::jsonb
+  ) into request_id;
+
+exception when others then
+  insert into debug_logs (event, payload)
+  values ('ig_cleanup_failed', jsonb_build_object(
+    'error', SQLERRM,
+    'timestamp', now()
+  ));
+end;
+$$;
+
+
+ALTER FUNCTION "public"."trigger_ig_cleanup"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."trigger_poll_submissions"() RETURNS "void"
@@ -4187,7 +4283,8 @@ CREATE TABLE IF NOT EXISTS "public"."ig_cybergrind_rounds" (
     "completed_at" timestamp with time zone,
     "distance" integer,
     "score" integer,
-    "time_spent_seconds" numeric(10,3)
+    "time_spent_seconds" numeric(10,3),
+    "guessed_level_id" bigint
 );
 
 
@@ -5018,6 +5115,11 @@ ALTER TABLE ONLY "public"."ig_cybergrind_rounds"
 
 
 ALTER TABLE ONLY "public"."ig_cybergrind_rounds"
+    ADD CONSTRAINT "ig_cybergrind_rounds_guessed_level_id_fkey" FOREIGN KEY ("guessed_level_id") REFERENCES "public"."levels"("id");
+
+
+
+ALTER TABLE ONLY "public"."ig_cybergrind_rounds"
     ADD CONSTRAINT "ig_cybergrind_rounds_image_submission_id_fkey" FOREIGN KEY ("image_submission_id") REFERENCES "public"."image_submissions"("id");
 
 
@@ -5293,11 +5395,21 @@ CREATE POLICY "Users can view own runs" ON "public"."cybergrind_runs" FOR SELECT
 
 
 
+CREATE POLICY "Users can view rounds from their own completed runs" ON "public"."ig_cybergrind_rounds" FOR SELECT TO "authenticated" USING ((EXISTS ( SELECT 1
+   FROM "public"."ig_cybergrind_runs"
+  WHERE (("ig_cybergrind_runs"."id" = "ig_cybergrind_rounds"."run_id") AND ("ig_cybergrind_runs"."user_id" = "auth"."uid"()) AND ("ig_cybergrind_runs"."status" <> 'active'::"public"."cybergrind_run_status_enum")))));
+
+
+
 CREATE POLICY "Users can view their own profile" ON "public"."profiles" FOR SELECT USING (("auth"."uid"() = "id"));
 
 
 
 CREATE POLICY "Users can view their own read message statuses" ON "public"."read_messages" FOR SELECT USING (("auth"."uid"() = "user_id"));
+
+
+
+CREATE POLICY "Users can view their own runs" ON "public"."ig_cybergrind_runs" FOR SELECT TO "authenticated" USING (("auth"."uid"() = "user_id"));
 
 
 
@@ -5704,6 +5816,12 @@ GRANT ALL ON FUNCTION "public"."end_cybergrind_run"("p_status" "public"."cybergr
 
 
 
+GRANT ALL ON FUNCTION "public"."end_ig_cybergrind_run"("p_run_id" bigint, "p_status" "public"."cybergrind_run_status_enum") TO "anon";
+GRANT ALL ON FUNCTION "public"."end_ig_cybergrind_run"("p_run_id" bigint, "p_status" "public"."cybergrind_run_status_enum") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."end_ig_cybergrind_run"("p_run_id" bigint, "p_status" "public"."cybergrind_run_status_enum") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."get_classic_init"("version" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."get_classic_init"("version" "text") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."get_classic_init"("version" "text") TO "service_role";
@@ -5895,6 +6013,11 @@ GRANT ALL ON FUNCTION "public"."terminate_ig_cybergrind_run"() TO "service_role"
 
 
 GRANT ALL ON FUNCTION "public"."trigger_dispatch_submissions"() TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."trigger_ig_cleanup"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."trigger_ig_cleanup"() TO "service_role";
 
 
 
