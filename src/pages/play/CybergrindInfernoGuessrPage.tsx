@@ -968,7 +968,12 @@ const CybergrindInfernoGuessrPage = () => {
                 {status === "active" && lastRoundResult && (
                   <div className="flex flex-col gap-1 items-start mt-4">
                     <Typewriter text={`DISTANCE: ${lastRoundResult.distance}`} className="opacity-50" speed={0.02} delay={0.2} />
-                    <Typewriter text={`TIME: ${lastRoundResult.time_spent_seconds.toFixed(3)}`} className="opacity-50" speed={0.02} delay={0.4} />
+                    <Typewriter
+                      text={`TIME: ${(lastRoundResult.time_spent_seconds ?? 0).toFixed(3)}`}
+                      className="opacity-50"
+                      speed={0.02}
+                      delay={0.4}
+                    />
                     {lastRoundResult.distance < 2 ? (
                       lastRoundResult.distance === 0 ? (
                         <Typewriter
@@ -1036,8 +1041,18 @@ const CybergrindInfernoGuessrPage = () => {
                 {status === "game_over" && lastRoundResult?.game_over && (
                   <div className="flex flex-col gap-1 items-start mt-4">
                     <Typewriter text={`DISTANCE: ${lastRoundResult.distance}`} className="opacity-50" speed={0.02} delay={0.2} />
-                    <Typewriter text={`TIME: ${lastRoundResult.time_spent_seconds.toFixed(3)}`} className="opacity-50" speed={0.02} delay={0.4} />
-                    <Typewriter text={`HEALTH -${(100 - lastRoundResult.score) / 2}`} className="text-red-500 font-bold" speed={0.02} delay={0.6} />
+                    <Typewriter
+                      text={`TIME: ${(lastRoundResult.time_spent_seconds ?? 0).toFixed(3)}`}
+                      className="opacity-50"
+                      speed={0.02}
+                      delay={0.4}
+                    />
+                    <Typewriter
+                      text={`HEALTH -${(100 - (lastRoundResult.score ?? 0)) / 2}`}
+                      className="text-red-500 font-bold"
+                      speed={0.02}
+                      delay={0.6}
+                    />
                   </div>
                 )}
 
@@ -1056,11 +1071,11 @@ const CybergrindInfernoGuessrPage = () => {
                         speed={0.02} 
                         delay={delayOffset + 0.2} 
                       />
-                      <Typewriter 
-                        text={`GUESS ACCURACY: ${gameOverStats.avg_score.toFixed(2)}%`} 
-                        className="opacity-50" 
-                        speed={0.02} 
-                        delay={delayOffset + 0.4} 
+                      <Typewriter
+                        text={`GUESS ACCURACY: ${(gameOverStats.avg_score ?? 0).toFixed(2)}%`}
+                        className="opacity-50"
+                        speed={0.02}
+                        delay={delayOffset + 0.4}
                       />
                       {gameOverStats.new_record && (
                       <Typewriter
