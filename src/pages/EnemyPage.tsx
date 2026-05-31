@@ -136,7 +136,7 @@ const EnemyPage = () => {
                   {enemyData != null ? capitalize(enemyData.name) : ""}
                 </span>
 
-                <div className='ml-auto mt-1 mr-1 gap-1'>
+                <div className='ml-auto mt-1 mr-1 gap-1 hidden lg:flex mb-1'>
                   <button style={{ border: "2px solid #570a07", borderRadius: 4 }}>
                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#570a07"><path d="M321.25-320.95Q256-385.9 256-479.7t64.95-159.05Q385.9-704 479.7-704t159.05 64.95Q704-574.1 704-480.3t-64.95 159.05Q574.1-256 480.3-256t-159.05-64.95Z" /></svg>
                   </button>
@@ -148,7 +148,7 @@ const EnemyPage = () => {
                   </button>
                 </div>
               </div>
-              <div className="grid gap-4 overflow-y-auto h-[60vh]" style={{
+              <div className="flex flex-col lg:grid gap-0 lg:gap-4 overflow-y-auto h-[85vh] lg:h-[60vh]" style={{
                 gridTemplateAreas: "image data",
                 gridTemplateColumns: "0fr 1fr",
                 backgroundColor: "rgba(38, 38, 38)",
@@ -156,8 +156,8 @@ const EnemyPage = () => {
                 border: "2px solid rgba(0,0,0,0.4)", borderStyle: "outset", borderTop: "0"
               }}>
                 {/* Note: To change the full body image overflow to just be in the box you can set the overflow to hidden */}
-                <div className='image min-w-60 pl-4 pb-4 pt-4 flex flex-col h-full min-h-0'>
-                  <div className='w-full flex justify-center relative h-full min-h-0'
+                <div className='image order-2 lg:order-none w-full lg:min-w-60 pl-4 pr-4 lg:pr-0 pb-4 pt-2 lg:pt-4 flex flex-col h-auto lg:h-full min-h-0'>
+                  <div className='w-full flex justify-center relative h-[180vh] lg:h-full min-h-0 mr-0 lg:mr-0'
                     style={{
                       backgroundColor: "rgba(31, 31, 31)",
                       border: "2px solid rgba(0,0,0,0.4)", borderStyle: "outset",
@@ -168,7 +168,7 @@ const EnemyPage = () => {
                     {/* Note: To restrain the image width, change this max-w-none and w-auto to max-w-X */}
                     {enemyData.full_body_url ? (
                       <img src={resolveExternalUrl(enemyData.full_body_url)}
-                        className='max-w-none w-auto p-2 object-contain inline fade-in'
+                        className='max-w-none w-auto h-full lg:h-auto p-2 object-contain inline fade-in'
                         alt={enemyData.name + " full body"} />
                     ) : (
                       <div className="w-full h-full bg-white/5 flex items-center justify-center text-[10px] opacity-20">
@@ -192,7 +192,7 @@ const EnemyPage = () => {
 
                 </div>
                 <div
-                  className='data text p-2 pb-4 pr-4 pl-0 h-full flex flex-col min-h-0'
+                  className='data text order-1 lg:order-none w-full p-2 pb-2 lg:pb-4 pr-4 lg:pl-0 pl-4 h-auto lg:h-full flex flex-col min-h-0'
                   style={{ textAlign: 'left' }}>
                   <Typewriter
                     text={enemyData.name}
