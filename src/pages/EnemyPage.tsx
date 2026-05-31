@@ -6,7 +6,6 @@ import { resolveExternalUrl } from '../lib/urls';
 import { toExternalUrl } from '../lib/urls';
 import { isRunningInDiscord, discordSdk } from '../lib/discord';
 import { Typewriter } from "../components/Typewriter";
-import { vh } from 'framer-motion';
 
 interface Enemy {
   id: number,
@@ -156,6 +155,7 @@ const EnemyPage = () => {
                 overflowX: "visible", overflowY: "visible",
                 border: "2px solid rgba(0,0,0,0.4)", borderStyle: "outset", borderTop: "0"
               }}>
+                {/* Note: To change the full body image overflow to just be in the box you can set the overflow to hidden */}
                 <div className='image min-w-60 pl-4 pb-4 pt-4 flex flex-col h-full min-h-0'>
                   <div className='w-full flex justify-center relative h-full min-h-0'
                     style={{
@@ -165,9 +165,10 @@ const EnemyPage = () => {
                       clipPath: "inset(0 0 0 -9999px)",
                       zIndex: 10,
                     }}>
+                    {/* Note: To restrain the image width, change this max-w-none and w-auto to max-w-X */}
                     {enemyData.full_body_url ? (
                       <img src={resolveExternalUrl(enemyData.full_body_url)}
-                        className='h-full w-auto max-w-90 p-2 object-contain inline fade-in'
+                        className='max-w-none w-auto p-2 object-contain inline fade-in'
                         alt={enemyData.name + " full body"} />
                     ) : (
                       <div className="w-full h-full bg-white/5 flex items-center justify-center text-[10px] opacity-20">
