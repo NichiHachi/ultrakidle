@@ -131,7 +131,7 @@ const EnemyPage = () => {
               >
                 {/* Note: Maybe change this to not include the whole svg path inside of the code */}
                 <svg xmlns="http://www.w3.org/2000/svg" height="32px" viewBox="0 -960 960 960" width="32px" fill="#570a07" transform="scale(-1, 1)"><path d="M782.87-98.52 526.91-354.48q-29.43 21.74-68.15 34.61Q420.04-307 375.48-307q-114.09 0-193.55-79.46-79.45-79.45-79.45-193.54 0-114.09 79.45-193.54Q261.39-853 375.48-853q114.09 0 193.54 79.46 79.46 79.45 79.46 193.54 0 45.13-12.87 83.28T601-429.7l256.52 257.09-74.65 74.09ZM375.48-413q69.91 0 118.45-48.54 48.55-48.55 48.55-118.46t-48.55-118.46Q445.39-747 375.48-747t-118.46 48.54Q208.48-649.91 208.48-580t48.54 118.46Q305.57-413 375.48-413Z" /></svg>
-                <span className='ml-1'
+                <span className='ml-1 truncate'
                   style={{ textShadow: "1px 1px 0px rgba(0, 0, 0, 1)", letterSpacing: "0.05rem" }}>
                   {enemyData != null ? capitalize(enemyData.name) : ""}
                 </span>
@@ -156,8 +156,8 @@ const EnemyPage = () => {
                 border: "2px solid rgba(0,0,0,0.4)", borderStyle: "outset", borderTop: "0"
               }}>
                 {/* Note: To change the full body image overflow to just be in the box you can set the overflow to hidden */}
-                <div className='image order-2 lg:order-none w-full lg:min-w-60 pl-4 pr-4 lg:pr-0 pb-4 pt-2 lg:pt-4 flex flex-col h-auto lg:h-full min-h-0'>
-                  <div className='w-full flex justify-center relative h-[180vh] lg:h-full min-h-0 mr-0 lg:mr-0'
+                <div className='image order-2 lg:order-0 w-full lg:min-w-60 pl-4 pr-4 lg:pr-0 pb-4 pt-2 lg:pt-4 flex flex-col h-auto lg:h-full min-h-0'>
+                  <div className='w-full flex justify-center relative h-100 lg:h-full min-h-0 mr-0 lg:mr-0'
                     style={{
                       backgroundColor: "rgba(31, 31, 31)",
                       border: "2px solid rgba(0,0,0,0.4)", borderStyle: "outset",
@@ -192,7 +192,7 @@ const EnemyPage = () => {
 
                 </div>
                 <div
-                  className='data text order-1 lg:order-none w-full p-2 pb-2 lg:pb-4 pr-4 lg:pl-0 pl-4 h-auto lg:h-full flex flex-col min-h-0'
+                  className='data text order-1 lg:order-0 w-full p-2 pb-2 lg:pb-4 pr-4 lg:pl-0 pl-4 h-auto lg:h-full flex flex-col min-h-0'
                   style={{ textAlign: 'left' }}>
                   <Typewriter
                     text={enemyData.name}
