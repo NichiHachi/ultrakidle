@@ -44,6 +44,7 @@ interface GuessBoardProps {
   guesses: GuessResult[];
   modifiers?: string[];
   overrideColumns?: string[];
+  event?: string;
 }
 
 const BADGE_TOOLTIPS: Record<string, string> = {
@@ -165,6 +166,7 @@ export const GuessBoard = ({
   guesses,
   modifiers = [],
   overrideColumns,
+  event,
 }: GuessBoardProps) => {
   const { settings } = useSettings();
 
@@ -241,6 +243,7 @@ export const GuessBoard = ({
                                 size={32}
                                 isSpawn={(enemy as any).isSpawn}
                                 className="shrink-0"
+                                event={event}
                               />
                             )}
                             <div className="flex items-center truncate">

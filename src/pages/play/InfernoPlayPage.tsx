@@ -520,7 +520,7 @@ const InfernoPlayPage = () => {
         seoDescription="Identify the level from the screenshot."
       >
         <div className="flex flex-col gap-0 mb-4 w-full lg:text-xl md:text-lg text-sm opacity-50 text-left flex-shrink-0 mt-4">
-          <h1 className="tracking-widest">DAILY_LOCATION</h1>
+          <h1 className="tracking-widest">DAILY_LOCATION #{infernoNumber}</h1>
         </div>
         <span className="opacity-30 uppercase tracking-widest">
           No mission available
@@ -594,7 +594,7 @@ const InfernoPlayPage = () => {
         <div className="flex flex-col gap-0 mb-4 w-full lg:text-xl md:text-lg text-sm opacity-50 text-left flex-shrink-0">
           <div className="flex md:flex-row flex-col justify-between items-baseline w-full md:max-w-[1000px]">
             <div className="flex gap-4 items-baseline">
-              <h1 className="tracking-widest">DAILY_LOCATION</h1>
+              <h1 className="tracking-widest">DAILY_LOCATION #{infernoNumber}</h1>
               <span className="text-sm tracking-widest opacity-70">
                 {showFinalResults
                   ? "COMPLETE"

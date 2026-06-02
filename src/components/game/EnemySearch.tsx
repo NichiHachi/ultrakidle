@@ -6,12 +6,18 @@ import { enemies } from '../../lib/enemy_list';
 import { EnemyIcon } from './EnemyIcon';
 
 interface EnemySearchProps {
-    onGuess: (enemyId: number) => void;
-    disabled?: boolean;
-    excludeIds?: number[];
+  onGuess: (enemyId: number) => void;
+  disabled?: boolean;
+  excludeIds?: number[];
+  event?: string;
 }
 
-export const EnemySearch = ({ onGuess, disabled = false, excludeIds = [] }: EnemySearchProps) => {
+export const EnemySearch = ({
+  onGuess,
+  disabled = false,
+  excludeIds = [],
+  event,
+}: EnemySearchProps) => {
     const { settings } = useSettings();
     const location = useLocation();
 
@@ -116,12 +122,17 @@ export const EnemySearch = ({ onGuess, disabled = false, excludeIds = [] }: Enem
                         {filteredEnemies.length > 0 ? (
                             filteredEnemies.map(enemy => (
                                 <li
-                                    key={enemy.id}
-                                    onClick={() => handleSelect(enemy.id)}
-                                    className="p-3 hover:bg-white/10 cursor-pointer uppercase text-left border-b border-white/10 last:border-b-0 flex items-center gap-3"
+                                  key={enemy.id}
+                                  onClick={() => handleSelect(enemy.id)}
+                                  className="p-3 hover:bg-white/10 cursor-pointer uppercase text-left border-b border-white/10 last:border-b-0 flex items-center gap-3"
                                 >
-                                    <EnemyIcon icons={enemy.icon} size={24} isSpawn={(enemy as any).isSpawn} />
-                                    <span>{enemy.name}</span>
+                                  <EnemyIcon
+                                    icons={enemy.icon}
+                                    size={24}
+                                    isSpawn={(enemy as any).isSpawn}
+                                    event={event}
+                                  />
+                                  <span>{enemy.name}</span>
                                 </li>
                             ))
                         ) : (
