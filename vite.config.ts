@@ -58,6 +58,12 @@ export default defineConfig(({ mode }) => {
       secure: true,
       rewrite: (path: string) => path.replace(/^\/external\/infernoguessr-images/, ''),
     },
+    '/external/ig-cg-images': {
+      target: 'https://cgimages.ultrakidle.online',
+      changeOrigin: true,
+      secure: true,
+      rewrite: (path: string) => path.replace(/^\/external\/ig-cg-images/, ''),
+    },
   };
 
   return {

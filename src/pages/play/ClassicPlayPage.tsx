@@ -32,6 +32,8 @@ const ClassicPlayPage = () => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [audioRankPlayed, setAudioRankPlayed] = useState(false)
 
+    const event = dayNumber === 100 ? 'PARTY' : undefined;
+
     const fetchInit = useCallback(async () => {
         setLoading(true);
         const { data, error } = await supabase.rpc("get_classic_init", {
@@ -231,6 +233,11 @@ const ClassicPlayPage = () => {
             showDeathBackground={!hasWon && hasReachedLimit}
         >
 
+            { event === "PARTY" &&
+            <div className="flex items-center gap-2 mb-4 px-2 py-1 bg-amber-500/10 border-2 border-amber-500/20 w-fit">
+                Happy 100th classic ULTRAKIDLE! Everyone gets to wear a hat :)
+            </div>
+            }
             <motion.div
                 key="classic"
                 initial={{ opacity: 0, x: -20 }}
@@ -240,7 +247,7 @@ const ClassicPlayPage = () => {
             >
                 <div className="flex flex-col gap-0 mb-4 w-full lg:text-xl md:text-lg text-sm opacity-50 text-left flex-shrink-0">
                     <div className="flex gap-2 items-baseline">
-                        <h1 className="tracking-widest flex-1">DAILY_ENEMY</h1>
+                        <h1 className="tracking-widest flex-1">DAILY_ENEMY #{dayNumber}</h1>
                     </div>
                 </div>
 
@@ -251,6 +258,7 @@ const ClassicPlayPage = () => {
                         excludeIds={guesses
                             .map((g: GuessResult) => g.guess_id)
                             .filter((id): id is number => id !== undefined)}
+                        event={event}
                     />
                 </div>
 
@@ -280,7 +288,7 @@ const ClassicPlayPage = () => {
                             be subject to change
                         </span>
                     </div>
-                    <GuessBoard guesses={guesses} />
+                    <GuessBoard guesses={guesses} event={event}/>
                 </motion.div>
 
                 <div className="mt-2 text-white flex flex-col items-start gap-1 font-bold uppercase tracking-wider">
@@ -334,6 +342,7 @@ const ClassicPlayPage = () => {
                                                 size={32}
                                                 isSpawn={(enemy as any)?.isSpawn}
                                                 className="border border-green-500/20 p-0.5 bg-green-500/5"
+                                                event={event}
                                             />
                                         );
                                     })()}
@@ -377,6 +386,7 @@ const ClassicPlayPage = () => {
                                                 isSpawn={
                                                     (revealedEnemy as any).isSpawn
                                                 }
+                                                event={event}
                                                 className=""
                                             />
                                         </motion.div>

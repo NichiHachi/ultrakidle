@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const BOT_TOKEN = Deno.env.get("DISCORD_AUTOMATION_BOT_TOKEN")!;
@@ -36,7 +35,7 @@ async function discordFetch(
   throw new Error(`All retries exhausted for ${url}`);
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   const authHeader = req.headers.get("Authorization");
   if (
     authHeader !==

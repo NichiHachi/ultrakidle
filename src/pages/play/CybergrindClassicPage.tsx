@@ -12,6 +12,9 @@ import { motion } from "framer-motion";
 import AlertDialog from "../../components/ui/AlertDialog";
 import { EnemyIcon } from "../../components/game/EnemyIcon";
 import Tooltip from "../../components/ui/Tooltip";
+import ModeTabs from "../../components/ui/ModeTabs";
+import type { GameMode } from "../../components/ui/ModeTabs";
+import { useNavigate } from "react-router-dom";
 
 const MODIFIER_DISPLAY_ORDER: string[] = [
   "PENANCE",
@@ -109,6 +112,7 @@ interface GameOverStats {
 
 const CybergrindClassicPage = () => {
   const { setUpdateAvailable } = useVersion();
+  const navigate = useNavigate();
   const bottomRef = useRef<HTMLDivElement>(null);
   const startingRef = useRef(false);
   const pendingNextState = useRef<any>(null);
@@ -377,6 +381,17 @@ const CybergrindClassicPage = () => {
     setStatus("loading");
     await fetchState();
   };
+  
+  const handleModeChange = (mode: GameMode) => {
+    if (mode === "inferno" || mode === "infernoguessr") {
+      navigate("/cybergrind/infernoguessr");
+    }
+  };
+
+  const tabs = [
+    { id: "classic" as GameMode, label: "CLASSIC" },
+    { id: "infernoguessr" as GameMode, label: "INFERNOGUESSR" },
+  ];
 
   const hasWon = guesses.some((g) => g.correct);
   const isRoundOver = hasWon || guessesLeft <= 0;
@@ -440,6 +455,12 @@ const CybergrindClassicPage = () => {
             <div className="flex flex-col gap-0 w-full lg:text-xl md:text-lg text-sm opacity-50 text-left">
               <h1 className="tracking-widest">CYBERGRIND_CLASSIC</h1>
             </div>
+
+            <ModeTabs
+              activeMode="classic"
+              onModeChange={handleModeChange}
+              tabs={tabs}
+            />
 
             {bestRecord && bestRecord.best_wave > 0 && (
               <div className="flex text-left flex-col gap-1 text-white/50 text-sm font-bold uppercase tracking-widest">
@@ -583,6 +604,12 @@ const CybergrindClassicPage = () => {
               </h1>
             </div>
           </div>
+
+          <ModeTabs
+            activeMode="classic"
+            onModeChange={handleModeChange}
+            tabs={tabs}
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 w-full md:max-w-[1000px] border-b border-white/5 pb-6">
             <div className="flex flex-col gap-1">

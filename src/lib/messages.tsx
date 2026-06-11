@@ -9,6 +9,52 @@ export interface Message {
 
 export const MESSAGES: Message[] = [
   {
+    id: 'infernoguessr-cybergrind-release',
+    date: '2026-05-26',
+    content: (
+      <div className="space-y-4 lg:space-y-6 text-justify">
+        <p className="text-zinc-400 text-sm">
+          SYSTEM UPDATE LOG // [26-MAY-2026]
+        </p>
+        <p className="text-green-500 lg:text-xl text-base font-bold tracking-wide uppercase">
+          INFERNOGUESSR CYBERGRIND HAS BEEN DEPLOYED
+        </p>
+
+        <p className="text-white/70 lg:text-base text-sm">
+          A endless gauntlet variant of Infernoguessr is now live.
+          Identify screenshots from random levels before your HP runs out.
+        </p>
+
+        <div className="space-y-2">
+          <ul className="list-disc list-outside pl-4 text-white/70 text-sm lg:text-base space-y-2">
+            <li>
+              <span className="text-green-400 font-bold">+20 HP</span> for
+              correct guesses.
+            </li>
+            <li>
+              Missing the target results in HP loss that{" "}
+              <span className="text-red-500 font-bold">
+                scales exponentially
+              </span>{" "}
+              based on how far off your guess is.
+            </li>
+            <li>
+              Your health constantly{" "}
+              <span className="text-white font-semibold">depletes over time</span>.
+              This decay rate accelerates as you reach higher waves.
+            </li>
+          </ul>
+        </div>
+
+        <p className="text-white/70 lg:text-base text-sm">
+          Similar to classic cybergrind, there is a global Leaderboard which ranks you based off of{" "}
+          <span className="text-yellow-400 font-bold">Waves Cleared</span>, using
+          average accuracy as a tiebreaker. Go play and get your rank!
+        </p>
+      </div>
+    ),
+  },
+  {
   id: 'cybergrind-idol-modifier',
   date: '2026-04-25',
   content: (

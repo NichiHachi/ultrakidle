@@ -13,6 +13,7 @@ import HomePage from "./pages/HomePage";
 import ClassicPlayPage from "./pages/play/ClassicPlayPage";
 import InfernoPlayPage from "./pages/play/InfernoPlayPage";
 import CybergrindClassicPage from "./pages/play/CybergrindClassicPage";
+import CybergrindInfernoGuessrPage from "./pages/play/CybergrindInfernoGuessrPage";
 import CreditsPage from "./pages/CreditsPage";
 import HistoryPage from "./pages/HistoryPage";
 import TermsPage from "./pages/TermsPage";
@@ -30,6 +31,7 @@ import "./App.css";
 import { VersionProvider, useVersion } from "./context/VersionContext";
 import { SettingsProvider } from "./context/SettingsContext";
 import { MessagesProvider } from "./context/MessagesContext";
+import { TimeProvider } from "./context/TimeContext";
 import { SessionContext, useSessionProvider } from "./hooks/useSession";
 import VersionUpdateModal from "./components/VersionUpdateModal";
 
@@ -73,6 +75,10 @@ function AppContent() {
             path="cybergrind/classic"
             element={<CybergrindClassicPage />}
           />
+          <Route
+            path="cybergrind/infernoguessr"
+            element={<CybergrindInfernoGuessrPage />}
+          />
           <Route path="credits" element={<CreditsPage />} />
           <Route path="history" element={<HistoryPage />} />
           <Route path="tos" element={<TermsPage />} />
@@ -102,7 +108,9 @@ function App() {
         <VersionProvider>
           <SettingsProvider>
             <MessagesProvider>
-              <AppContent />
+              <TimeProvider>
+                <AppContent />
+              </TimeProvider>
             </MessagesProvider>
           </SettingsProvider>
         </VersionProvider>
