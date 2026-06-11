@@ -333,8 +333,9 @@ const InfernoPlayPage = () => {
       }
       setSelectedLevelId(null);
       setSearchQuery("");
-      setZoom(1);
-      setGamma(1);
+      const persist = settings.persistImageControls.infernoguessr;
+      if (!persist.zoom) setZoom(1);
+      if (!persist.gamma) setGamma(1);
       setPan({ x: 0, y: 0 });
 
       setTimeout(() => {

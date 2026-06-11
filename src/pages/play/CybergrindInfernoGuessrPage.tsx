@@ -106,8 +106,16 @@ const CybergrindInfernoGuessrPage = () => {
   const [isAbandonModalOpen, setIsAbandonModalOpen] = useState(false);
 
   // Play view states
-  const [zoom, setZoom] = useState(1);
-  const [gamma, setGamma] = useState(1);
+  const [zoom, setZoom] = useState(() =>
+    settings.persistImageControls.igCybergrind.zoom
+      ? Number(localStorage.getItem("persist_zoom_ig_cybergrind") || 1)
+      : 1,
+  );
+  const [gamma, setGamma] = useState(() =>
+    settings.persistImageControls.igCybergrind.gamma
+      ? Number(localStorage.getItem("persist_gamma_ig_cybergrind") || 1)
+      : 1,
+  );
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLevelId, setSelectedLevelId] = useState<number | null>(null);
@@ -324,8 +332,9 @@ const CybergrindInfernoGuessrPage = () => {
 
       setSelectedLevelId(null);
       setSearchQuery("");
-      setZoom(1);
-      setGamma(1);
+      const persist = settings.persistImageControls.igCybergrind;
+      if (!persist.zoom) setZoom(1);
+      if (!persist.gamma) setGamma(1);
       setPan({ x: 0, y: 0 });
 
       setTimeout(() => {
@@ -368,8 +377,9 @@ const CybergrindInfernoGuessrPage = () => {
       setImageLoaded(false);
       setImgRetry(0);
       setSearchQuery("");
-      setZoom(1);
-      setGamma(1);
+      const persist = settings.persistImageControls.igCybergrind;
+      if (!persist.zoom) setZoom(1);
+      if (!persist.gamma) setGamma(1);
       setPan({ x: 0, y: 0 });
 
       setTimeout(() => {
@@ -813,7 +823,7 @@ const CybergrindInfernoGuessrPage = () => {
                         type="range"
                         min="1"
                         max="4"
-                        step="0.5"
+                        step="0.1"
                         value={zoom}
                         onChange={(e) => setZoom(parseFloat(e.target.value))}
                         className="w-24 md:w-32 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-white"

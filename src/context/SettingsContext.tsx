@@ -29,6 +29,10 @@ export interface UserSettings {
     cybergrind: boolean;
     igCybergrind: boolean;
   };
+  persistImageControls: {
+    infernoguessr: { gamma: boolean; zoom: boolean };
+    igCybergrind: { gamma: boolean; zoom: boolean };
+  };
   customColors: {
     correct: RGB;
     partial: RGB;
@@ -57,6 +61,10 @@ export const DEFAULT_SETTINGS: UserSettings = {
     cybergrind: false,
     igCybergrind: false,
   },
+  persistImageControls: {
+    infernoguessr: { gamma: false, zoom: false },
+    igCybergrind: { gamma: false, zoom: false },
+  },
   customColors: {
     correct: { r: 0.13, g: 0.77, b: 0.37 },
     partial: { r: 0.92, g: 0.68, b: 0.13 },
@@ -74,10 +82,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(
   undefined,
 );
 
-const mergeSettings = (
-  base: UserSettings,
-  patch: any,
-): UserSettings => ({
+const mergeSettings = (base: UserSettings, patch: any): UserSettings => ({
   ...base,
   ...patch,
   allowRandomGuess: {
@@ -87,6 +92,16 @@ const mergeSettings = (
   confirmDialogs: {
     ...base.confirmDialogs,
     ...(patch?.confirmDialogs || {}),
+  },
+  persistImageControls: {
+    infernoguessr: {
+      ...base.persistImageControls.infernoguessr,
+      ...(patch?.persistImageControls?.infernoguessr || {}),
+    },
+    igCybergrind: {
+      ...base.persistImageControls.igCybergrind,
+      ...(patch?.persistImageControls?.igCybergrind || {}),
+    },
   },
   customColors: {
     ...base.customColors,
@@ -130,33 +145,45 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateSettings = (newSettings: Partial<UserSettings>) => {
-    setSettingsState((prev) => {
-      const next = { ...prev, ...newSettings };
-      if (newSettings.allowRandomGuess) {
-        next.allowRandomGuess = {
-          ...prev.allowRandomGuess,
-          ...newSettings.allowRandomGuess,
-        };
-      }
-      if (newSettings.confirmDialogs) {
-        next.confirmDialogs = {
-          ...prev.confirmDialogs,
-          ...newSettings.confirmDialogs,
-        };
-      }
-      if (newSettings.customColors) {
-        next.customColors = {
-          ...prev.customColors,
-          ...newSettings.customColors,
-        };
-      }
+const updateSettings = (newSettings: Partial<UserSettings>) => {
+  setSettingsState((prev) => {
+    const next = { ...prev, ...newSettings };
+    if (newSettings.allowRandomGuess) {
+      next.allowRandomGuess = {
+        ...prev.allowRandomGuess,
+        ...newSettings.allowRandomGuess,
+      };
+    }
+    if (newSettings.confirmDialogs) {
+      next.confirmDialogs = {
+        ...prev.confirmDialogs,
+        ...newSettings.confirmDialogs,
+      };
+    }
+    if (newSettings.persistImageControls) {
+      next.persistImageControls = {
+        infernoguessr: {
+          ...prev.persistImageControls.infernoguessr,
+          ...(newSettings.persistImageControls.infernoguessr || {}),
+        },
+        igCybergrind: {
+          ...prev.persistImageControls.igCybergrind,
+          ...(newSettings.persistImageControls.igCybergrind || {}),
+        },
+      };
+    }
+    if (newSettings.customColors) {
+      next.customColors = {
+        ...prev.customColors,
+        ...newSettings.customColors,
+      };
+    }
 
-      localStorage.setItem("ultrakidle_settings", JSON.stringify(next));
-      updateDB(next);
-      return next;
-    });
-  };
+    localStorage.setItem("ultrakidle_settings", JSON.stringify(next));
+    updateDB(next);
+    return next;
+  });
+};
 
   const syncWithDbSettings = (dbSettings: any | null) => {
     const localSaved = localStorage.getItem("ultrakidle_settings");

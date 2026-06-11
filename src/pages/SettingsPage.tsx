@@ -229,10 +229,11 @@ const SettingsPage = () => {
           </p>
 
           <div className="flex flex-col gap-6">
-            {/* Random Guess Setting */}
+{/* Random Guess Setting */}
             <div className="flex flex-col gap-2">
               <p className="opacity-40 text-left text-xs mb-1 uppercase tracking-widest">
-                Allow random selection to guess the correct enemy in these modes:
+                Allow random selection to guess the correct enemy in these
+                modes:
               </p>
               <div className="flex flex-col gap-2">
                 <label className="flex items-center gap-3 cursor-pointer opacity-80 hover:opacity-100 p-2 bg-white/5 w-fit rounded uppercase text-sm tracking-widest font-bold">
@@ -249,7 +250,7 @@ const SettingsPage = () => {
                     }
                     className="w-4 h-4 accent-green-500 shrink-0"
                   />
-                  <span>Classic Mode</span>
+                  <span>Classic</span>
                 </label>
 
                 <label className="flex items-center gap-3 cursor-pointer opacity-80 hover:opacity-100 p-2 bg-white/5 w-fit rounded uppercase text-sm tracking-widest font-bold">
@@ -266,7 +267,7 @@ const SettingsPage = () => {
                     }
                     className="w-4 h-4 accent-green-500 shrink-0"
                   />
-                  <span>Cybergrind Mode</span>
+                  <span>Cybergrind</span>
                 </label>
               </div>
             </div>
@@ -274,7 +275,8 @@ const SettingsPage = () => {
             {/* Confirmation Dialogs */}
             <div className="flex flex-col gap-2">
               <p className="opacity-40 text-left text-xs mb-1 uppercase tracking-widest">
-                Prompt for confirmation before submitting guesses in these modes.
+                Prompt for confirmation before submitting guesses in these
+                modes.
               </p>
               <div className="flex flex-col gap-2">
                 <label className="flex items-center gap-3 cursor-pointer opacity-80 hover:opacity-100 p-2 bg-white/5 w-fit rounded uppercase text-sm tracking-widest font-bold">
@@ -291,7 +293,7 @@ const SettingsPage = () => {
                     }
                     className="w-4 h-4 accent-green-500"
                   />
-                  <span>Classic Mode</span>
+                  <span>Classic</span>
                 </label>
 
                 <label className="flex items-center gap-3 cursor-pointer opacity-80 hover:opacity-100 p-2 bg-white/5 w-fit rounded uppercase text-sm tracking-widest font-bold">
@@ -308,7 +310,7 @@ const SettingsPage = () => {
                     }
                     className="w-4 h-4 accent-green-500"
                   />
-                  <span>Infernoguessr Mode</span>
+                  <span>Infernoguessr</span>
                 </label>
 
                 <label className="flex items-center gap-3 cursor-pointer opacity-80 hover:opacity-100 p-2 bg-white/5 w-fit rounded uppercase text-sm tracking-widest font-bold">
@@ -325,7 +327,7 @@ const SettingsPage = () => {
                     }
                     className="w-4 h-4 accent-green-500"
                   />
-                  <span>Cybergrind (classic) Mode</span>
+                  <span>Cybergrind (classic)</span>
                 </label>
 
                 <label className="flex items-center gap-3 cursor-pointer opacity-80 hover:opacity-100 p-2 bg-white/5 w-fit rounded uppercase text-sm tracking-widest font-bold">
@@ -342,8 +344,109 @@ const SettingsPage = () => {
                     }
                     className="w-4 h-4 accent-green-500"
                   />
-                  <span>Cybergrind (infernoguessr) Mode</span>
+                  <span>Cybergrind (infernoguessr)</span>
                 </label>
+              </div>
+            </div>
+{/* Image Control Persistence */}
+            <div className="flex flex-col gap-2">
+              <p className="opacity-40 text-left text-xs mb-1 uppercase tracking-widest">
+                Persist these image controls between rounds in these modes:
+              </p>
+              <div className="flex flex-col gap-4">
+                {/* Infernoguessr */}
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs text-left opacity-30 uppercase tracking-[0.2em] font-bold ml-2">
+                    Infernoguessr
+                  </span>
+                  <div className="flex gap-2">
+                    <label className="flex items-center gap-3 cursor-pointer opacity-80 hover:opacity-100 p-2 bg-white/5 w-fit rounded uppercase text-sm tracking-widest font-bold">
+                      <input
+                        type="checkbox"
+                        checked={settings.persistImageControls.infernoguessr.gamma}
+                        onChange={(e) =>
+                          updateSettings({
+                            persistImageControls: {
+                              ...settings.persistImageControls,
+                              infernoguessr: {
+                                ...settings.persistImageControls.infernoguessr,
+                                gamma: e.target.checked,
+                              },
+                            },
+                          })
+                        }
+                        className="w-4 h-4 accent-green-500"
+                      />
+                      <span>Gamma</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer opacity-80 hover:opacity-100 p-2 bg-white/5 w-fit rounded uppercase text-sm tracking-widest font-bold">
+                      <input
+                        type="checkbox"
+                        checked={settings.persistImageControls.infernoguessr.zoom}
+                        onChange={(e) =>
+                          updateSettings({
+                            persistImageControls: {
+                              ...settings.persistImageControls,
+                              infernoguessr: {
+                                ...settings.persistImageControls.infernoguessr,
+                                zoom: e.target.checked,
+                              },
+                            },
+                          })
+                        }
+                        className="w-4 h-4 accent-green-500"
+                      />
+                      <span>Zoom</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Cybergrind (Infernoguessr) */}
+                <div className="flex flex-col gap-2">
+                  <span className="text-xs text-left opacity-30 uppercase tracking-[0.2em] font-bold ml-2">
+                    Cybergrind (Infernoguessr)
+                  </span>
+                  <div className="flex gap-2">
+                    <label className="flex items-center gap-3 cursor-pointer opacity-80 hover:opacity-100 p-2 bg-white/5 w-fit rounded uppercase text-sm tracking-widest font-bold">
+                      <input
+                        type="checkbox"
+                        checked={settings.persistImageControls.igCybergrind.gamma}
+                        onChange={(e) =>
+                          updateSettings({
+                            persistImageControls: {
+                              ...settings.persistImageControls,
+                              igCybergrind: {
+                                ...settings.persistImageControls.igCybergrind,
+                                gamma: e.target.checked,
+                              },
+                            },
+                          })
+                        }
+                        className="w-4 h-4 accent-green-500"
+                      />
+                      <span>Gamma</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer opacity-80 hover:opacity-100 p-2 bg-white/5 w-fit rounded uppercase text-sm tracking-widest font-bold">
+                      <input
+                        type="checkbox"
+                        checked={settings.persistImageControls.igCybergrind.zoom}
+                        onChange={(e) =>
+                          updateSettings({
+                            persistImageControls: {
+                              ...settings.persistImageControls,
+                              igCybergrind: {
+                                ...settings.persistImageControls.igCybergrind,
+                                zoom: e.target.checked,
+                              },
+                            },
+                          })
+                        }
+                        className="w-4 h-4 accent-green-500"
+                      />
+                      <span>Zoom</span>
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
