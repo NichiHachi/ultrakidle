@@ -165,10 +165,10 @@ const EnemyPage = () => {
                       clipPath: "inset(0 0 0 -9999px)",
                       zIndex: 10,
                     }}>
-                    {/* Note: To restrain the image width, change this max-w-none and w-auto to max-w-X */}
+                    {/* Note: To restrain the image width, change this max-w-none and w-90 to max-w-X */}
                     {enemyData.full_body_url ? (
                       <img src={resolveExternalUrl(enemyData.full_body_url)}
-                        className='max-w-none w-auto h-full lg:h-auto p-2 object-contain inline fade-in'
+                        className='max-w-none w-90 h-full lg:h-auto p-2 object-contain inline fade-in'
                         alt={enemyData.name + " full body"} />
                     ) : (
                       <div className="w-full h-full bg-white/5 flex items-center justify-center text-[10px] opacity-20">
