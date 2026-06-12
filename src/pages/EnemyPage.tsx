@@ -197,7 +197,6 @@ const EnemyPage = () => {
                   <Typewriter
                     text={enemyData.name}
                     className='text-3xl uppercase mb-1.5'
-                    speed={0.04}
                   />
                   <div
                     className='pl-4 pr-4 flex-1 min-h-0'
@@ -213,21 +212,18 @@ const EnemyPage = () => {
                         { text: "TYPE:", className: "text-red-500 uppercase" },
                         { text: ` ${capitalize(enemyData.enemy_type)}` },
                       ]}
-                      speed={0.05}
                     />
                     <Typewriter
                       segments={[
                         { text: "WEIGHT:", className: "text-red-500 uppercase" },
                         { text: ` ${capitalize(enemyData.weight_class)}` },
                       ]}
-                      speed={0.05}
                     />
                     <Typewriter
                       segments={[
                         { text: "HEALTH:", className: "text-red-500 uppercase" },
                         { text: ` ${enemyData.health}` },
                       ]}
-                      speed={0.05}
                     />
 
                     <Typewriter
@@ -235,10 +231,8 @@ const EnemyPage = () => {
                         { text: "BOSS:", className: "text-red-500 uppercase" },
                         { text: ` ${enemyData.is_boss ? "Yes" : "No"}` },
                       ]}
-                      speed={0.05}
                     />
 
-                    {/* Note: The Typewriter speed are balanced so that the levels data (which are fetched and loaded after the enemy data) seem to appear at the same time as the enemy data */}
                     {levelDataList != null && (
                       <div>
                         <Typewriter
@@ -246,20 +240,17 @@ const EnemyPage = () => {
                             { text: "TOTAL LEVELS:", className: "text-red-500 uppercase" },
                             { text: ` ${levelDataList.length}` },
                           ]}
-                          speed={0.03}
                         />
                         <Typewriter
                           segments={[
                             { text: "REGISTERED AT:", className: "text-red-500 uppercase" },
                             { text: ` ${enemyData.first_appearance}` },
                           ]}
-                          speed={0.02}
                         />
                         <div className='pb-4'>
                           <Typewriter
                             text={`APPEARANCE${levelDataList.length > 1 ? "S" : ''}:`}
                             className='text-red-500 uppercase'
-                            speed={0.04}
                           />
                           <div
                             className={`
