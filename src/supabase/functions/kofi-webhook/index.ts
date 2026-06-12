@@ -6,6 +6,14 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
+async function hashEmail(email: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(email.toLowerCase().trim());
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 serve(async (req) => {
   try {
     const formData = await req.formData();
@@ -15,28 +23,27 @@ serve(async (req) => {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    // 1. Handle Name (Webhook usually has the UI name, but fallback just in case)
     let displayName = payload.from_name;
     if (!displayName || displayName === "Ko-fi Supporter") {
       displayName = "Anonymous Supporter";
     }
 
-    // 2. Calculate the Expiry Date (Current time + 7 days)
+    const hashedEmail = await hashEmail(payload.email);
+
     const boardExpiry = new Date();
     boardExpiry.setDate(boardExpiry.getDate() + 7);
 
-    // 3. Upsert into Supabase
     const { error } = await supabase.from("supporters").upsert(
       {
         kofi_transaction_id: payload.kofi_transaction_id,
         name: displayName,
-        email: payload.email,
+        email_hash: hashedEmail,
         amount: parseFloat(payload.amount),
         currency: payload.currency,
-        board_expiry: boardExpiry.toISOString(), // <--- THIS IS WHERE IT'S ADDED
+        board_expiry: boardExpiry.toISOString(),
         created_at: new Date().toISOString(),
       },
-      { onConflict: "kofi_transaction_id" }
+      { onConflict: "kofi_transaction_id" },
     );
 
     if (error) throw error;

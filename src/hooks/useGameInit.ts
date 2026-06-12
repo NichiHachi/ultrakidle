@@ -11,6 +11,11 @@ export interface Donor {
   created_at: string;
 }
 
+export interface RankedDonor {
+  name: string;
+  totalAmount: number;
+}
+
 export interface ClassicRank {
   rank: number | null;
   tied_with: number | null;
@@ -95,15 +100,23 @@ export function useGameInit() {
   const [dailyStats, setDailyStats] = useState<DailyStats | null>(null);
   const [streak, setStreak] = useState<number>(0);
   const [donors, setDonors] = useState<Donor[]>([]);
+  const [rankedDonors, setRankedDonors] = useState<
+    {
+      name: string;
+      totalAmount: number;
+      rank: number;
+    }[]
+  >([]);
   const [rates, setRates] = useState<Record<string, number>>({ USD: 1 });
   const [ranks, setRanks] = useState<Ranks | null>(null);
 
-  const [infernoTotal, setInfernoTotal] =
-    useState<InfernoTotalScore | null>(null);
-  const [infernoAvg, setInfernoAvg] =
-    useState<InfernoDailyAvg | null>(null);
-  const [infernoStatus, setInfernoStatus] =
-    useState<InfernoRoundData | null>(null);
+  const [infernoTotal, setInfernoTotal] = useState<InfernoTotalScore | null>(
+    null,
+  );
+  const [infernoAvg, setInfernoAvg] = useState<InfernoDailyAvg | null>(null);
+  const [infernoStatus, setInfernoStatus] = useState<InfernoRoundData | null>(
+    null,
+  );
   const [infernoImageUrls, setInfernoImageUrls] = useState<
     Record<number, string>
   >({});
@@ -157,14 +170,51 @@ export function useGameInit() {
         setDailyStats(data.stats);
         setStreak(data.streak);
         setRanks(data.ranks ?? null);
-        setDonors(data.donors ?? []);
+        const rawDonors: any[] = data.donors ?? [];
+        setDonors(rawDonors);
+
+        // Process ranked donors from all_donors list
+        const rawAllDonors: any[] = data.all_donors ?? [];
+        // Group by email_hash or name
+        const donorMap = rawAllDonors.reduce(
+          (acc, d) => {
+            const key = d.email_hash || d.name;
+            const currency = d.currency?.toUpperCase() || "USD";
+            const rate = rates[currency] || 1;
+            const amountInUsd =
+              currency === "USD" ? d.amount : d.amount / rate;
+
+            if (!acc[key]) {
+              acc[key] = { name: d.name, totalAmount: 0 };
+            }
+            acc[key].totalAmount += amountInUsd;
+            return acc;
+          },
+          {} as Record<string, { name: string; totalAmount: number }>,
+        );
+
+        // Sort by total amount
+        const sorted = (
+          Object.values(donorMap) as { name: string; totalAmount: number }[]
+        ).sort((a, b) => b.totalAmount - a.totalAmount);
+
+        // Standard competition ranking (1, 2, 2, 4...)
+        let currentRank = 1;
+        const ranked = sorted.map((entry, index) => {
+          if (index > 0 && entry.totalAmount < sorted[index - 1].totalAmount) {
+            currentRank = index + 1;
+          }
+          return { ...entry, rank: currentRank };
+        });
+
+        setRankedDonors(ranked);
+
         setInfernoTotal(data.inferno?.total ?? null);
         setInfernoAvg(data.inferno?.daily_avg ?? null);
         setInfernoStatus(data.inferno?.status ?? null);
 
         const paths: { round_number: number; image_url: string }[] =
           data.inferno?.paths ?? [];
-
 
         if (paths.length > 0) {
           const urlMap: Record<number, string> = {};
@@ -176,11 +226,9 @@ export function useGameInit() {
           setInfernoImageUrls(urlMap);
 
           Object.values(urlMap).forEach((url) => {
-            preloadImage(url).catch(() => { });
+            preloadImage(url).catch(() => {});
           });
         }
-
-
       } catch (err) {
         console.error("Game init error:", err);
       } finally {
@@ -212,6 +260,7 @@ export function useGameInit() {
     streak,
     ranks,
     donors,
+    rankedDonors,
     rates,
     refresh,
     dailyChanged,

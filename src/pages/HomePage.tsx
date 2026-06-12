@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import Modal from "../components/ui/Modal";
 import Button from "../components/ui/Button";
 import { useGameInit } from "../hooks/useGameInit";
 import { Typewriter } from "../components/Typewriter";
@@ -48,32 +49,57 @@ const getCountdown = () => {
 
 const DonorsBoard = ({
   donors,
+  rankedDonors,
   rates,
 }: {
   donors: any[];
+  rankedDonors: { name: string; totalAmount: number; rank: number }[];
   rates: Record<string, number>;
 }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const processedDonors = (donors || [])
     .map((d) => {
       const currency = d.currency.toUpperCase();
       const rate = rates[currency] || 1;
-      const amountInUsd =
-        currency === "USD" ? d.amount : d.amount / rate;
+      const amountInUsd = currency === "USD" ? d.amount : d.amount / rate;
       return { ...d, amountInUsd };
     })
     .sort((a, b) => {
-      if (b.amountInUsd !== a.amountInUsd)
-        return b.amountInUsd - a.amountInUsd;
+      if (b.amountInUsd !== a.amountInUsd) return b.amountInUsd - a.amountInUsd;
       return (
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
     });
 
+  const groupedDonors = rankedDonors.reduce((acc, curr) => {
+  const lastGroup = acc[acc.length - 1];
+  if (lastGroup && lastGroup[0].rank === curr.rank) {
+    lastGroup.push(curr);
+  } else {
+    acc.push([curr]);
+  }
+  return acc;
+}, [] as typeof rankedDonors[]);
+
   return (
     <div className="flex flex-col gap-2 bg-black/40 border-2 border-white/10 p-4">
-      <div className="text-xs uppercase font-bold tracking-widest text-white/40 border-b border-white/10 pb-2 mb-1">
-        RECENT_DONATIONS
+      <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-1">
+        <div className="text-xs uppercase font-bold tracking-widest text-white/40">
+          RECENT_DONATIONS
+        </div>
+        <Button
+          variant="ghost"
+          onClick={() => setIsModalOpen(true)}
+          size="sm"
+          className=""
+        >
+          <span className="text-white/40">
+          [VIEW_ALL]
+          </span>
+        </Button>
       </div>
+
       <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-1">
         {processedDonors.length > 0 ? (
           processedDonors.map((donor, i) => (
@@ -102,6 +128,55 @@ const DonorsBoard = ({
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="SUPPORTERS_LEADERBOARD"
+        maxWidth="max-w-md"
+        footerButtonText="CLOSE"
+        showCloseButton={false}
+      >
+        <div className="flex flex-col gap-3 py-2">
+          {groupedDonors.map((group, groupIdx) => (
+            <div
+              key={groupIdx}
+              className="flex flex-col gap-2 border-l-4 border-white/50"
+            >
+              {group.map((entry, i) => (
+                <div
+                  key={`${groupIdx}-${i}`}
+                  className="flex items-center justify-between p-3 border border-white/10 bg-white/5"
+                >
+                  <div className="flex items-center gap-4">
+                    <span className="text-xs font-bold text-white/40 w-6">
+                      #{entry.rank}
+                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-white uppercase tracking-tight">
+                        {entry.name}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-green-500 font-bold">
+                      $
+                      {entry.totalAmount.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                      })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+          {rankedDonors.length === 0 && (
+            <div className="text-center py-8 opacity-40 italic">
+              NO DATA RECOVERED
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };
@@ -113,6 +188,7 @@ const HomePage = () => {
     dailyStats,
     streak,
     donors,
+    rankedDonors,
     rates,
     refresh,
     dailyChanged,
@@ -323,7 +399,7 @@ const HomePage = () => {
             transition={{ duration: 0.5 }}
             className="flex flex-col gap-2 w-full max-w-[450px] overflow-show min-h-0 pb-4"
           >
-            <DonorsBoard donors={donors} rates={rates} />
+            <DonorsBoard donors={donors} rankedDonors={rankedDonors} rates={rates} />
 
             <div className="flex flex-col gap-2">
               <PlayExpandable
