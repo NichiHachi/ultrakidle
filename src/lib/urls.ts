@@ -1,77 +1,98 @@
 import { isRunningInDiscord } from './discord';
 
 /**
- * Resolves an external URL.
- * If running in Discord, it uses the local proxy path defined in vite.config.ts.
- * If running in a normal browser (production on Render), it resolves to the direct external URL.
+ * Actually adding a comment mysefl because I tend to forget how these work:
+ * resolveExternalUrl changes url to:
+ *   - proxied path if running on discord
+ *   - true url if running on browser
+ * This is independend on whether the original url is proxied or not. Kinda like a
+ * 2 way conversion thingy
+ *
+ * toExternalUrl works similarly but only returns true urls independently of whether
+ * the original is proxied or not. Useful for when we want ACTUAL external links
+ * within the discord activity (for navigation using the SDK)
+ *
+ * toProxiedUrl behavior spec is left as an excercise for the reader
+ * :) 
  */
-export function resolveExternalUrl(url: string): string {
-    if (!url) return url;
 
-    // If we are in Discord, we need the proxy to bypass CSP
-    if (isRunningInDiscord()) {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        if (supabaseUrl && url.startsWith(supabaseUrl)) {
-            // Convert to a relative path so it's handled by the Vite proxy
-            // Ensure we don't end up with double slashes if supabaseUrl ends with /
-            return url.replace(supabaseUrl.endsWith('/') ? supabaseUrl.slice(0, -1) : supabaseUrl, '');
-        }
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-        if (url.startsWith('https://img.icons8.com/')) {
-            return url.replace('https://img.icons8.com', '/external/icons8');
-        }
+const MAPPINGS = [
+  {
+    external: SUPABASE_URL,
+    proxy: '',
+    matchExternal: (url: string) => SUPABASE_URL && url.startsWith(SUPABASE_URL),
+    matchProxy: (url: string) =>
+      url.startsWith('/storage/v1/') || url.startsWith('/rest/v1/'),
+  },
+  {
+    external: 'https://img.icons8.com',
+    proxy: '/external/icons8',
+  },
+  {
+    external: 'https://bucket.ultrakidle.online',
+    proxy: '/external/infernoguessr-images',
+  },
+  {
+    external: 'https://cgimages.ultrakidle.online',
+    proxy: '/external/ig-cg-images',
+  },
+  {
+    external: 'https://proxy.ultrakidle.online',
+    proxy: '/external/proxy',
+  },
+  {
+    external: 'https://cdn.prod.website-files.com',
+    proxy: '/external/kofi',
+  },
+  {
+    external: 'https://ultrakill.wiki.gg',
+    proxy: '/external/wiki',
+  },
+];
 
-        if (url.startsWith('https://bucket.ultrakidle.online')) {
-            return url.replace('https://bucket.ultrakidle.online', '/external/infernoguessr-images');
-        }
-        if (url.startsWith('https://cgimages.ultrakidle.online')) {
-            return url.replace('https://cgimages.ultrakidle.online', '/external/ig-cg-images');
-        }
-        if (url.startsWith('https://proxy.ultrakidle.online')) {
-            return url.replace('https://proxy.ultrakidle.online', '/external/proxy');
-        }
-
-        return url;
-    }
-
-    // If not in Discord, we need to resolve to the direct URL because the /external proxy
-    // only exists in the Vite dev/preview server, not in the production build on Render.
-
-    // Handle Ko-fi proxy
-    if (url.startsWith('/external/kofi/')) {
-        return `https://cdn.prod.website-files.com/${url.replace('/external/kofi/', '')}`;
-    }
-
-    // Handle Wiki proxy
-    if (url.startsWith('/external/wiki/')) {
-        return `https://ultrakill.wiki.gg/${url.replace('/external/wiki/', '')}`;
-    }
-
-    return url;
-}
-
-
-// Kinda the same function as above but without the early return, useful in some places
 export function toExternalUrl(url: string): string {
-    if (!url) return url;
+  if (!url) return url;
 
-    if (url.startsWith("/external/kofi/")) {
-        return `https://cdn.prod.website-files.com/${url.replace("/external/kofi/", "")}`;
+  for (const { external, proxy, matchProxy } of MAPPINGS) {
+    const isMatch = matchProxy ? matchProxy(url) : url.startsWith(proxy + '/');
+
+    if (isMatch) {
+      return url.replace(proxy, external);
     }
+  }
 
-    if (url.startsWith("/external/wiki/")) {
-        return `https://ultrakill.wiki.gg/${url.replace("/external/wiki/", "")}`;
-    }
-
-    if (url.startsWith("/external/icons8/")) {
-        return `https://img.icons8.com/${url.replace("/external/icons8/", "")}`;
-    }
-
-    return url;
+  return url;
 }
 
-// Slugify strings for usage in urls. Use for enemies only rn, could be useful
-// in other pages later
+export function toProxiedUrl(url: string): string {
+  if (!url) return url;
+
+  for (const { external, proxy, matchExternal } of MAPPINGS) {
+    const isMatch = matchExternal
+      ? matchExternal(url)
+      : external && url.startsWith(external);
+
+    if (isMatch && external) {
+      const baseUrl = external.endsWith('/') ? external.slice(0, -1) : external;
+      return url.replace(baseUrl, proxy);
+    }
+  }
+
+  return url;
+}
+
+export function resolveExternalUrl(url: string): string {
+  if (!url) return url;
+
+  if (isRunningInDiscord()) {
+    return toProxiedUrl(url);
+  }
+
+  return toExternalUrl(url);
+}
+
 export const slugify = (text: string) => {
   return text
     .toString()
