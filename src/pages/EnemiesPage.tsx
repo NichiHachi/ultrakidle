@@ -2,6 +2,7 @@ import SEO from '../components/SEO';
 import { enemies } from '../lib/enemy_list';
 import { resolveExternalUrl, toExternalUrl } from '../lib/urls';
 import { isRunningInDiscord, discordSdk } from '../lib/discord';
+import { Link } from "react-router";
 
 const EnemiesPage = () => {
     const handleLinkClick = (
@@ -28,12 +29,8 @@ const EnemiesPage = () => {
                     {[...enemies]
                         .sort((a, b) => a.name.localeCompare(b.name))
                         .map((enemy) => (
-                            <a
+                            <Link to={"/enemy/"+ enemy.id}
                                 key={enemy.id}
-                                href={resolveExternalUrl(enemy.wikiLink)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => handleLinkClick(e, resolveExternalUrl(enemy.wikiLink))}
                                 className="group flex items-center gap-4 bg-white/5 border border-white/5 p-3 hover:bg-white/10 hover:border-white/20 transition-all duration-200"
                             >
                                 <div className="w-12 h-12 flex-shrink-0 bg-black/40 border border-white/10 overflow-hidden flex items-center justify-center p-1">
@@ -54,13 +51,13 @@ const EnemiesPage = () => {
                                         {enemy.name}
                                     </span>
                                     <span className="text-[10px] opacity-30 font-normal normal-case tracking-normal">
-                                        VIEW WIKI ENTRY
+                                        VIEW ENTRY
                                     </span>
                                 </div>
                                 <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-external-link"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
                                 </div>
-                            </a>
+                            </Link>
                         ))}
                 </div>
 

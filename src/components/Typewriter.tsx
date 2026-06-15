@@ -1,15 +1,28 @@
 import { motion } from 'framer-motion';
 
-interface TypewriterProps {
+interface TypewriterSegment {
     text: string;
+    className?: string;
+};
+
+interface TypewriterProps {
+    text?: string;
+    segments?: TypewriterSegment[];
     delay?: number;
     onComplete?: () => void;
     className?: string;
     speed?: number;
 }
 
-export const Typewriter = ({ text, delay = 0, onComplete, className = '', speed = 0.03 }: TypewriterProps) => {
-    const characters = text.split("");
+export const Typewriter = ({ text = '', segments, delay = 0, onComplete, className = '', speed = 0.03 }: TypewriterProps) => {
+    const definedSegments = segments ?? [{ text, className: '' }];
+
+    const characters = definedSegments.flatMap((segment) =>
+        segment.text.split('').map((char) => ({
+            char,
+            className: segment.className || '',
+        }))
+    );
 
     const container = {
         hidden: {},
@@ -43,8 +56,8 @@ export const Typewriter = ({ text, delay = 0, onComplete, className = '', speed 
             onAnimationComplete={onComplete}
         >
             {characters.map((char, index) => (
-                <motion.span variants={child} key={index}>
-                    {char === " " ? "\u00A0" : char}
+                <motion.span variants={child} key={index} className={char.className}>
+                    {char.char === " " ? "\u00A0" : char.char}
                 </motion.span>
             ))}
         </motion.div>
