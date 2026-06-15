@@ -342,22 +342,24 @@ const CybergrindClassicPage = () => {
         throw error;
       }
 
+      const { status_data, enemy_id } = data;
+
       const stats: GameOverStats = {
-        waves_reached: data.waves_reached,
-        is_new_record: data.is_new_record,
-        correct_id: data.correct_id,
-        total_guesses: data.total_guesses,
-        hint_accuracy: data.hint_accuracy,
-        avg_accuracy: data.avg_accuracy,
+        waves_reached: status_data.waves_reached,
+        is_new_record: status_data.is_new_record,
+        correct_id: enemy_id,
+        total_guesses: status_data.total_guesses,
+        hint_accuracy: status_data.hint_accuracy,
+        avg_accuracy: status_data.avg_accuracy,
       };
       setGameOverStats(stats);
 
-      if (data.is_new_record) {
+      if (status_data.is_new_record) {
         setBestRecord({
-          best_wave: data.waves_reached,
-          total_guesses: data.total_guesses,
-          hint_accuracy: data.hint_accuracy,
-          avg_accuracy: data.avg_accuracy,
+          best_wave: status_data.waves_reached,
+          total_guesses: status_data.total_guesses,
+          hint_accuracy: status_data.hint_accuracy,
+          avg_accuracy: status_data.avg_accuracy,
         });
       }
 
