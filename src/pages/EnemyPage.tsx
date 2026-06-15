@@ -6,6 +6,8 @@ import { resolveExternalUrl } from '../lib/urls';
 import { toExternalUrl } from '../lib/urls';
 import { isRunningInDiscord, discordSdk } from '../lib/discord';
 import { Typewriter } from "../components/Typewriter";
+import { enemies } from '../lib/enemy_list';
+import { slugify } from '../lib/urls';
 
 interface Enemy {
   id: number,
@@ -54,12 +56,16 @@ const EnemyPage = () => {
     let ignore = false;
 
     const fetchData = async () => {
+      const foundEnemy = enemies.find((e) => slugify(e.name) === enemy);
 
-      // Get the enemy data
+      if (!foundEnemy) return;
+
       const { data: enemyData, error: enemyError } = await supabase
         .from("ultrakill_enemies")
-        .select("id, name, full_body_url, wiki_link, enemy_type, weight_class, health, first_appearance, is_boss")
-        .eq("id", enemy)
+        .select(
+          "id, name, full_body_url, wiki_link, enemy_type, weight_class, health, first_appearance, is_boss"
+        )
+        .eq("id", foundEnemy.id)
         .single();
 
       if (enemyError && enemyError.message.includes("CLIENT_OUTDATED")) return;
@@ -94,7 +100,7 @@ const EnemyPage = () => {
 
     fetchData();
     return () => { ignore = true; };
-  }, [setEnemyData, setLevelDataList, enemy]);
+  }, [enemy]);
 
   return (
     <div className="flex flex-col w-full pt-4 h-full justify-start items-start">
@@ -115,9 +121,6 @@ const EnemyPage = () => {
       <div className="flex flex-col w-full max-w-4xl bg-black/40 border-2 border-white/10 p-8 font-bold tracking-widest">
         <div className="flex justify-between flex-wrap items-center border-b border-white/10 pb-4 mb-6" >
           <h1 className="text-3xl text-white uppercase">ENEMY_DETAIL</h1>
-          <span className="text-sm opaimageimagecity-50 tracking-normal  font-normal uppercase">
-            {(enemyData == null ? 0 : 6) + (levelDataList == null ? 0 : levelDataList?.length) + 1} ENTRIES FOUND
-          </span>
         </div>
         {
           enemyData != null && (
@@ -223,13 +226,6 @@ const EnemyPage = () => {
                       segments={[
                         { text: "HEALTH:", className: "text-red-500 uppercase" },
                         { text: ` ${enemyData.health}` },
-                      ]}
-                    />
-
-                    <Typewriter
-                      segments={[
-                        { text: "BOSS:", className: "text-red-500 uppercase" },
-                        { text: ` ${enemyData.is_boss ? "Yes" : "No"}` },
                       ]}
                     />
 

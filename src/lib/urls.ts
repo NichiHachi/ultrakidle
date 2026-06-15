@@ -69,3 +69,15 @@ export function toExternalUrl(url: string): string {
 
     return url;
 }
+
+// Slugify strings for usage in urls. Use for enemies only rn, could be useful
+// in other pages later
+export const slugify = (text: string) => {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-');
+};
