@@ -168,6 +168,8 @@ const MainLayout = () => {
   const isPlay = location.pathname.startsWith('/play') || location.pathname.startsWith('/cybergrind');
   const inDiscord = isRunningInDiscord();
 
+  const pathSegments = location.pathname.split('/').filter(Boolean);
+
   return (
     <div className="text-white overflow-hidden w-full h-dvh flex flex-col relative">
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-black h-screen w-screen">
@@ -215,22 +217,31 @@ const MainLayout = () => {
             <div className="md:w-full flex flex-col min-h-full max-w-[800px] lg:max-w-none mx-auto w-full">
               <div className="z-20 max-w-[600px] flex-shrink-0">
                 <img
-                  className=" mx-auto lg:mx-0"
+                  className="cursor-pointer mx-auto lg:mx-0"
+                  onClick={() => {navigate("/")}}
                   src={`${import.meta.env.BASE_URL}images/ultrakidle-logo.png`}
                   alt="ULTRAKIDLE - The Daily ULTRAKILL Guessing Game"
                 />
               </div>
               <div className="flex flex-wrap justify-start md:justify-start items-center gap-2 mt-2 flex-shrink-0">
                 {!isHome && (
-                  <Button
-                    variant="ghost"
-                    size="md"
-                    onClick={() => navigate('/')}
-                    className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100"
-                  >
-                    &lt; RETURN TO HOME
-                  </Button>
+                    <Button
+                      variant="ghost"
+                      size="md"
+                      onClick={() => {
+                        // If key is 'default', the user landed here directly (refresh or URL entry)
+                        if (location.key !== "default") {
+                          navigate(-1);
+                        } else {
+                          navigate("/");
+                        }
+                      }}
+                      className="text-xl flex items-center gap-2 opacity-50 hover:opacity-100 uppercase"
+                    >
+                      &lt; Return
+                    </Button>
                 )}
+
                 {isPlay && (
                   <>
                     <div className="relative inline-flex items-center">

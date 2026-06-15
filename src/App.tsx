@@ -85,7 +85,7 @@ function AppContent() {
           <Route path="privacy" element={<PrivacyPage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="enemies" element={<EnemiesPage />} />
-          <Route path="enemy/:enemy" element={<EnemyPage />} />
+          <Route path="enemies/:enemy" element={<EnemyPage />} />
           <Route path="levels" element={<LevelsPage />} />
           <Route path="messages" element={<MessagesPage />} />
           <Route path="faq" element={<FaqPage />} />
