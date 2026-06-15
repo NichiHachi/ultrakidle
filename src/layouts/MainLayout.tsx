@@ -168,8 +168,6 @@ const MainLayout = () => {
   const isPlay = location.pathname.startsWith('/play') || location.pathname.startsWith('/cybergrind');
   const inDiscord = isRunningInDiscord();
 
-  const pathSegments = location.pathname.split('/').filter(Boolean);
-
   return (
     <div className="text-white overflow-hidden w-full h-dvh flex flex-col relative">
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none bg-black h-screen w-screen">
