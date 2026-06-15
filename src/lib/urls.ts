@@ -30,6 +30,9 @@ export function resolveExternalUrl(url: string): string {
         if (url.startsWith('https://proxy.ultrakidle.online')) {
             return url.replace('https://proxy.ultrakidle.online', '/external/proxy');
         }
+        if (url.startsWith('/external/wiki/')) {
+        return `https://ultrakill.wiki.gg/${url.replace('/external/wiki/', '')}`;
+        }
 
         return url;
     }
