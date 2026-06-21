@@ -90,9 +90,14 @@ const InfernoPlayPage = () => {
   const [activeTimer, setActiveTimer] = useState(0);
   const [isListVisible, setIsListVisible] = useState(false);
 
+  const [guessesFromPlayers, setGuessesFromPlayers] = useState<Map<string, number> | null>(null);
+  const [maxGuessesFromPlayers, setMaxGuessesFromPlayers] = useState<number>(0);
+  const [totalGuessesFromPlayers, setTotalGuessesFromPlayers] = useState<number>(0);
+
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [audioRankPlayed, setAudioRankPlayed] = useState(false)
-  
+
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const isDragging = useRef(false);
   const dragStart = useRef({ x: 0, y: 0 });
@@ -282,6 +287,7 @@ const InfernoPlayPage = () => {
     }
 
     executeGuess();
+    increaseCountGuess();
   };
 
   const executeGuess = async () => {
@@ -348,6 +354,41 @@ const InfernoPlayPage = () => {
       setIsSubmitting(false);
     }
   };
+
+
+  const increaseCountGuess = async () => {
+    if (!selectedLevelId || gameData?.status !== "in_progress") return;
+    try {
+      const { data, error: rpcError } = await supabase.rpc(
+        "infernoguessr_increase_image_guess_count",
+        {
+          id_level_guess: selectedLevelId,
+          round_id: gameData.round_id,
+        }
+      );
+
+      if (rpcError) {
+        setError(rpcError.message);
+        return;
+      }
+
+      const result = data as Map<string, number>
+      setGuessesFromPlayers(result);
+
+      let total = 0;
+      let max = 0;
+      Object.values(result).forEach(amount => {
+        total += amount;
+        if (max < amount) {
+          max = amount;
+        }
+      });
+      setTotalGuessesFromPlayers(total);
+      setMaxGuessesFromPlayers(max);
+    } catch (err) {
+      console.error("Increase guess error:", err);
+    }
+  }
 
   const nextRound = async () => {
     setIsFetchingNextRound(true);
@@ -813,10 +854,10 @@ const InfernoPlayPage = () => {
                           </span>
                           <span
                             className={`font-bold ${round.score === 100
-                                ? "text-green-500"
-                                : round.score >= 60
-                                  ? "text-yellow-500"
-                                  : "text-red-500"
+                              ? "text-green-500"
+                              : round.score >= 60
+                                ? "text-yellow-500"
+                                : "text-red-500"
                               }`}
                           >
                             {round.guessed_level.level_number}
@@ -1116,47 +1157,54 @@ const InfernoPlayPage = () => {
                 </span>
 
                 {lastRoundResult && (
-                  <div className="flex flex-col gap-1 items-start">
-                    <Typewriter
-                      text={
-                        lastRoundResult.distance === 0
-                          ? "STATUS: SUCCESS"
-                          : "STATUS: FAILED"
-                      }
-                      className={
-                        lastRoundResult.distance === 0
-                          ? "text-green-500 opacity-50"
-                          : "text-red-500 opacity-50"
-                      }
-                      speed={0.02}
-                    />
-                    <Typewriter
-                      text={`DISTANCE: ${lastRoundResult.distance}`}
-                      className="opacity-50"
-                      speed={0.02}
-                      delay={0.4}
-                    />
-                    <Typewriter
-                      text={`TIME: ${lastRoundResult.time_spent_seconds.toFixed(
-                        3
-                      )}`}
-                      className="opacity-50"
-                      speed={0.02}
-                      delay={0.6}
-                    />
-                    <Typewriter
-                      text={`SCORE: +${lastRoundResult.score}`}
-                      className="text-green-500 opacity-50"
-                      speed={0.02}
-                      delay={0.8}
-                    />
-                    <div className="md:block hidden">
-                      <Typewriter
-                        text={`(CLICK OR PRESS ENTER)`}
-                        className="lg:block hidden text-sm opacity-50"
-                        speed={0.02}
-                        delay={1.2}
-                      />
+                  <div>
+                    <div style={{ 'display': 'flex', 'flexDirection': 'row' }}>
+                      <div className="flex flex-col gap-1 items-start">
+                        <Typewriter
+                          text={
+                            lastRoundResult.distance === 0
+                              ? "STATUS: SUCCESS"
+                              : "STATUS: FAILED"
+                          }
+                          className={
+                            lastRoundResult.distance === 0
+                              ? "text-green-500 opacity-50"
+                              : "text-red-500 opacity-50"
+                          }
+                          speed={0.02}
+                        />
+                        <Typewriter
+                          text={`DISTANCE: ${lastRoundResult.distance}`}
+                          className="opacity-50"
+                          speed={0.02}
+                          delay={0.4}
+                        />
+                        <Typewriter
+                          text={`TIME: ${lastRoundResult.time_spent_seconds.toFixed(
+                            3
+                          )}`}
+                          className="opacity-50"
+                          speed={0.02}
+                          delay={0.6}
+                        />
+                        <Typewriter
+                          text={`SCORE: +${lastRoundResult.score}`}
+                          className="text-green-500 opacity-50"
+                          speed={0.02}
+                          delay={0.8}
+                        />
+                        <div className="md:block hidden">
+                          <Typewriter
+                            text={`(CLICK OR PRESS ENTER)`}
+                            className="lg:block hidden text-sm opacity-50"
+                            speed={0.02}
+                            delay={1.2}
+                          />
+                        </div>
+                      </div>
+                        <div>
+                          <p>WIP</p>
+                      </div>
                     </div>
                     <motion.div
                       initial={{ opacity: 0 }}
@@ -1167,6 +1215,7 @@ const InfernoPlayPage = () => {
                           preventScroll: true,
                         });
                       }}
+                      style={{ 'display': 'flex', 'flexDirection': 'column', 'maxWidth': '160px' }}
                     >
                       {isGameFinished ? (
                         <Button
