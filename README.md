@@ -55,3 +55,68 @@ You cannot reset the database by simply stopping the db container. You must dele
 ```sh
 sudo rm -rf supabase/volumes/db/data
 ```
+
+### Setup Daily Infernoguessr
+
+In the supabase dashboard SQL editor, insert those values:
+```sql
+INSERT INTO inferno_daily_sets (game_date)
+VALUES (
+  NOW()::DATE
+)
+RETURNING id;
+```
+
+
+```sql
+INSERT INTO guilds (guild_id, name)
+VALUES (
+  1,
+  'ikz87'
+)
+```
+
+
+```sql
+INSERT INTO image_submissions (
+  guild_id,
+  channel_id,
+  message_id,
+  discord_user_id,
+  discord_name,
+  level_id,
+  image_url,
+  status
+)
+VALUES (
+  1,
+  'Huh',
+  'Huh',
+  'Huh',
+  'Nichi Hachi',
+  1,
+  'Huh',
+  'Huh'
+)
+RETURNING id;
+```
+
+Use the inferno_daily_sets and image_submissions id-s to insert the different levels into the daily rounds:
+
+(THE SQL QUERY VALUES NEED TO BE UPDATED WITH THOSE FROM THE PREVIOUS QUERY)
+```sql
+INSERT INTO inferno_daily_rounds (
+  set_id,
+  round_number,
+  image_submission_id,
+  correct_level_id,
+  public_image_url
+)
+VALUES
+  (<inferno_daily_sets.id>, 1, <image_submissions.id>, 1, 'https://ultrakill.wiki.gg/images/0-1_Into_the_Fire.webp'),
+  (<inferno_daily_sets.id>, 2, <image_submissions.id>, 2, 'https://ultrakill.wiki.gg/images/0-2_The_Meatgrinder.webp'),
+  (<inferno_daily_sets.id>, 3, <image_submissions.id>, 3, 'https://ultrakill.wiki.gg/images/0-3_Double_Down.webp'),
+  (<inferno_daily_sets.id>, 4, <image_submissions.id>, 4, 'https://ultrakill.wiki.gg/images/0-4_A_One-Machine_Army.webp'),
+  (<inferno_daily_sets.id>, 5, <image_submissions.id>, 5, 'https://ultrakill.wiki.gg/images/0-5_Cerberus.webp')
+RETURNING *;
+```
