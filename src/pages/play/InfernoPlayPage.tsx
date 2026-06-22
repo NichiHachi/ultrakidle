@@ -1204,7 +1204,7 @@ const InfernoPlayPage = () => {
                         </div>
                       </div>
                       {guessesFromPlayers && (
-                        <div className='flex flex-row items-end ml-4'>
+                        <div className='hidden lg:flex flex-row items-end ml-4'>
                           {levels.map((level) => {
                             const guessCount = level.id.toString() in guessesFromPlayers ?
                               guessesFromPlayers[level.id.toString()] :
