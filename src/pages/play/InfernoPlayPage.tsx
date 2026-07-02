@@ -10,9 +10,9 @@ import { supabase } from "../../lib/supabaseClient";
 import { CURRENT_VERSION, useVersion } from "../../context/VersionContext";
 import { Typewriter } from "../../components/Typewriter";
 import AlertDialog from "../../components/ui/AlertDialog";
-import Tooltip from "../../components/ui/Tooltip";
 import { getMsUntilNicaraguaMidnight } from "../../lib/time";
 import { useSettings } from "../../context/SettingsContext";
+import GraphGuessLevel from "../../components/ui/GraphGuessLevel";
 
 interface Submitter {
   name: string;
@@ -92,9 +92,6 @@ const InfernoPlayPage = () => {
   const [isListVisible, setIsListVisible] = useState(false);
 
   const [guessesFromPlayers, setGuessesFromPlayers] = useState<Map<string, number> | null>(null);
-  const [maxGuessesFromPlayers, setMaxGuessesFromPlayers] = useState<number>(0);
-  const [totalGuessesFromPlayers, setTotalGuessesFromPlayers] = useState<number>(0);
-
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [audioRankPlayed, setAudioRankPlayed] = useState(false)
@@ -373,19 +370,14 @@ const InfernoPlayPage = () => {
         return;
       }
 
-      const result = data as Map<string, number>
-      setGuessesFromPlayers(result);
+      const result = new Map<string, number>(
+        Object.entries(data || {}).map(([key, value]) => [
+          String(key),
+          typeof value === 'number' ? value : Number(value),
+        ])
+      )
 
-      let total = 0;
-      let max = 0;
-      Object.values(result).forEach(amount => {
-        total += amount;
-        if (max < amount) {
-          max = amount;
-        }
-      });
-      setTotalGuessesFromPlayers(total);
-      setMaxGuessesFromPlayers(max);
+      setGuessesFromPlayers(result);
     } catch (err) {
       console.error("Increase guess error:", err);
     }
@@ -1204,41 +1196,12 @@ const InfernoPlayPage = () => {
                         </div>
                       </div>
                       {guessesFromPlayers && (
-                        <div className='hidden lg:flex flex-row items-end ml-4'>
-                          {levels.map((level) => {
-                            const guessCount = level.id.toString() in guessesFromPlayers ?
-                              guessesFromPlayers[level.id.toString()] :
-                              0;
-                            const percent = Math.round((guessCount / totalGuessesFromPlayers * 100));
-                            const tooltipContent = (
-                              <div className="text-center">
-                                <p>{level.levelNumber}</p>
-                                <p>Guesses: {guessCount}</p>
-                                <p>{percent}%</p>
-                              </div>
-                            );
-
-                            return (
-                              <Tooltip key={level.id} content={tooltipContent} placement="top">
-                                <div
-                                  className={`w-3 mr-0.75 opacity-50
-                                      ${lastRoundResult.correct_level.id == level.id ?
-                                      'bg-green-500' :
-                                      (lastRoundResult.guessed_level.id == level.id ?
-                                        'bg-red-500' :
-                                        'bg-white')}
-                                      `}
-                                  style={{
-                                    height: `${guessCount > 0 ?
-                                      122 * guessCount / maxGuessesFromPlayers + 12 :
-                                      12}px`,
-                                    borderRadius: '12px'
-                                  }}>
-                                </div>
-                              </Tooltip>
-                            )
-                          })}
-                        </div>
+                        <GraphGuessLevel
+                          guessesFromPlayers={guessesFromPlayers}
+                          correct_level_id={lastRoundResult.correct_level.id}
+                          player_guess_id={lastRoundResult.guessed_level.id}
+                        >
+                        </GraphGuessLevel>
                       )}
                     </div>
                     <motion.div
