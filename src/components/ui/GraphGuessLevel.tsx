@@ -60,9 +60,7 @@ const GraphGuessLevel = ({
                     'bg-white')}
                   `}
               style={{
-                height: `${guessCount > 0 ?
-                  122 * guessCount / maxGuessesFromPlayers + 12 :
-                  12}px`,
+                height: `${98 * guessCount / maxGuessesFromPlayers + 2}%`,
                 borderRadius: '2px'
               }}>
             </div>
