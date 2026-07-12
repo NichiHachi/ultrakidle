@@ -34,6 +34,7 @@ interface RoundResult {
   guessed_level: Level;
   correct_level: Level;
   submitted_by: Submitter;
+  image_guess_stats: Map<string, number>;
 }
 
 interface GameInProgress {
@@ -90,8 +91,6 @@ const InfernoPlayPage = () => {
 
   const [activeTimer, setActiveTimer] = useState(0);
   const [isListVisible, setIsListVisible] = useState(false);
-
-  const [guessesFromPlayers, setGuessesFromPlayers] = useState<Map<string, number> | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [audioRankPlayed, setAudioRankPlayed] = useState(false)
@@ -285,7 +284,6 @@ const InfernoPlayPage = () => {
     }
 
     executeGuess();
-    increaseCountGuess();
   };
 
   const executeGuess = async () => {
@@ -328,7 +326,10 @@ const InfernoPlayPage = () => {
         time_spent_seconds: result.time_spent_seconds,
         image_url: resolveRoundImage(result.round_number, gameData.image_url),
         submitted_by: gameData.submitted_by,
+        image_guess_stats: new Map<string, number>(Object.entries(result.image_guess_stats || {}).map(([key, value]) => [String(key), typeof value === 'number' ? value : Number(value)])),
       };
+
+      console.log(currentRoundResult);
 
       setLastRoundResult(currentRoundResult);
 
@@ -352,36 +353,6 @@ const InfernoPlayPage = () => {
       setIsSubmitting(false);
     }
   };
-
-
-  const increaseCountGuess = async () => {
-    if (!selectedLevelId || gameData?.status !== "in_progress") return;
-    try {
-      const { data, error: rpcError } = await supabase.rpc(
-        "infernoguessr_increase_image_guess_count",
-        {
-          id_level_guess: selectedLevelId,
-          round_id: gameData.round_id,
-        }
-      );
-
-      if (rpcError) {
-        setError(rpcError.message);
-        return;
-      }
-
-      const result = new Map<string, number>(
-        Object.entries(data || {}).map(([key, value]) => [
-          String(key),
-          typeof value === 'number' ? value : Number(value),
-        ])
-      )
-
-      setGuessesFromPlayers(result);
-    } catch (err) {
-      console.error("Increase guess error:", err);
-    }
-  }
 
   const nextRound = async () => {
     setIsFetchingNextRound(true);
@@ -1195,14 +1166,12 @@ const InfernoPlayPage = () => {
                           />
                         </div>
                       </div>
-                      {guessesFromPlayers && (
-                        <GraphGuessLevel
-                          guessesFromPlayers={guessesFromPlayers}
-                          correct_level_id={lastRoundResult.correct_level.id}
-                          player_guess_id={lastRoundResult.guessed_level.id}
-                        >
-                        </GraphGuessLevel>
-                      )}
+                      <GraphGuessLevel
+                        guessesFromPlayers={lastRoundResult.image_guess_stats}
+                        correct_level_id={lastRoundResult.correct_level.id}
+                        player_guess_id={lastRoundResult.guessed_level.id}
+                      >
+                      </GraphGuessLevel>
                     </div>
                     <motion.div
                       initial={{ opacity: 0 }}
