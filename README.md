@@ -78,13 +78,24 @@ VALUES (
 
 
 ```sql
+INSERT INTO submitter_profiles (
+  discord_user_id,
+  discord_name
+)
+VALUES (
+'Huh',
+'Nichi Hachi'
+)
+RETURNING id;
+```
+
+```sql
 INSERT INTO image_submissions (
   guild_id,
   channel_id,
   message_id,
-  discord_user_id,
-  discord_name,
   level_id,
+  submitter_id,
   image_url,
   status
 )
@@ -92,9 +103,8 @@ VALUES (
   1,
   'Huh',
   'Huh',
-  'Huh',
-  'Nichi Hachi',
   1,
+  '',
   'Huh',
   'Huh'
 )
@@ -110,13 +120,14 @@ INSERT INTO inferno_daily_rounds (
   round_number,
   image_submission_id,
   correct_level_id,
-  public_image_url
+  public_image_url,
+  submitter_id
 )
 VALUES
-  (<inferno_daily_sets.id>, 1, <image_submissions.id>, 1, 'https://ultrakill.wiki.gg/images/0-1_Into_the_Fire.webp'),
-  (<inferno_daily_sets.id>, 2, <image_submissions.id>, 2, 'https://ultrakill.wiki.gg/images/0-2_The_Meatgrinder.webp'),
-  (<inferno_daily_sets.id>, 3, <image_submissions.id>, 3, 'https://ultrakill.wiki.gg/images/0-3_Double_Down.webp'),
-  (<inferno_daily_sets.id>, 4, <image_submissions.id>, 4, 'https://ultrakill.wiki.gg/images/0-4_A_One-Machine_Army.webp'),
-  (<inferno_daily_sets.id>, 5, <image_submissions.id>, 5, 'https://ultrakill.wiki.gg/images/0-5_Cerberus.webp')
+  (<inferno_daily_sets.id>, 1, <image_submissions.id>, 1, 'https://ultrakill.wiki.gg/images/0-1_Into_the_Fire.webp', 1),
+  (<inferno_daily_sets.id>, 2, <image_submissions.id>, 2, 'https://ultrakill.wiki.gg/images/0-2_The_Meatgrinder.webp', 1),
+  (<inferno_daily_sets.id>, 3, <image_submissions.id>, 3, 'https://ultrakill.wiki.gg/images/0-3_Double_Down.webp', 1),
+  (<inferno_daily_sets.id>, 4, <image_submissions.id>, 4, 'https://ultrakill.wiki.gg/images/0-4_A_One-Machine_Army.webp', 1),
+  (<inferno_daily_sets.id>, 5, <image_submissions.id>, 5, 'https://ultrakill.wiki.gg/images/0-5_Cerberus.webp', 1)
 RETURNING *;
 ```
