@@ -34,100 +34,31 @@ The Supabase docker-compose is based on the [official documentation](https://sup
 ### Import the database
 (Note: The import process is in WIP. In the future, manual imports will no longer be necessary)
 
-Import the db schema
+#### Import the db schema
 ```sh
 docker exec -i supabase-db psql -U supabase_admin -d postgres < schema.sql
 ```
 
-Import the data
+#### Import the data
 ```sh
 docker exec -i supabase-db psql -U supabase_admin -d postgres < data/import.sql
 ```
 
-Select a daily enemy in the classic mode (usable multiple times)
+#### Launch a daily enemy in the classic mode
+(Usable multiple times)
 ```sh
 docker exec -i supabase-db psql -U supabase_admin -d postgres -c "SELECT pick_daily_enemy();"
 ```
 
-#### Reset the database
+#### Launch a daily infernoguessr in the classic mode
+The ig rounds are the first 5 levels: 0-1 to 0-5 
+```sh
+docker exec -i supabase-db psql -U supabase_admin -d postgres < data/daily_ig.sql
+```
 
+#### Reset the database
 You cannot reset the database by simply stopping the db container. You must delete the `supabase/volumes/db/data` folder (Root access required) **after stopping the services**:
 ```sh
 sudo rm -rf supabase/volumes/db/data
 ```
 
-### Setup Daily Infernoguessr
-
-In the supabase dashboard SQL editor, insert those values:
-```sql
-INSERT INTO inferno_daily_sets (game_date)
-VALUES (
-  NOW()::DATE
-)
-RETURNING id;
-```
-
-
-```sql
-INSERT INTO guilds (guild_id, name)
-VALUES (
-  1,
-  'ikz87'
-)
-```
-
-
-```sql
-INSERT INTO submitter_profiles (
-  discord_user_id,
-  discord_name
-)
-VALUES (
-'Huh',
-'Nichi Hachi'
-)
-RETURNING id;
-```
-
-```sql
-INSERT INTO image_submissions (
-  guild_id,
-  channel_id,
-  message_id,
-  level_id,
-  submitter_id,
-  image_url,
-  status
-)
-VALUES (
-  1,
-  'Huh',
-  'Huh',
-  1,
-  '',
-  'Huh',
-  'Huh'
-)
-RETURNING id;
-```
-
-Use the inferno_daily_sets and image_submissions id-s to insert the different levels into the daily rounds:
-
-(THE SQL QUERY VALUES NEED TO BE UPDATED WITH THOSE FROM THE PREVIOUS QUERY)
-```sql
-INSERT INTO inferno_daily_rounds (
-  set_id,
-  round_number,
-  image_submission_id,
-  correct_level_id,
-  public_image_url,
-  submitter_id
-)
-VALUES
-  (<inferno_daily_sets.id>, 1, <image_submissions.id>, 1, 'https://ultrakill.wiki.gg/images/0-1_Into_the_Fire.webp', 1),
-  (<inferno_daily_sets.id>, 2, <image_submissions.id>, 2, 'https://ultrakill.wiki.gg/images/0-2_The_Meatgrinder.webp', 1),
-  (<inferno_daily_sets.id>, 3, <image_submissions.id>, 3, 'https://ultrakill.wiki.gg/images/0-3_Double_Down.webp', 1),
-  (<inferno_daily_sets.id>, 4, <image_submissions.id>, 4, 'https://ultrakill.wiki.gg/images/0-4_A_One-Machine_Army.webp', 1),
-  (<inferno_daily_sets.id>, 5, <image_submissions.id>, 5, 'https://ultrakill.wiki.gg/images/0-5_Cerberus.webp', 1)
-RETURNING *;
-```
