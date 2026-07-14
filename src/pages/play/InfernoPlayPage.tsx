@@ -12,7 +12,7 @@ import { Typewriter } from "../../components/Typewriter";
 import AlertDialog from "../../components/ui/AlertDialog";
 import { getMsUntilNicaraguaMidnight } from "../../lib/time";
 import { useSettings } from "../../context/SettingsContext";
-import GraphGuessLevel from "../../components/ui/GraphGuessLevel";
+import GraphLevelGuessed from "../../components/ui/GraphLevelGuessed";
 
 interface Submitter {
   name: string;
@@ -1166,12 +1166,12 @@ const InfernoPlayPage = () => {
                           />
                         </div>
                       </div>
-                      <GraphGuessLevel
+                      <GraphLevelGuessed
                         guessesFromPlayers={lastRoundResult.image_guess_stats}
                         correct_level_id={lastRoundResult.correct_level.id}
                         player_guess_id={lastRoundResult.guessed_level.id}
                       >
-                      </GraphGuessLevel>
+                      </GraphLevelGuessed>
                     </div>
                     <motion.div
                       initial={{ opacity: 0 }}

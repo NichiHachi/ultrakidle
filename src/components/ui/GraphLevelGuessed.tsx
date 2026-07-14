@@ -1,18 +1,18 @@
 import { levels } from "../../lib/levels_list";
-import Tooltip from "../../components/ui/Tooltip";
+import Tooltip from "./Tooltip";
 import { useMemo } from "react";
 
-interface GraphGuessLevelProps {
+interface GraphLevelGuessedProps {
   guessesFromPlayers: Map<string, number>;
   correct_level_id: number;
   player_guess_id: number;
 }
 
-const GraphGuessLevel = ({
+const GraphLevelGuessed = ({
   guessesFromPlayers,
   correct_level_id,
   player_guess_id
-}: GraphGuessLevelProps) => {
+}: GraphLevelGuessedProps) => {
 
   const { totalGuessesFromPlayers, maxGuessesFromPlayers } = useMemo(() => {
     let total = 0;
@@ -71,4 +71,4 @@ const GraphGuessLevel = ({
   );
 };
 
-export default GraphGuessLevel;
+export default GraphLevelGuessed;
